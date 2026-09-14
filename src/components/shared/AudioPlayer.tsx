@@ -89,3 +89,4 @@ export default function AudioPlayer({ src, title = "Background Song", autoPlay =
     </div>
   );
 }
+

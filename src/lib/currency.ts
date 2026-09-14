@@ -99,3 +99,4 @@ export function formatPrice(amount: number, currency: CurrencyCode): string {
 
   return `${symbol}${amount}`;
 }
+

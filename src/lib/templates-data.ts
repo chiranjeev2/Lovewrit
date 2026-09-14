@@ -196,3 +196,4 @@ export const TEMPLATES: TemplateDefinition[] = [
 export function getTemplateById(id: string): TemplateDefinition | undefined {
   return TEMPLATES.find((t) => t.id === id);
 }
+
