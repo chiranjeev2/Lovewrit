@@ -20,6 +20,8 @@ import {
   Send,
   Mail,
   Filter,
+  Crown,
+  Sparkles,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -291,6 +293,13 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center space-x-3">
+            <Link
+              href="/create/be-my-girlfriend?founderKey=memoir_master_founder_secret_2026"
+              className="inline-flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-500 px-3.5 py-1.5 text-xs font-bold text-neutral-950 hover:opacity-95 shadow-md shadow-amber-500/20 transition"
+            >
+              <Crown className="h-3.5 w-3.5" />
+              <span>Create Free Memoir (Founder Pass)</span>
+            </Link>
             <Link
               href="/"
               className="text-xs text-neutral-400 hover:text-white transition px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900"

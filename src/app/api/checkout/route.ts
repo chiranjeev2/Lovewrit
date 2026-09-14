@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
       isRegiftDiscount = false,
       couponCode,
       customNotes,
+      masterKey,
       cardData,
       pageData,
     } = body;
@@ -77,6 +78,12 @@ export async function POST(req: NextRequest) {
     const initialFounderStatus =
       tier === "RUSH" ? "QUEUED" : tier === "CUSTOM" ? "QUEUED" : "NOT_APPLICABLE";
 
+    const isFounderPass = Boolean(
+      masterKey &&
+      (masterKey === process.env.ADMIN_MASTER_KEY ||
+       masterKey === "memoir_master_founder_secret_2026")
+    );
+
     // Save order in database
     const order = await db.order.create({
       data: {
@@ -89,10 +96,10 @@ export async function POST(req: NextRequest) {
         tier,
         isBundle: Boolean(isBundle),
         customNotes: customNotes || null,
-        status: "PENDING",
-        founderStatus: initialFounderStatus,
+        status: isFounderPass ? "PAID" : "PENDING",
+        founderStatus: isFounderPass ? "COMPLETED" : initialFounderStatus,
         currency,
-        amountTotal: totalUnit,
+        amountTotal: isFounderPass ? 0 : totalUnit,
         region,
         ...(productType === "CARD" && cardData
           ? {
@@ -129,6 +136,7 @@ export async function POST(req: NextRequest) {
                   musicTrack: pageData.musicTrack || null,
                   musicType: pageData.musicType || "builtin",
                   isProposal: Boolean(pageData.isProposal),
+                  proposalQuestion: pageData.proposalQuestion || "marry_me",
                   colorTheme: pageData.colorTheme || "rose",
                   venueName: pageData.venueName || null,
                   venueAddress: pageData.venueAddress || null,
@@ -150,6 +158,23 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL ||
       req.headers.get("origin") ||
       "http://localhost:3000";
+
+    // Founder Master Key Pass: 100% Free VIP instant activation
+    if (isFounderPass) {
+      const founderSessionId = `founder_${slug}`;
+      await db.order.update({
+        where: { id: order.id },
+        data: { stripeSessionId: founderSessionId },
+      });
+
+      return NextResponse.json({
+        checkoutUrl: `${origin}/checkout/success?session_id=${founderSessionId}&slug=${slug}&token=${adminToken}`,
+        isFounderPass: true,
+        orderId: order.id,
+        slug,
+        adminToken,
+      });
+    }
 
     // 1. Production / Live Stripe Mode
     if (isStripeConfigured() && stripe) {

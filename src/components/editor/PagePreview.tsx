@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { COLOR_THEMES, ColorThemeKey } from "@/lib/templates-data";
+import { COLOR_THEMES, ColorThemeKey, ProposalQuestionKey, PROPOSAL_QUESTIONS } from "@/lib/templates-data";
 import {
   Heart,
   Sparkles,
@@ -29,6 +29,7 @@ interface PagePreviewProps {
   colorTheme: ColorThemeKey;
   collageLayout?: CollageLayoutStyle;
   isProposal?: boolean;
+  proposalQuestion?: ProposalQuestionKey;
   musicTrackName?: string;
   venueName?: string;
   venueAddress?: string;
@@ -46,6 +47,7 @@ export default function PagePreview({
   colorTheme,
   collageLayout = "masonry",
   isProposal = false,
+  proposalQuestion = "marry_me",
   musicTrackName,
   venueName,
   venueAddress,
@@ -54,6 +56,7 @@ export default function PagePreview({
   previewOnly = false,
 }: PagePreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
+  const proposalConfig = PROPOSAL_QUESTIONS[proposalQuestion] || PROPOSAL_QUESTIONS.marry_me;
 
   // Proposal interaction states
   const [noButtonPos, setNoButtonPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -444,10 +447,10 @@ export default function PagePreview({
                 <Heart className="h-8 w-8 fill-rose-500" />
               </div>
               <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-2">
-                Will you marry me?
+                {proposalConfig.question}
               </h3>
               <p className="text-xs text-neutral-400 mb-6">
-                Choose carefully... but love only knows one answer!
+                {proposalConfig.subtitle}
               </p>
 
               {/* Action Buttons */}
@@ -456,7 +459,7 @@ export default function PagePreview({
                   onClick={handleYes}
                   className="w-full sm:w-auto rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
                 >
-                  YES! A Million Times Yes! 💍
+                  {proposalConfig.yesText}
                 </button>
 
                 <div
@@ -473,7 +476,7 @@ export default function PagePreview({
                     onClick={dodgeNoButton}
                     className="w-full sm:w-auto rounded-full border border-neutral-700 bg-neutral-800/80 px-6 py-3.5 text-xs font-semibold text-neutral-400 hover:text-white"
                   >
-                    No
+                    {proposalConfig.noText}
                   </button>
                 </div>
               </div>
@@ -484,10 +487,10 @@ export default function PagePreview({
                 <CheckCircle className="h-10 w-10" />
               </div>
               <h3 className="font-serif text-3xl font-bold text-white">
-                THEY SAID YES! 💍🎉
+                {proposalConfig.celebrateHeading}
               </h3>
               <p className="text-sm text-rose-200 max-w-sm mx-auto">
-                Here's to beginning the greatest adventure of your lives together!
+                {proposalConfig.celebrateSub}
               </p>
             </div>
           )}

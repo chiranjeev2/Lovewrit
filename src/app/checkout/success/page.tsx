@@ -31,7 +31,6 @@ function SuccessContent() {
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
-  const [copiedCoupon, setCopiedCoupon] = useState(false);
 
   useEffect(() => {
     async function verify() {
@@ -92,13 +91,6 @@ function SuccessContent() {
     a.click();
   };
 
-  const copyCouponCode = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText("REGIFT50");
-      setCopiedCoupon(true);
-      setTimeout(() => setCopiedCoupon(false), 2000);
-    }
-  };
 
   const copyToClipboard = () => {
     if (navigator.clipboard) {
@@ -237,53 +229,7 @@ function SuccessContent() {
           </Link>
         </div>
 
-        {/* 50% OFF Regift Promotion Banner */}
-        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/25 via-neutral-900 to-rose-950/20 p-5 sm:p-6 text-left relative overflow-hidden">
-          <div className="flex items-start space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
-              <Gift className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="inline-block rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/30">
-                  Regift Loyalty Perk
-                </span>
-                <span className="text-xs font-extrabold text-amber-400">
-                  50% OFF Next Order
-                </span>
-              </div>
-              <h4 className="font-serif text-sm font-bold text-white mt-1.5">
-                Surprise Another Loved One
-              </h4>
-              <p className="text-xs text-neutral-300 mt-1 leading-relaxed">
-                Loved creating this? Send another personalized card or interactive page to a friend or partner and get 50% off automatically!
-              </p>
 
-              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={copyCouponCode}
-                  className="flex items-center justify-between sm:justify-start space-x-2 rounded-xl border border-amber-500/30 bg-neutral-950 px-3 py-2 text-xs font-mono font-bold text-amber-300 hover:bg-neutral-900 transition"
-                >
-                  <span>Coupon: REGIFT50</span>
-                  {copiedCoupon ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5 text-neutral-400" />
-                  )}
-                </button>
-
-                <Link
-                  href={`/create/${order?.templateId || "forever-proposal"}?discount=REGIFT50`}
-                  className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>Create Another with 50% OFF</span>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Order Details receipt summary */}
         <div className="mt-10 border-t border-neutral-800/80 pt-6 text-left">

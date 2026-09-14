@@ -66,6 +66,7 @@ model PageData {
   musicTrack               String?          // Built-in track ID or custom uploaded audio URL
   musicType                String?          @default("builtin") // "builtin" | "custom"
   isProposal               Boolean          @default(false)
+  proposalQuestion         String?          @default("marry_me") // "marry_me" | "be_my_girlfriend" | "be_my_boyfriend" | "go_on_date"
   colorTheme               String           @default("rose")
   venueName                String?
   venueAddress             String?

@@ -10,7 +10,7 @@ export type OccasionType =
   | "kitty_party";
 
 export type ColorThemeKey = "rose" | "midnight" | "sunset" | "emerald" | "champagne" | "serene" | "festive";
-export type PhotoShapeKey = "oval" | "square" | "rounded" | "heart" | "circle";
+export type PhotoShapeKey = "oval" | "square" | "rounded" | "circle";
 export type RevealType =
   | "velvet_box"
   | "champagne_seal"
@@ -21,6 +21,66 @@ export type RevealType =
   | "golden_invite"
   | "diya_aarti"
   | "cupid_arrow";
+
+export type ProposalQuestionKey =
+  | "marry_me"
+  | "be_my_girlfriend"
+  | "be_my_boyfriend"
+  | "go_on_date";
+
+export interface ProposalQuestionOption {
+  id: ProposalQuestionKey;
+  label: string;
+  question: string;
+  subtitle: string;
+  yesText: string;
+  noText: string;
+  celebrateHeading: string;
+  celebrateSub: string;
+}
+
+export const PROPOSAL_QUESTIONS: Record<ProposalQuestionKey, ProposalQuestionOption> = {
+  marry_me: {
+    id: "marry_me",
+    label: "Marry Me",
+    question: "Will you marry me?",
+    subtitle: "Choose carefully... but love only knows one answer!",
+    yesText: "YES! A Million Times Yes! 💍",
+    noText: "No",
+    celebrateHeading: "THEY SAID YES! 💍🎉",
+    celebrateSub: "Here's to beginning the greatest adventure of your lives together!",
+  },
+  be_my_girlfriend: {
+    id: "be_my_girlfriend",
+    label: "Be My Girlfriend",
+    question: "Will you be my girlfriend? 🌹",
+    subtitle: "Every moment with you feels like pure magic...",
+    yesText: "YES! I'd love to be your girlfriend! ❤️",
+    noText: "No",
+    celebrateHeading: "SHE SAID YES! Best Girlfriend Ever! ❤️🎉",
+    celebrateSub: "Our forever starts today. Every day is sweeter with you!",
+  },
+  be_my_boyfriend: {
+    id: "be_my_boyfriend",
+    label: "Be My Boyfriend",
+    question: "Will you be my boyfriend? 💖",
+    subtitle: "Life is so much more joyful with you by my side...",
+    yesText: "YES! A thousand times yes! 💖",
+    noText: "No",
+    celebrateHeading: "HE SAID YES! Best Boyfriend Ever! 💖🎉",
+    celebrateSub: "So lucky to have you by my side forever and always!",
+  },
+  go_on_date: {
+    id: "go_on_date",
+    label: "Go On A Date",
+    question: "Will you go on a date with me? 🥂",
+    subtitle: "Good wine, great memories, and just the two of us...",
+    yesText: "YES! It's a date! ✨",
+    noText: "No",
+    celebrateHeading: "IT'S A DATE! 🥂🎉",
+    celebrateSub: "Can't wait to spend an unforgettable evening together!",
+  },
+};
 
 export interface ColorTheme {
   id: ColorThemeKey;
@@ -110,6 +170,7 @@ export interface TemplateDefinition {
   id: string;
   name: string;
   subtitle: string;
+  icon: string;
   occasion: OccasionType;
   category: "couples" | "birthdays" | "memorials" | "invites";
   supportedFormats: ("CARD" | "PAGE")[];
@@ -133,11 +194,12 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "forever-proposal",
     name: "The Forever Proposal",
     subtitle: "Interactive proposal page with playful dodging 'No' button & velvet box reveal",
+    icon: "💍",
     occasion: "proposal",
     category: "couples",
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "rose",
-    defaultShape: "heart",
+    defaultShape: "rounded",
     coverImage: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
     samplePhotos: [
       "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
@@ -153,9 +215,34 @@ export const TEMPLATES: TemplateDefinition[] = [
     badge: "Most Popular",
   },
   {
+    id: "be-my-girlfriend",
+    name: "Be My Girlfriend / Boyfriend",
+    subtitle: "Playful romantic reveal with dodging 'No' button, sweet memories, and Cupid's arrow",
+    icon: "💘",
+    occasion: "proposal",
+    category: "couples",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "rose",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
+      "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
+      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+    ],
+    sampleSender: "Kabir",
+    sampleRecipient: "Ananya",
+    sampleMessage: "Every single day with you feels effortless and warm. I can't imagine my life without your smile. Will you be my girlfriend?",
+    sampleLocation: "Our Favorite Sunset Spot",
+    hasInteractiveDodging: true,
+    revealType: "cupid_arrow",
+    badge: "Romantic Hit",
+  },
+  {
     id: "golden-anniversary",
     name: "Golden Anniversary",
     subtitle: "Celebrate your love story with champagne gold sparkles and an emotional photo timeline",
+    icon: "🥂",
     occasion: "anniversary",
     category: "couples",
     supportedFormats: ["PAGE", "CARD"],
@@ -179,6 +266,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "from-my-heart",
     name: "From My Heart (I'm Sorry)",
     subtitle: "A sincere, tender apology card & letter with warm candlelight glow and gentle wax seal reveal",
+    icon: "💌",
     occasion: "sorry",
     category: "couples",
     supportedFormats: ["CARD", "PAGE"],
@@ -200,6 +288,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "sweet-reminiscing",
     name: "Sweet Reminiscing",
     subtitle: "A nostalgic memory lane journey with scrapbook ribbon reveal and curated photo stream",
+    icon: "🎞️",
     occasion: "reminiscing",
     category: "couples",
     supportedFormats: ["PAGE", "CARD"],
@@ -222,6 +311,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "modern-romance",
     name: "Modern Romance",
     subtitle: "Chic editorial typography and sleek frames for couples who love timeless modern elegance",
+    icon: "✨",
     occasion: "anniversary",
     category: "couples",
     supportedFormats: ["CARD", "PAGE"],
@@ -245,6 +335,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "festive-birthday",
     name: "Festive Birthday Celebration",
     subtitle: "Joyful birthday countdown with balloon pop unboxing, confetti shower, and group wishes",
+    icon: "🎂",
     occasion: "birthday",
     category: "birthdays",
     supportedFormats: ["PAGE", "CARD"],
@@ -270,6 +361,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "in-loving-memory",
     name: "In Loving Memory (Sacred Tribute)",
     subtitle: "A serene, respectful tribute page with candle-lighting reveal and pre-moderated condolence wall",
+    icon: "🕯️",
     occasion: "memorial",
     category: "memorials",
     supportedFormats: ["PAGE", "CARD"],
@@ -295,11 +387,12 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "godhbharai-blessings",
     name: "Godhbharai & Baby Shower Invite",
     subtitle: "Pastel celebratory invitation with baby lullaby soundtrack, venue map directions & RSVP registry",
+    icon: "👶",
     occasion: "godhbharai",
     category: "invites",
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "champagne",
-    defaultShape: "heart",
+    defaultShape: "rounded",
     coverImage: "https://images.unsplash.com/photo-1544126592-807ade215a0b?w=800&q=80",
     samplePhotos: [
       "https://images.unsplash.com/photo-1544126592-807ade215a0b?w=800&q=80",
@@ -320,6 +413,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "jagrata-kirtan-invitation",
     name: "Mata Ka Jagrata & Kirtan Invite",
     subtitle: "Auspicious devotional invitation with traditional Aarti/Bhajan soundtrack, Diya lighting & temple map",
+    icon: "🙏",
     occasion: "jagrata_kirtan",
     category: "invites",
     supportedFormats: ["PAGE", "CARD"],
@@ -344,6 +438,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     id: "chic-kitty-party",
     name: "Chic Kitty Party & High-Tea Invite",
     subtitle: "Vibrant high-tea social gathering invite with dress-code theme, RSVP headcount & venue pin",
+    icon: "☕",
     occasion: "kitty_party",
     category: "invites",
     supportedFormats: ["PAGE", "CARD"],

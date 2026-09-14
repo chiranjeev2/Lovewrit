@@ -210,6 +210,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           colorTheme={pageData.colorTheme as ColorThemeKey}
           collageLayout={(pageData.collageLayout as any) || "masonry"}
           isProposal={pageData.isProposal}
+          proposalQuestion={pageData.proposalQuestion}
           venueName={pageData.venueName}
           venueAddress={pageData.venueAddress}
           venueMapUrl={pageData.venueMapUrl}
@@ -225,6 +226,29 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           token={token || order?.adminToken}
           requireApproval={pageData.requireGuestbookApproval}
         />
+
+        {/* 50% OFF Reply / Regift Call To Action */}
+        <div className="mt-10 rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 mb-4">
+            <Sparkles className="h-7 w-7" />
+          </div>
+          <span className="inline-block rounded-full bg-rose-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rose-300 border border-rose-500/30 mb-2">
+            Emotional Reply Perk
+          </span>
+          <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mb-2">
+            Touched by {pageData.senderName || "this moment"}?
+          </h3>
+          <p className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto mb-6 leading-relaxed">
+            Reply back to {pageData.senderName || "them"} with your own custom digital card or interactive keepsake page and claim <span className="text-amber-400 font-bold">50% OFF</span>!
+          </p>
+          <Link
+            href={`/create/be-my-girlfriend?to=${encodeURIComponent(pageData.senderName || "")}&replyTo=${slug}&discount=REGIFT50`}
+            className="inline-flex items-center justify-center space-x-2 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-xl shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
+          >
+            <Heart className="h-4 w-4 fill-white" />
+            <span>Reply to {pageData.senderName || "Them"} (50% OFF)</span>
+          </Link>
+        </div>
       </main>
 
       <footer className="py-6 text-center text-xs text-neutral-500">

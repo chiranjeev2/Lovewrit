@@ -16,6 +16,8 @@ import {
   ColorThemeKey,
   PhotoShapeKey,
   COLOR_THEMES,
+  ProposalQuestionKey,
+  PROPOSAL_QUESTIONS,
 } from "@/lib/templates-data";
 import {
   PRICING_TIERS,
@@ -27,6 +29,7 @@ import { LanguageCode, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
 import {
   Heart,
   Sparkles,
+  Crown,
   ArrowLeft,
   Upload,
   Music,
@@ -117,19 +120,45 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   const [playingPreviewTrackId, setPlayingPreviewTrackId] = useState<string | null>(null);
   const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
 
-  // Regift 50% discount coupon
+  // Proposal Question
+  const [proposalQuestion, setProposalQuestion] = useState<ProposalQuestionKey>(
+    template.id.includes("girlfriend") ? "be_my_girlfriend" : "marry_me"
+  );
+
+  // Founder Master Pass (Free All-Access)
+  const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
+  const [founderKeyInput, setFounderKeyInput] = useState<string>("");
+  const [showFounderInput, setShowFounderInput] = useState<boolean>(false);
+
+  // Regift 50% discount & reply details
   const [couponCode, setCouponCode] = useState<string>("");
   const [isRegiftDiscount, setIsRegiftDiscount] = useState<boolean>(false);
   const [couponFeedback, setCouponFeedback] = useState<string | null>(null);
+  const [replySender, setReplySender] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const discountParam = urlParams.get("discount");
-      if (discountParam && discountParam.toUpperCase() === "REGIFT50") {
+      const replyParam = urlParams.get("replyTo");
+      const toParam = urlParams.get("to");
+      const fKeyParam = urlParams.get("founderKey");
+
+      if (toParam) {
+        const decodedTo = decodeURIComponent(toParam);
+        setRecipientName(decodedTo);
+        setReplySender(decodedTo);
+      }
+      if (replyParam && discountParam && discountParam.toUpperCase() === "REGIFT50") {
         setIsRegiftDiscount(true);
         setCouponCode("REGIFT50");
-        setCouponFeedback("50% Regift Discount Applied!");
+        setCouponFeedback("50% Regift Reply Discount Applied!");
+      }
+      if (
+        fKeyParam &&
+        (fKeyParam === "memoir_master_founder_secret_2026" || fKeyParam === "founder_master")
+      ) {
+        setIsFounderFree(true);
       }
     }
     return () => {
@@ -138,6 +167,53 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
       }
     };
   }, []);
+
+  const handleApplyFounderKey = () => {
+    if (
+      founderKeyInput.trim() === "memoir_master_founder_secret_2026" ||
+      founderKeyInput.trim().toLowerCase() === "founder_master"
+    ) {
+      setIsFounderFree(true);
+      setShowFounderInput(false);
+      setFormError(null);
+    } else {
+      setFormError("Invalid Founder Master Key.");
+    }
+  };
+
+  const applyDatePreset = (
+    preset: "tonight" | "tomorrow_morning" | "tomorrow_evening" | "in_24h" | "weekend"
+  ) => {
+    const now = new Date();
+    let target = new Date();
+
+    if (preset === "tonight") {
+      target.setHours(23, 59, 0, 0);
+      if (target.getTime() <= now.getTime()) {
+        target.setDate(target.getDate() + 1);
+      }
+    } else if (preset === "tomorrow_morning") {
+      target.setDate(target.getDate() + 1);
+      target.setHours(9, 0, 0, 0);
+    } else if (preset === "tomorrow_evening") {
+      target.setDate(target.getDate() + 1);
+      target.setHours(20, 0, 0, 0);
+    } else if (preset === "in_24h") {
+      target = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    } else if (preset === "weekend") {
+      const day = now.getDay();
+      const daysUntilSaturday = (6 - day + 7) % 7 || 7;
+      target.setDate(now.getDate() + daysUntilSaturday);
+      target.setHours(20, 0, 0, 0);
+    }
+
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const formatted = `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(
+      target.getDate()
+    )}T${pad(target.getHours())}:${pad(target.getMinutes())}`;
+    setRevealDateTime(formatted);
+    setEnableRevealCountdown(true);
+  };
 
   const handleApplyCoupon = (codeToApply?: string) => {
     const code = (codeToApply || couponCode).trim().toUpperCase();
@@ -194,7 +270,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   };
 
   // Photo upload handler
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>, isSingle = true) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -202,8 +278,10 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     setUploadError(null);
 
     try {
-      if (isSingle) {
-        const file = files[0];
+      const maxCount = productType === "CARD" ? 3 : 6;
+      const uploadedUrls: string[] = [];
+      for (let i = 0; i < Math.min(files.length, maxCount); i++) {
+        const file = files[i];
         const formData = new FormData();
         formData.append("file", file);
         formData.append("kind", "image");
@@ -211,28 +289,13 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Upload failed");
-        setCardPhoto(data.url);
-        if (!pagePhotos.includes(data.url)) {
-          setPagePhotos([data.url, ...pagePhotos]);
+        if (data.url) {
+          uploadedUrls.push(data.url);
         }
-      } else {
-        const uploadedUrls: string[] = [];
-        for (let i = 0; i < Math.min(files.length, 6); i++) {
-          const file = files[i];
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("kind", "image");
-
-          const res = await fetch("/api/upload", { method: "POST", body: formData });
-          const data = await res.json();
-          if (res.ok && data.url) {
-            uploadedUrls.push(data.url);
-          }
-        }
-        if (uploadedUrls.length > 0) {
-          setPagePhotos(uploadedUrls);
-          setCardPhoto(uploadedUrls[0]);
-        }
+      }
+      if (uploadedUrls.length > 0) {
+        setPagePhotos(uploadedUrls);
+        setCardPhoto(uploadedUrls[0]);
       }
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Error uploading photo");
@@ -295,13 +358,20 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   };
 
   // Pricing calculation
-  const { displayPrice, symbol, isDiscounted, originalDisplayPrice } = calculateOrderTotal(
+  const calculatedPricing = calculateOrderTotal(
     region,
     productType,
     tier,
     isBundle,
     isRegiftDiscount
   );
+
+  const displayPrice = isFounderFree ? "0" : calculatedPricing.displayPrice;
+  const symbol = calculatedPricing.symbol;
+  const isDiscounted = isFounderFree ? true : calculatedPricing.isDiscounted;
+  const originalDisplayPrice = isFounderFree
+    ? calculatedPricing.displayPrice
+    : calculatedPricing.originalDisplayPrice;
 
   // Smart check for Rush vs Countdown distance
   const isCountdownOver48Hours = () => {
@@ -315,7 +385,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     e.preventDefault();
     setFormError(null);
 
-    if (!customerEmail || !customerEmail.includes("@")) {
+    const finalEmail = customerEmail || (isFounderFree ? "founder@memoir.app" : "");
+    if (!finalEmail || !finalEmail.includes("@")) {
       setFormError("Please enter a valid email address to receive your order links.");
       return;
     }
@@ -333,12 +404,13 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
       const payload = {
         productType,
         templateId: template.id,
-        customerEmail,
+        customerEmail: finalEmail,
         customerName: customerName || senderName || "Valued Customer",
         currency,
         tier,
         isBundle,
         isRegiftDiscount,
+        masterKey: isFounderFree ? "memoir_master_founder_secret_2026" : undefined,
         couponCode: isRegiftDiscount ? "REGIFT50" : couponCode,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         cardData: {
@@ -346,7 +418,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           recipientName,
           occasion,
           message,
-          photoUrl: cardPhoto,
+          photoUrl: pagePhotos.length > 1 ? JSON.stringify(pagePhotos.slice(0, 3)) : cardPhoto,
           photoShape,
           colorTheme: selectedTheme,
           location,
@@ -367,6 +439,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           musicTrack: currentTrack,
           musicType: musicOption,
           isProposal,
+          proposalQuestion: isProposal ? proposalQuestion : undefined,
           colorTheme: selectedTheme,
           venueName,
           venueAddress,
@@ -463,6 +536,98 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               mobileTab === "preview" ? "hidden lg:block" : "block"
             }`}
           >
+            {/* VIP Founder Pass Badge */}
+            {isFounderFree && (
+              <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-950/40 via-neutral-900 to-rose-950/30 p-4 shadow-lg flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                    <Crown className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                      Founder VIP All-Access Pass Active
+                    </span>
+                    <h4 className="text-xs font-bold text-white">
+                      100% Free Creation & Instant Unlocked Publishing
+                    </h4>
+                  </div>
+                </div>
+                <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-mono font-bold text-amber-300 border border-amber-500/40">
+                  ₹0 / $0 Free
+                </span>
+              </div>
+            )}
+
+            {/* Regift / Reply 50% Discount Alert */}
+            {isRegiftDiscount && (
+              <div className="rounded-2xl border border-rose-500/40 bg-gradient-to-r from-rose-950/40 via-neutral-900 to-amber-950/30 p-4 shadow-lg flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400">
+                    <Gift className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">
+                      Regift & Reply Perk
+                    </span>
+                    <h4 className="text-xs font-bold text-white">
+                      50% OFF Applied {replySender ? `for your reply to ${replySender}` : ""}!
+                    </h4>
+                  </div>
+                </div>
+                <span className="rounded-full bg-rose-500/20 px-3 py-1 text-xs font-mono font-bold text-rose-300 border border-rose-500/40">
+                  50% OFF
+                </span>
+              </div>
+            )}
+
+            {/* In-Studio Seamless Template Switcher */}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-5 shadow-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="h-4 w-4 text-rose-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-white">
+                    Template Theme Switcher
+                  </span>
+                </div>
+                <span className="text-[10px] text-neutral-400">
+                  Switch anytime without losing your entered message or photos
+                </span>
+              </div>
+
+              <div className="flex items-center space-x-2.5 overflow-x-auto pb-2 scrollbar-none">
+                {TEMPLATES.map((tmpl) => (
+                  <button
+                    key={tmpl.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedTheme(tmpl.defaultTheme);
+                      if (tmpl.occasion) setOccasion(tmpl.occasion);
+                      if (tmpl.hasInteractiveDodging || tmpl.occasion === "proposal") {
+                        setIsProposal(true);
+                        if (tmpl.id.includes("girlfriend")) {
+                          setProposalQuestion("be_my_girlfriend");
+                        }
+                      }
+                      if (typeof window !== "undefined") {
+                        window.history.replaceState(null, "", `/create/${tmpl.id}${window.location.search}`);
+                      }
+                    }}
+                    className={`flex items-center space-x-2 rounded-2xl border px-3.5 py-2 shrink-0 transition text-left ${
+                      tmpl.id === template.id
+                        ? "border-rose-500 bg-rose-500/20 text-white shadow-md shadow-rose-500/20"
+                        : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700 hover:text-white"
+                    }`}
+                  >
+                    <span className="text-base">{tmpl.icon}</span>
+                    <div>
+                      <span className="text-xs font-semibold block whitespace-nowrap">{tmpl.name}</span>
+                      <span className="text-[9px] text-neutral-400 block capitalize">{tmpl.occasion.replace("_", " ")}</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Step 1: Tier & Format Selection (Phase 2 Upgrade) */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
@@ -489,7 +654,11 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-bold text-white">Self-Service</span>
                     <span className="text-xs font-bold text-rose-400">
-                      {productType === "CARD" ? `${symbol}${PRICING_TIERS[region].cardPrice}` : `${symbol}${PRICING_TIERS[region].pagePrice}`}
+                      {isFounderFree
+                        ? "₹0 / Free"
+                        : productType === "CARD"
+                        ? `${symbol}${PRICING_TIERS[region].cardPrice}`
+                        : `${symbol}${PRICING_TIERS[region].pagePrice}`}
                     </span>
                   </div>
                   <p className="text-[10px] text-neutral-400">
@@ -510,7 +679,11 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-bold text-white">Custom Tier</span>
                     <span className="text-xs font-bold text-amber-400">
-                      {productType === "CARD" ? `${symbol}${PRICING_TIERS[region].customCardPrice}` : `${symbol}${PRICING_TIERS[region].customPrice}`}
+                      {isFounderFree
+                        ? "₹0 / Free"
+                        : productType === "CARD"
+                        ? `${symbol}${PRICING_TIERS[region].customCardPrice}`
+                        : `${symbol}${PRICING_TIERS[region].customPrice}`}
                     </span>
                   </div>
                   <p className="text-[10px] text-neutral-400 leading-relaxed">
@@ -534,7 +707,11 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                       <span className="text-xs font-bold text-white">Custom Emergency Rush</span>
                     </div>
                     <span className="text-xs font-bold text-red-400">
-                      {productType === "CARD" ? `${symbol}${PRICING_TIERS[region].rushCardPrice}` : `${symbol}${PRICING_TIERS[region].rushPrice}`}
+                      {isFounderFree
+                        ? "₹0 / Free"
+                        : productType === "CARD"
+                        ? `${symbol}${PRICING_TIERS[region].rushCardPrice}`
+                        : `${symbol}${PRICING_TIERS[region].rushPrice}`}
                     </span>
                   </div>
                   <p className="text-[10px] text-neutral-400 leading-relaxed">
@@ -567,27 +744,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 >
                   Interactive Page
                 </button>
-              </div>
-
-              {/* Multi-template bundle addon */}
-              <div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-950 p-3 pt-2">
-                <div className="flex items-center space-x-2">
-                  <Layers className="h-4 w-4 text-rose-400" />
-                  <div>
-                    <span className="text-xs font-semibold text-white block">
-                      Multi-Template Bundle Addon (+{symbol}{PRICING_TIERS[region].bundleAddonPrice})
-                    </span>
-                    <span className="text-[10px] text-neutral-400 block">
-                      Receive 2-3 style variations; pick your favorite with 1 revision included.
-                    </span>
-                  </div>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={isBundle}
-                  onChange={(e) => setIsBundle(e.target.checked)}
-                  className="h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-600 focus:ring-rose-500"
-                />
               </div>
 
               {/* Custom Notes input if Custom or Rush selected */}
@@ -683,6 +839,48 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   </select>
                 </div>
               </div>
+
+              {/* Proposal & Asking Out Question Customizer */}
+              {(isProposal ||
+                occasion === "proposal" ||
+                template.occasion === "proposal" ||
+                template.id.includes("proposal") ||
+                template.id.includes("girlfriend")) && (
+                <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-4 space-y-2 mt-3 animate-in fade-in">
+                  <div className="flex items-center space-x-2 text-rose-400">
+                    <Heart className="h-4 w-4 fill-rose-500" />
+                    <span className="text-xs font-bold uppercase tracking-wider">
+                      Proposal & Asking Out Question
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-neutral-300">
+                    Select your tailored question. The recipient will experience dodging &ldquo;No&rdquo; mechanics and a celebratory reveal!
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {Object.entries(PROPOSAL_QUESTIONS).map(([key, q]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        onClick={() => {
+                          setProposalQuestion(key as ProposalQuestionKey);
+                          setIsProposal(true);
+                        }}
+                        className={`rounded-xl border p-3 text-left transition ${
+                          proposalQuestion === key
+                            ? "border-rose-500 bg-rose-500/20 text-white shadow-sm"
+                            : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700 hover:text-white"
+                        }`}
+                      >
+                        <div className="text-xs font-bold text-white">{q.label}</div>
+                        <div className="text-[10px] text-rose-300/80 mt-0.5 font-serif italic">
+                          &ldquo;{q.question}&rdquo;
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Step 3: Heartfelt Message & Letter */}
@@ -796,6 +994,43 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                     Set a target date & time. The link will display an anticipatory ticking countdown until that exact moment, then automatically unveil!
                   </p>
 
+                  {/* 1-Click Quick Presets */}
+                  <div>
+                    <label className="block text-[11px] font-semibold text-neutral-400 mb-1.5">
+                      ⚡ Quick Reveal Presets (1-Click Set)
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {[
+                        { id: "tonight", label: "Tonight (11:59 PM)" },
+                        { id: "tomorrow_morning", label: "Tomorrow Morning (9 AM)" },
+                        { id: "tomorrow_evening", label: "Tomorrow Evening (8 PM)" },
+                        { id: "in_24h", label: "In 24 Hours" },
+                        { id: "weekend", label: "Weekend (Sat 8 PM)" },
+                      ].map((preset) => (
+                        <button
+                          key={preset.id}
+                          type="button"
+                          onClick={() => applyDatePreset(preset.id as any)}
+                          className="rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-neutral-300 hover:border-rose-500/60 hover:text-white transition"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                      {revealDateTime && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRevealDateTime("");
+                            setEnableRevealCountdown(false);
+                          }}
+                          className="rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-red-400 hover:border-red-500/60 transition"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
                   <div>
                     <label className="block text-xs font-semibold text-neutral-300 mb-1">
                       Reveal Unlock Date & Time
@@ -890,13 +1125,12 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 <label className="block text-xs font-semibold text-neutral-300 mb-2">
                   Photo Frame Shape
                 </label>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-4 gap-2">
                   {(
                     [
                       { id: "oval", label: "Oval" },
                       { id: "square", label: "Square" },
                       { id: "rounded", label: "Rounded" },
-                      { id: "heart", label: "Heart" },
                       { id: "circle", label: "Circle" },
                     ] as { id: PhotoShapeKey; label: string }[]
                   ).map((shape) => (
@@ -922,8 +1156,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <input
                     type="file"
                     accept="image/png, image/jpeg, image/webp, image/heic"
-                    multiple={productType === "PAGE"}
-                    onChange={(e) => handlePhotoUpload(e, productType === "CARD")}
+                    multiple={true}
+                    onChange={handlePhotoUpload}
                     className="hidden"
                   />
                   <div className="flex flex-col items-center text-center">
@@ -933,10 +1167,14 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                       <Upload className="h-6 w-6 text-neutral-400" />
                     )}
                     <span className="mt-2 text-xs font-medium text-neutral-300">
-                      {isUploadingPhoto ? "Uploading..." : "Click or drag photos to upload"}
+                      {isUploadingPhoto
+                        ? "Uploading..."
+                        : productType === "CARD"
+                        ? "Click or drag photos to upload (up to 3 for multi-card polaroid layout)"
+                        : "Click or drag photos to upload (up to 6 for interactive collage)"}
                     </span>
                     <span className="text-[10px] text-neutral-500">
-                      Strict 10MB limit enforced
+                      Strict 10MB limit per photo
                     </span>
                   </div>
                 </label>
@@ -1183,13 +1421,17 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                       {symbol}{displayPrice}
                     </span>
                   </div>
-                  {isDiscounted && (
+                  {isFounderFree ? (
+                    <span className="inline-block rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold text-amber-300 border border-amber-500/30 uppercase mt-0.5">
+                      Founder Pass (100% Free)
+                    </span>
+                  ) : isDiscounted ? (
                     <span className="inline-block rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300 border border-emerald-500/30 uppercase mt-0.5">
                       50% Off Regift
                     </span>
-                  )}
+                  ) : null}
                   <div className="text-[10px] text-neutral-400 uppercase">
-                    {currency} • {isBundle ? "Bundle Edition" : "Single Order"}
+                    {currency} • {isFounderFree ? "Founder Edition" : "Direct Order"}
                   </div>
                 </div>
               </div>
@@ -1202,42 +1444,92 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               )}
 
               {/* Coupon / Regift 50% discount box */}
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-3.5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-neutral-300 flex items-center space-x-1.5">
-                    <Tag className="h-3.5 w-3.5 text-rose-400" />
-                    <span>Have a coupon or regift code?</span>
-                  </span>
-                  {isRegiftDiscount && (
-                    <span className="text-[11px] text-emerald-400 font-semibold">
-                      50% OFF Active
+              {!isFounderFree && (
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-neutral-300 flex items-center space-x-1.5">
+                      <Tag className="h-3.5 w-3.5 text-rose-400" />
+                      <span>Have a reply or regift coupon?</span>
                     </span>
+                    {isRegiftDiscount && (
+                      <span className="text-[11px] text-emerald-400 font-semibold">
+                        50% OFF Active
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      placeholder="Enter REGIFT50"
+                      className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs font-mono uppercase text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApplyCoupon()}
+                      className="rounded-xl bg-neutral-800 hover:bg-neutral-700 px-4 py-2 text-xs font-semibold text-white transition shrink-0"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  {couponFeedback && (
+                    <p className={`text-[11px] font-medium ${isRegiftDiscount ? "text-emerald-400" : "text-amber-400"}`}>
+                      {couponFeedback}
+                    </p>
                   )}
                 </div>
+              )}
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={couponCode}
-                    onChange={(e) => setCouponCode(e.target.value)}
-                    placeholder="Enter REGIFT50"
-                    className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs font-mono uppercase text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleApplyCoupon()}
-                    className="rounded-xl bg-neutral-800 hover:bg-neutral-700 px-4 py-2 text-xs font-semibold text-white transition shrink-0"
-                  >
-                    Apply
-                  </button>
+              {/* Founder Master Key Unlock Prompt */}
+              {!isFounderFree && (
+                <div className="pt-1">
+                  {!showFounderInput ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowFounderInput(true)}
+                      className="text-[11px] text-neutral-500 hover:text-amber-400 flex items-center space-x-1 transition"
+                    >
+                      <Crown className="h-3 w-3" />
+                      <span>Have Founder Master Key? Unlock Free All-Access</span>
+                    </button>
+                  ) : (
+                    <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-3 space-y-2 animate-in fade-in">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-amber-300 flex items-center space-x-1.5">
+                          <Crown className="h-3.5 w-3.5" />
+                          <span>Enter Founder Master Key</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setShowFounderInput(false)}
+                          className="text-[10px] text-neutral-400 hover:text-white"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="password"
+                          value={founderKeyInput}
+                          onChange={(e) => setFounderKeyInput(e.target.value)}
+                          placeholder="Master key secret..."
+                          className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-500 focus:border-amber-500 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleApplyFounderKey}
+                          className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-neutral-950 transition shrink-0"
+                        >
+                          Unlock Free
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-
-                {couponFeedback && (
-                  <p className={`text-[11px] font-medium ${isRegiftDiscount ? "text-emerald-400" : "text-amber-400"}`}>
-                    {couponFeedback}
-                  </p>
-                )}
-              </div>
+              )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -1260,7 +1552,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   </label>
                   <input
                     type="email"
-                    required
+                    required={!isFounderFree}
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
                     placeholder="aarav@example.com"
@@ -1272,17 +1564,30 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="group relative flex w-full items-center justify-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-4 text-sm font-bold text-white shadow-xl shadow-rose-500/25 transition-all hover:scale-[1.01] hover:shadow-rose-500/40 active:scale-[0.99] disabled:opacity-50"
+                className={`group relative flex w-full items-center justify-center rounded-2xl ${
+                  isFounderFree
+                    ? "bg-gradient-to-r from-amber-500 to-rose-500 shadow-amber-500/25"
+                    : "bg-gradient-to-r from-rose-500 to-pink-500 shadow-rose-500/25"
+                } px-6 py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Processing Order...</span>
+                    <span>Publishing Memoir...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <CreditCard className="h-4 w-4" />
-                    <span>Proceed to Checkout ({symbol}{displayPrice})</span>
+                    {isFounderFree ? (
+                      <>
+                        <Crown className="h-4 w-4" />
+                        <span>Instant Publish (Founder Pass • ₹0 Free)</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4" />
+                        <span>Proceed to Checkout ({symbol}{displayPrice})</span>
+                      </>
+                    )}
                   </div>
                 )}
               </button>
@@ -1315,6 +1620,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 occasion={occasion}
                 message={message}
                 photoUrl={cardPhoto}
+                photoUrls={pagePhotos}
                 photoShape={photoShape}
                 colorTheme={selectedTheme}
                 location={location}
@@ -1333,6 +1639,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 colorTheme={selectedTheme}
                 collageLayout={collageLayout}
                 isProposal={isProposal}
+                proposalQuestion={proposalQuestion}
                 venueName={venueName}
                 venueAddress={venueAddress}
                 venueMapUrl={venueMapUrl}

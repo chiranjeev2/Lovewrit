@@ -187,21 +187,36 @@ export default function CardSharePage({ params }: CardSharePageProps) {
 
       {/* Digital Card Centerpiece */}
       <main className="my-auto py-6 w-full flex flex-col items-center">
-        <CardPreview
-          cardRef={cardRef}
-          senderName={cardData.senderName}
-          recipientName={cardData.recipientName}
-          occasion={cardData.occasion}
-          message={cardData.message}
-          photoUrl={cardData.photoUrl}
-          photoShape={cardData.photoShape as PhotoShapeKey}
-          colorTheme={cardData.colorTheme as ColorThemeKey}
-          location={cardData.location}
-          venueName={cardData.venueName}
-          venueAddress={cardData.venueAddress}
-          venueMapUrl={cardData.venueMapUrl}
-          voiceMessageUrl={cardData.voiceMessageUrl}
-        />
+        {(() => {
+          let parsedCardPhotos: string[] = [];
+          try {
+            if (cardData.photoUrl?.startsWith("[")) {
+              parsedCardPhotos = JSON.parse(cardData.photoUrl);
+            } else if (cardData.photoUrl) {
+              parsedCardPhotos = [cardData.photoUrl];
+            }
+          } catch {
+            parsedCardPhotos = cardData.photoUrl ? [cardData.photoUrl] : [];
+          }
+          return (
+            <CardPreview
+              cardRef={cardRef}
+              senderName={cardData.senderName}
+              recipientName={cardData.recipientName}
+              occasion={cardData.occasion}
+              message={cardData.message}
+              photoUrl={cardData.photoUrl}
+              photoUrls={parsedCardPhotos}
+              photoShape={cardData.photoShape as PhotoShapeKey}
+              colorTheme={cardData.colorTheme as ColorThemeKey}
+              location={cardData.location}
+              venueName={cardData.venueName}
+              venueAddress={cardData.venueAddress}
+              venueMapUrl={cardData.venueMapUrl}
+              voiceMessageUrl={cardData.voiceMessageUrl}
+            />
+          );
+        })()}
 
         {/* Action Controls */}
         <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
@@ -225,6 +240,29 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           >
             <span>Download JPG</span>
           </button>
+        </div>
+
+        {/* 50% OFF Reply / Regift Call To Action */}
+        <div className="mt-10 w-full max-w-lg rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 mb-3">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <span className="inline-block rounded-full bg-rose-500/20 px-3 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rose-300 border border-rose-500/30 mb-2">
+            Emotional Reply Perk
+          </span>
+          <h3 className="font-serif text-lg sm:text-xl font-bold text-white mb-1.5">
+            Send love back to {cardData.senderName || "them"}
+          </h3>
+          <p className="text-xs text-neutral-300 max-w-sm mx-auto mb-5 leading-relaxed">
+            Touched by this gesture? Reply back to {cardData.senderName || "them"} with your own custom digital card or interactive page and claim <span className="text-amber-400 font-bold">50% OFF</span>!
+          </p>
+          <Link
+            href={`/create/be-my-girlfriend?to=${encodeURIComponent(cardData.senderName || "")}&replyTo=${slug}&discount=REGIFT50`}
+            className="inline-flex items-center justify-center space-x-2 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
+          >
+            <Heart className="h-4 w-4 fill-white" />
+            <span>Reply to {cardData.senderName || "Them"} (50% OFF)</span>
+          </Link>
         </div>
       </main>
 

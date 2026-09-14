@@ -11,6 +11,7 @@ interface CardPreviewProps {
   occasion: string;
   message: string;
   photoUrl: string;
+  photoUrls?: string[];
   photoShape: PhotoShapeKey;
   colorTheme: ColorThemeKey;
   location?: string;
@@ -27,6 +28,7 @@ export default function CardPreview({
   occasion,
   message,
   photoUrl,
+  photoUrls = [],
   photoShape,
   colorTheme,
   location,
@@ -37,6 +39,10 @@ export default function CardPreview({
   cardRef,
 }: CardPreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
+
+  // Active photos list (fall back to photoUrl if photoUrls is empty)
+  const activePhotos =
+    photoUrls.length > 0 ? photoUrls.slice(0, 3) : photoUrl ? [photoUrl] : [];
 
   // Compute CSS shape class
   const getShapeClass = (shape: PhotoShapeKey) => {
@@ -49,8 +55,6 @@ export default function CardPreview({
         return "rounded-3xl";
       case "circle":
         return "rounded-full";
-      case "heart":
-        return "rounded-[40px] rotate-0 shadow-rose-500/20";
       default:
         return "rounded-3xl";
     }
@@ -88,26 +92,91 @@ export default function CardPreview({
           )}
         </div>
 
-        {/* Central Photo Area */}
+        {/* Central Photo Area (Supports single or multi-photo collage) */}
         <div className="relative z-10 my-auto flex flex-col items-center justify-center py-2">
-          <div
-            className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
-              photoShape
-            )} ${theme.borderStyle}`}
-          >
-            {photoUrl ? (
+          {activePhotos.length === 0 ? (
+            <div
+              className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
+                photoShape
+              )} ${theme.borderStyle} bg-neutral-800/80 flex flex-col items-center justify-center text-neutral-400 p-4 text-center`}
+            >
+              <Heart className="h-8 w-8 mb-2 opacity-50 text-rose-400 animate-pulse" />
+              <span className="text-xs">Photo will appear here</span>
+            </div>
+          ) : activePhotos.length === 1 ? (
+            <div
+              className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
+                photoShape
+              )} ${theme.borderStyle}`}
+            >
               <img
-                src={photoUrl}
+                src={activePhotos[0]}
                 alt="Moment photo"
                 className="w-full h-full object-cover"
               />
-            ) : (
-              <div className="w-full h-full bg-neutral-800/80 flex flex-col items-center justify-center text-neutral-400 p-4 text-center">
-                <Heart className="h-8 w-8 mb-2 opacity-50 text-rose-400 animate-pulse" />
-                <span className="text-xs">Photo will appear here</span>
+            </div>
+          ) : activePhotos.length === 2 ? (
+            <div className="flex items-center justify-center -space-x-6 py-2">
+              <div
+                className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                  photoShape
+                )} ${theme.borderStyle}`}
+              >
+                <img
+                  src={activePhotos[0]}
+                  alt="Moment 1"
+                  className="w-full h-full object-cover"
+                />
               </div>
-            )}
-          </div>
+              <div
+                className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 ${getShapeClass(
+                  photoShape
+                )} ${theme.borderStyle}`}
+              >
+                <img
+                  src={activePhotos[1]}
+                  alt="Moment 2"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center -space-x-5 py-2">
+              <div
+                className={`relative w-28 h-28 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                  photoShape
+                )} ${theme.borderStyle}`}
+              >
+                <img
+                  src={activePhotos[0]}
+                  alt="Moment 1"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div
+                className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 ${getShapeClass(
+                  photoShape
+                )} ${theme.borderStyle}`}
+              >
+                <img
+                  src={activePhotos[1]}
+                  alt="Moment 2"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div
+                className={`relative w-28 h-28 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                  photoShape
+                )} ${theme.borderStyle}`}
+              >
+                <img
+                  src={activePhotos[2]}
+                  alt="Moment 3"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Recipient & Sender Names */}
           <div className="mt-4 text-center">
