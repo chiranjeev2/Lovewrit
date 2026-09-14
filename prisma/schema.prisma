@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id              String    @id @default(cuid())
+  slug            String    @unique
+  customerEmail   String
+  customerName    String
+  productType     String    // "CARD" | "PAGE"
+  templateId      String
+  status          String    @default("PENDING") // "PENDING" | "PAID" | "FAILED"
+  currency        String    // "INR" | "USD" | "EUR" | "GBP"
+  amountTotal     Int       // in cents / paise / pence
+  region          String    // "asia_africa" | "americas" | "europe" | "uk"
+  stripeSessionId String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  cardData        CardData?
+  pageData        PageData?
+}
+
+model CardData {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName    String
+  recipientName String
+  occasion      String   // "proposal" | "anniversary" | "sorry" | "reminiscing"
+  message       String
+  photoUrl      String
+  photoShape    String   @default("oval") // "oval" | "square" | "rounded" | "heart" | "circle"
+  colorTheme    String   @default("rose")
+  location      String?
+  language      String   @default("en") // "en" | "pa" | "hi"
+  createdAt     DateTime @default(now())
+}
+
+model PageData {
+  id            String   @id @default(cuid())
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName    String
+  recipientName String
+  occasion      String   // "proposal" | "anniversary" | "sorry" | "reminiscing"
+  letter        String
+  photoUrls     String   // JSON stringified array of URLs
+  musicTrack    String?  // Built-in track ID or custom uploaded audio URL
+  musicType     String?  @default("builtin") // "builtin" | "custom"
+  isProposal    Boolean  @default(false)
+  colorTheme    String   @default("rose")
+  language      String   @default("en") // "en" | "pa" | "hi"
+  createdAt     DateTime @default(now())
+}
+
