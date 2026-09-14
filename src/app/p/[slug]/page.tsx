@@ -208,6 +208,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           letter={pageData.letter}
           photoUrls={parsedPhotos}
           colorTheme={pageData.colorTheme as ColorThemeKey}
+          collageLayout={(pageData.collageLayout as any) || "masonry"}
           isProposal={pageData.isProposal}
           venueName={pageData.venueName}
           venueAddress={pageData.venueAddress}

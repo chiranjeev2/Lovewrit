@@ -6,6 +6,7 @@ import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import confetti from "canvas-confetti";
+import QRCode from "qrcode";
 import {
   Heart,
   CheckCircle,
@@ -16,6 +17,8 @@ import {
   Sparkles,
   Loader2,
   Share2,
+  QrCode,
+  Gift,
 } from "lucide-react";
 
 function SuccessContent() {
@@ -27,6 +30,8 @@ function SuccessContent() {
   const [order, setOrder] = useState<any>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [copiedCoupon, setCopiedCoupon] = useState(false);
 
   useEffect(() => {
     async function verify() {
@@ -62,6 +67,38 @@ function SuccessContent() {
   const targetSlug = order?.slug || slug;
   const isCard = order?.productType === "CARD";
   const shareUrl = `${origin}/${isCard ? "c" : "p"}/${targetSlug}`;
+
+  // Generate QR code when shareUrl is ready
+  useEffect(() => {
+    if (shareUrl && targetSlug) {
+      QRCode.toDataURL(shareUrl, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: "#0a0a0a",
+          light: "#ffffff",
+        },
+      })
+        .then((url) => setQrDataUrl(url))
+        .catch((err) => console.error("QR generation error:", err));
+    }
+  }, [shareUrl, targetSlug]);
+
+  const downloadQRCode = () => {
+    if (!qrDataUrl) return;
+    const a = document.createElement("a");
+    a.download = `memoir-${targetSlug}-qr.png`;
+    a.href = qrDataUrl;
+    a.click();
+  };
+
+  const copyCouponCode = () => {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText("REGIFT50");
+      setCopiedCoupon(true);
+      setTimeout(() => setCopiedCoupon(false), 2000);
+    }
+  };
 
   const copyToClipboard = () => {
     if (navigator.clipboard) {
@@ -151,15 +188,101 @@ function SuccessContent() {
           </div>
         </div>
 
+        {/* QR Code Presentation Box (Image 1 feedback) */}
+        <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-950/80 p-6 text-center">
+          <div className="flex items-center justify-center space-x-2 text-rose-400 mb-2">
+            <QrCode className="h-5 w-5" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Printable & Scannable QR Code
+            </span>
+          </div>
+          <p className="text-xs text-neutral-400 max-w-sm mx-auto mb-4">
+            Scan with any smartphone camera to open immediately, or print and insert into greeting cards, flower bouquets, or gift boxes!
+          </p>
+
+          {qrDataUrl ? (
+            <div className="flex flex-col items-center space-y-4">
+              <div className="rounded-2xl bg-white p-3 shadow-2xl border-4 border-rose-500/20">
+                <img
+                  src={qrDataUrl}
+                  alt="Memoir QR Code"
+                  className="h-44 w-44 object-contain rounded-lg"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={downloadQRCode}
+                className="inline-flex items-center space-x-2 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-semibold text-neutral-200 hover:text-white hover:border-rose-500/50 hover:bg-neutral-800 transition shadow-sm"
+              >
+                <Download className="h-3.5 w-3.5 text-rose-400" />
+                <span>Download QR Code (PNG)</span>
+              </button>
+            </div>
+          ) : (
+            <div className="py-8 flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-rose-500" />
+            </div>
+          )}
+        </div>
+
         {/* Actions */}
         <div className="mt-6 flex flex-col sm:flex-row gap-3">
           <Link
             href={`/${isCard ? "c" : "p"}/${targetSlug}`}
             className="flex flex-1 items-center justify-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition"
           >
-            <span>Open Experience</span>
+            <span>Open Experience Now</span>
             <ExternalLink className="h-4 w-4" />
           </Link>
+        </div>
+
+        {/* 50% OFF Regift Promotion Banner */}
+        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-gradient-to-br from-amber-950/25 via-neutral-900 to-rose-950/20 p-5 sm:p-6 text-left relative overflow-hidden">
+          <div className="flex items-start space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400 shrink-0">
+              <Gift className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="inline-block rounded-full bg-amber-500/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 border border-amber-500/30">
+                  Regift Loyalty Perk
+                </span>
+                <span className="text-xs font-extrabold text-amber-400">
+                  50% OFF Next Order
+                </span>
+              </div>
+              <h4 className="font-serif text-sm font-bold text-white mt-1.5">
+                Surprise Another Loved One
+              </h4>
+              <p className="text-xs text-neutral-300 mt-1 leading-relaxed">
+                Loved creating this? Send another personalized card or interactive page to a friend or partner and get 50% off automatically!
+              </p>
+
+              <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={copyCouponCode}
+                  className="flex items-center justify-between sm:justify-start space-x-2 rounded-xl border border-amber-500/30 bg-neutral-950 px-3 py-2 text-xs font-mono font-bold text-amber-300 hover:bg-neutral-900 transition"
+                >
+                  <span>Coupon: REGIFT50</span>
+                  {copiedCoupon ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 text-neutral-400" />
+                  )}
+                </button>
+
+                <Link
+                  href={`/create/${order?.templateId || "forever-proposal"}?discount=REGIFT50`}
+                  className="inline-flex items-center justify-center space-x-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98] transition"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Create Another with 50% OFF</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Order Details receipt summary */}

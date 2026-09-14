@@ -36,6 +36,13 @@ export default function OpeningMoment({
         origin: { y: 0.5 },
         colors: ["#ec4899", "#a855f7", "#3b82f6", "#10b981", "#f59e0b"],
       });
+    } else if (revealType === "cupid_arrow") {
+      confetti({
+        particleCount: 100,
+        spread: 90,
+        origin: { y: 0.5 },
+        colors: ["#f43f5e", "#fb7185", "#ffd700", "#ffffff"],
+      });
     } else if (revealType === "champagne_seal" || revealType === "golden_invite") {
       confetti({
         particleCount: 80,
@@ -90,6 +97,16 @@ export default function OpeningMoment({
           className="relative max-w-md w-full rounded-3xl border border-rose-500/20 bg-gradient-to-b from-neutral-900/90 to-neutral-950/90 p-8 text-center shadow-2xl backdrop-blur-2xl"
         >
           {/* Visual emblem based on occasion reveal type */}
+          {revealType === "cupid_arrow" && (
+            <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-tr from-rose-600 via-pink-500 to-rose-700 shadow-xl shadow-rose-600/40 ring-4 ring-rose-400/30">
+              <Heart className="h-12 w-12 fill-white text-white animate-pulse" />
+              {/* Cupid's Arrow overlay */}
+              <div className="absolute inset-0 flex items-center justify-center transform -rotate-45 pointer-events-none">
+                <span className="text-2xl drop-shadow">💘</span>
+              </div>
+            </div>
+          )}
+
           {revealType === "velvet_box" && (
             <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-tr from-rose-600 to-pink-500 shadow-xl shadow-rose-600/30 ring-4 ring-rose-400/20 animate-bounce">
               <Gift className="h-12 w-12 text-white" />
@@ -141,7 +158,9 @@ export default function OpeningMoment({
           {/* Heading and recipient note */}
           <div className="space-y-2">
             <span className="inline-block rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-semibold tracking-wider text-rose-300 uppercase border border-rose-500/20">
-              {revealType === "velvet_box"
+              {revealType === "cupid_arrow"
+                ? "Cupid's Love Arrow"
+                : revealType === "velvet_box"
                 ? "A Romantic Proposal"
                 : revealType === "champagne_seal"
                 ? "Anniversary Celebration"
@@ -177,7 +196,9 @@ export default function OpeningMoment({
             >
               <Heart className="mr-2 h-5 w-5 fill-white transition group-hover:scale-125" />
               <span>
-                {revealType === "memorial_candle"
+                {revealType === "cupid_arrow"
+                  ? "Tap to Strike Cupid's Arrow & Open 🏹"
+                  : revealType === "memorial_candle"
                   ? "Light Candle & Pay Tribute"
                   : revealType === "balloon_pop"
                   ? "Pop Balloons to Celebrate! 🎈"

@@ -227,6 +227,28 @@ export default function AdminPage() {
             </button>
           </form>
 
+          {/* Quick-Access Key Helper (Addressing User Feedback) */}
+          <div className="mt-5 rounded-2xl border border-rose-500/20 bg-neutral-950/90 p-3.5 text-left">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-neutral-300">
+                Default Founder Secret Key:
+              </span>
+              <button
+                type="button"
+                onClick={() => setMasterKey("memoir_master_founder_secret_2026")}
+                className="rounded-md bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-300 hover:bg-rose-500/30 transition"
+              >
+                Auto-Fill Key
+              </button>
+            </div>
+            <code className="mt-1.5 block rounded-lg bg-neutral-900 px-2.5 py-1 text-[11px] font-mono text-rose-300 select-all border border-neutral-800">
+              memoir_master_founder_secret_2026
+            </code>
+            <p className="mt-1.5 text-[10px] text-neutral-500">
+              Configured in your local <code className="text-neutral-400">.env</code> file under <code className="text-neutral-400">ADMIN_MASTER_KEY</code>.
+            </p>
+          </div>
+
           <div className="mt-6 text-center">
             <Link href="/" className="text-xs text-neutral-500 hover:text-neutral-300 transition">
               ← Return to public site

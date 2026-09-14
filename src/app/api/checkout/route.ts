@@ -23,6 +23,8 @@ export async function POST(req: NextRequest) {
       currency: requestedCurrency,
       tier: requestedTier = "SELF_SERVICE",
       isBundle = false,
+      isRegiftDiscount = false,
+      couponCode,
       customNotes,
       cardData,
       pageData,
@@ -52,11 +54,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const hasDiscount = Boolean(
+      isRegiftDiscount || (couponCode && couponCode.trim().toUpperCase() === "REGIFT50")
+    );
+
     const { totalUnit, displayPrice, symbol } = calculateOrderTotal(
       region,
       productType,
       tier,
-      isBundle
+      isBundle,
+      hasDiscount
     );
 
     // Generate unique short slug & secret buyer admin token for moderation
@@ -118,6 +125,7 @@ export async function POST(req: NextRequest) {
                   occasion: pageData.occasion || "proposal",
                   letter: pageData.letter || "",
                   photoUrls: JSON.stringify(pageData.photoUrls || []),
+                  collageLayout: pageData.collageLayout || "masonry",
                   musicTrack: pageData.musicTrack || null,
                   musicType: pageData.musicType || "builtin",
                   isProposal: Boolean(pageData.isProposal),

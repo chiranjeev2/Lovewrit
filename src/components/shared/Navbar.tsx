@@ -4,13 +4,11 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useApp } from "@/context/AppContext";
 import { CurrencyCode, PRICING_TIERS } from "@/lib/currency";
-import { LANGUAGES, LanguageCode } from "@/lib/i18n";
-import { Heart, Globe, Sparkles, Shield, ChevronDown } from "lucide-react";
+import { Heart, Sparkles, Shield, ChevronDown } from "lucide-react";
 
 export default function Navbar() {
-  const { currency, setCurrency, region, language, setLanguage, t } = useApp();
+  const { currency, setCurrency, region, t } = useApp();
   const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
-  const [showLangDropdown, setShowLangDropdown] = useState(false);
 
   const tier = PRICING_TIERS[region];
 
@@ -27,26 +25,33 @@ export default function Navbar() {
               Memoir
             </span>
             <span className="text-[10px] tracking-wider uppercase text-rose-300/80 font-medium">
-              Couples Editions
+              Occasions & Memories
             </span>
           </div>
         </Link>
 
-        {/* Navigation Links & Selectors */}
+        {/* Navigation Links & Currency Selector */}
         <div className="flex items-center space-x-2 sm:space-x-4">
           <Link
             href="/#templates"
             className="hidden sm:inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
           >
             <Sparkles className="mr-1.5 h-3.5 w-3.5 text-rose-400" />
-            {t.exploreTemplates}
+            <span>Templates</span>
+          </Link>
+
+          <Link
+            href="/#pricing"
+            className="hidden sm:inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
+          >
+            <span>Pricing</span>
           </Link>
 
           {/* Currency Selector */}
           <div className="relative">
             <button
               onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
-              className="flex items-center space-x-1 rounded-full border border-neutral-800 bg-neutral-900/90 px-3 py-1 text-xs font-semibold text-neutral-200 hover:border-neutral-700 hover:text-white transition"
+              className="flex items-center space-x-1 rounded-full border border-neutral-800 bg-neutral-900/90 px-3 py-1.5 text-xs font-semibold text-neutral-200 hover:border-neutral-700 hover:text-white transition"
               title="Change Currency & Region"
             >
               <span className="text-rose-400">{tier.symbol}</span>
@@ -56,11 +61,11 @@ export default function Navbar() {
 
             {showCurrencyDropdown && (
               <div
-                className="absolute right-0 mt-2 w-48 rounded-xl border border-neutral-800 bg-neutral-900 p-1.5 shadow-2xl z-50"
+                className="absolute right-0 mt-2 w-52 rounded-xl border border-neutral-800 bg-neutral-900 p-1.5 shadow-2xl z-50"
                 onMouseLeave={() => setShowCurrencyDropdown(false)}
               >
                 <div className="px-2 py-1 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
-                  Select Currency
+                  Select Currency & Region
                 </div>
                 {(["INR", "USD", "EUR", "GBP"] as CurrencyCode[]).map((code) => {
                   const targetRegion =
@@ -99,48 +104,6 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Language Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowLangDropdown(!showLangDropdown)}
-              className="flex items-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900/90 px-3 py-1 text-xs font-medium text-neutral-200 hover:border-neutral-700 hover:text-white transition"
-              title="Change Language"
-            >
-              <Globe className="h-3.5 w-3.5 text-neutral-400" />
-              <span>
-                {LANGUAGES.find((l) => l.code === language)?.nativeName || "English"}
-              </span>
-              <ChevronDown className="h-3 w-3 text-neutral-400" />
-            </button>
-
-            {showLangDropdown && (
-              <div
-                className="absolute right-0 mt-2 w-36 rounded-xl border border-neutral-800 bg-neutral-900 p-1.5 shadow-2xl z-50"
-                onMouseLeave={() => setShowLangDropdown(false)}
-              >
-                {LANGUAGES.map((l) => (
-                  <button
-                    key={l.code}
-                    onClick={() => {
-                      setLanguage(l.code as LanguageCode);
-                      setShowLangDropdown(false);
-                    }}
-                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition ${
-                      language === l.code
-                        ? "bg-rose-500/20 text-rose-300 font-medium"
-                        : "text-neutral-300 hover:bg-neutral-800"
-                    }`}
-                  >
-                    <span>{l.nativeName}</span>
-                    <span className="text-[10px] text-neutral-500 uppercase">
-                      {l.code}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Founder Admin Access link */}
           <Link
             href="/admin"
@@ -154,4 +117,3 @@ export default function Navbar() {
     </header>
   );
 }
-

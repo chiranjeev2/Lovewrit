@@ -62,6 +62,7 @@ model PageData {
   occasion                 String
   letter                   String
   photoUrls                String           // JSON stringified array of URLs
+  collageLayout            String?          @default("masonry") // "masonry" | "timeline" | "filmstrip"
   musicTrack               String?          // Built-in track ID or custom uploaded audio URL
   musicType                String?          @default("builtin") // "builtin" | "custom"
   isProposal               Boolean          @default(false)

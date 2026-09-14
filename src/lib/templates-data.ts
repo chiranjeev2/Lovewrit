@@ -19,7 +19,8 @@ export type RevealType =
   | "balloon_pop"
   | "memorial_candle"
   | "golden_invite"
-  | "diya_aarti";
+  | "diya_aarti"
+  | "cupid_arrow";
 
 export interface ColorTheme {
   id: ColorThemeKey;

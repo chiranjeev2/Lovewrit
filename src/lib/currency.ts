@@ -8,15 +8,26 @@ export interface PricingTier {
   regionLabel: string;
   currency: CurrencyCode;
   symbol: string;
-  cardPrice: number;         // ₹49 / $2 / €2 / £2
-  pagePrice: number;         // ₹200 / $10 / €10 / £10
-  customPrice: number;       // ₹1000 / $50 / €50 / £50
-  rushPrice: number;         // ₹2000 / $100 / €100 / £100
-  bundleAddonPrice: number;  // ₹99 / $5 / €5 / £5
-  cardPriceUnit: number;     // In smallest currency units (paise / cents / pence)
+  // Self-Service
+  cardPrice: number;             // ₹49 / $2 / €2 / £2
+  pagePrice: number;             // ₹200 / $10 / €10 / £10
+  // Custom Handcrafted (Split properly between Card & Page!)
+  customPrice: number;           // ₹1000 / $50 / €50 / £50 (Page default)
+  customCardPrice: number;       // ₹299 / $15 / €15 / £15
+  customPagePrice: number;       // ₹1000 / $50 / €50 / £50
+  // Custom Emergency Rush (Split properly between Card & Page!)
+  rushPrice: number;             // ₹2000 / $100 / €100 / £100 (Page default)
+  rushCardPrice: number;         // ₹599 / $30 / €30 / £30
+  rushPagePrice: number;         // ₹2000 / $100 / €100 / £100
+  // Bundle addon
+  bundleAddonPrice: number;      // ₹99 / $5 / €5 / £5
+
+  cardPriceUnit: number;
   pagePriceUnit: number;
-  customPriceUnit: number;
-  rushPriceUnit: number;
+  customCardPriceUnit: number;
+  customPagePriceUnit: number;
+  rushCardPriceUnit: number;
+  rushPagePriceUnit: number;
   bundleAddonUnit: number;
 }
 
@@ -29,12 +40,19 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     cardPrice: 49,
     pagePrice: 200,
     customPrice: 1000,
+    customCardPrice: 299,
+    customPagePrice: 1000,
     rushPrice: 2000,
+    rushCardPrice: 599,
+    rushPagePrice: 2000,
     bundleAddonPrice: 99,
+
     cardPriceUnit: 4900,
     pagePriceUnit: 20000,
-    customPriceUnit: 100000,
-    rushPriceUnit: 200000,
+    customCardPriceUnit: 29900,
+    customPagePriceUnit: 100000,
+    rushCardPriceUnit: 59900,
+    rushPagePriceUnit: 200000,
     bundleAddonUnit: 9900,
   },
   americas: {
@@ -45,12 +63,19 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     cardPrice: 2,
     pagePrice: 10,
     customPrice: 50,
+    customCardPrice: 15,
+    customPagePrice: 50,
     rushPrice: 100,
+    rushCardPrice: 30,
+    rushPagePrice: 100,
     bundleAddonPrice: 5,
+
     cardPriceUnit: 200,
     pagePriceUnit: 1000,
-    customPriceUnit: 5000,
-    rushPriceUnit: 10000,
+    customCardPriceUnit: 1500,
+    customPagePriceUnit: 5000,
+    rushCardPriceUnit: 3000,
+    rushPagePriceUnit: 10000,
     bundleAddonUnit: 500,
   },
   europe: {
@@ -61,12 +86,19 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     cardPrice: 2,
     pagePrice: 10,
     customPrice: 50,
+    customCardPrice: 15,
+    customPagePrice: 50,
     rushPrice: 100,
+    rushCardPrice: 30,
+    rushPagePrice: 100,
     bundleAddonPrice: 5,
+
     cardPriceUnit: 200,
     pagePriceUnit: 1000,
-    customPriceUnit: 5000,
-    rushPriceUnit: 10000,
+    customCardPriceUnit: 1500,
+    customPagePriceUnit: 5000,
+    rushCardPriceUnit: 3000,
+    rushPagePriceUnit: 10000,
     bundleAddonUnit: 500,
   },
   uk: {
@@ -77,12 +109,19 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     cardPrice: 2,
     pagePrice: 10,
     customPrice: 50,
+    customCardPrice: 15,
+    customPagePrice: 50,
     rushPrice: 100,
+    rushCardPrice: 30,
+    rushPagePrice: 100,
     bundleAddonPrice: 5,
+
     cardPriceUnit: 200,
     pagePriceUnit: 1000,
-    customPriceUnit: 5000,
-    rushPriceUnit: 10000,
+    customCardPriceUnit: 1500,
+    customPagePriceUnit: 5000,
+    rushCardPriceUnit: 3000,
+    rushPagePriceUnit: 10000,
     bundleAddonUnit: 500,
   },
 };
@@ -94,9 +133,6 @@ export const CURRENCY_TO_REGION: Record<CurrencyCode, RegionKey> = {
   GBP: "uk",
 };
 
-/**
- * Detect region from timezone or country code
- */
 export function detectRegion(countryCode?: string | null, timezone?: string | null): RegionKey {
   if (countryCode) {
     const code = countryCode.toUpperCase();
@@ -135,18 +171,36 @@ export function calculateOrderTotal(
   region: RegionKey,
   productType: ProductType,
   tier: TierType = "SELF_SERVICE",
-  isBundle = false
-): { totalUnit: number; displayPrice: number; currency: CurrencyCode; symbol: string } {
+  isBundle = false,
+  isRegiftDiscount = false
+): {
+  totalUnit: number;
+  displayPrice: number;
+  currency: CurrencyCode;
+  symbol: string;
+  isDiscounted: boolean;
+  originalDisplayPrice?: number;
+} {
   const p = PRICING_TIERS[region];
   let unit = 0;
   let display = 0;
 
   if (tier === "RUSH") {
-    unit = p.rushPriceUnit;
-    display = p.rushPrice;
+    if (productType === "CARD") {
+      unit = p.rushCardPriceUnit;
+      display = p.rushCardPrice;
+    } else {
+      unit = p.rushPagePriceUnit;
+      display = p.rushPagePrice;
+    }
   } else if (tier === "CUSTOM") {
-    unit = p.customPriceUnit;
-    display = p.customPrice;
+    if (productType === "CARD") {
+      unit = p.customCardPriceUnit;
+      display = p.customCardPrice;
+    } else {
+      unit = p.customPagePriceUnit;
+      display = p.customPagePrice;
+    }
   } else {
     // SELF_SERVICE
     if (productType === "CARD") {
@@ -163,10 +217,23 @@ export function calculateOrderTotal(
     display += p.bundleAddonPrice;
   }
 
+  let isDiscounted = false;
+  let originalDisplayPrice: number | undefined;
+
+  // 50% OFF Regift Discount
+  if (isRegiftDiscount) {
+    originalDisplayPrice = display;
+    unit = Math.round(unit * 0.5);
+    display = Math.round(display * 0.5);
+    isDiscounted = true;
+  }
+
   return {
     totalUnit: unit,
     displayPrice: display,
     currency: p.currency,
     symbol: p.symbol,
+    isDiscounted,
+    originalDisplayPrice,
   };
 }

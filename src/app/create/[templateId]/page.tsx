@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, use } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useRef, useEffect, use } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import CardPreview from "@/components/editor/CardPreview";
-import PagePreview from "@/components/editor/PagePreview";
+import PagePreview, { CollageLayoutStyle } from "@/components/editor/PagePreview";
+import VoiceRecorder from "@/components/interactive/VoiceRecorder";
+import HindiPunjabiKeyboard from "@/components/editor/HindiPunjabiKeyboard";
 import { useApp } from "@/context/AppContext";
 import {
   TEMPLATES,
@@ -42,6 +44,13 @@ import {
   AlertCircle,
   Eye,
   Sliders,
+  Play,
+  Pause,
+  Volume2,
+  Gift,
+  Tag,
+  Film,
+  Camera,
 } from "lucide-react";
 
 interface CreatePageProps {
@@ -100,6 +109,65 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   // Phase 2: Timed reveal
   const [enableRevealCountdown, setEnableRevealCountdown] = useState<boolean>(false);
   const [revealDateTime, setRevealDateTime] = useState<string>("");
+
+  // Photo collage layout style
+  const [collageLayout, setCollageLayout] = useState<CollageLayoutStyle>("masonry");
+
+  // Track Audio Preview
+  const [playingPreviewTrackId, setPlayingPreviewTrackId] = useState<string | null>(null);
+  const audioPreviewRef = useRef<HTMLAudioElement | null>(null);
+
+  // Regift 50% discount coupon
+  const [couponCode, setCouponCode] = useState<string>("");
+  const [isRegiftDiscount, setIsRegiftDiscount] = useState<boolean>(false);
+  const [couponFeedback, setCouponFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const discountParam = urlParams.get("discount");
+      if (discountParam && discountParam.toUpperCase() === "REGIFT50") {
+        setIsRegiftDiscount(true);
+        setCouponCode("REGIFT50");
+        setCouponFeedback("50% Regift Discount Applied!");
+      }
+    }
+    return () => {
+      if (audioPreviewRef.current) {
+        audioPreviewRef.current.pause();
+      }
+    };
+  }, []);
+
+  const handleApplyCoupon = (codeToApply?: string) => {
+    const code = (codeToApply || couponCode).trim().toUpperCase();
+    if (code === "REGIFT50") {
+      setIsRegiftDiscount(true);
+      setCouponFeedback("Success! 50% OFF Regift discount applied.");
+    } else if (!code) {
+      setIsRegiftDiscount(false);
+      setCouponFeedback(null);
+    } else {
+      setCouponFeedback("Invalid coupon code.");
+    }
+  };
+
+  const toggleAudioPreview = (track: typeof BUILTIN_AUDIO_TRACKS[0], e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (playingPreviewTrackId === track.id) {
+      audioPreviewRef.current?.pause();
+      setPlayingPreviewTrackId(null);
+    } else {
+      if (audioPreviewRef.current) {
+        audioPreviewRef.current.pause();
+      }
+      const audio = new Audio(track.url);
+      audioPreviewRef.current = audio;
+      setPlayingPreviewTrackId(track.id);
+      audio.play().catch((err) => console.log("Audio preview playback notice:", err));
+      audio.onended = () => setPlayingPreviewTrackId(null);
+    }
+  };
 
   // Proposal toggle
   const [isProposal, setIsProposal] = useState<boolean>(
@@ -227,11 +295,12 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   };
 
   // Pricing calculation
-  const { displayPrice, symbol } = calculateOrderTotal(
+  const { displayPrice, symbol, isDiscounted, originalDisplayPrice } = calculateOrderTotal(
     region,
     productType,
     tier,
-    isBundle
+    isBundle,
+    isRegiftDiscount
   );
 
   // Smart check for Rush vs Countdown distance
@@ -269,6 +338,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         currency,
         tier,
         isBundle,
+        isRegiftDiscount,
+        couponCode: isRegiftDiscount ? "REGIFT50" : couponCode,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         cardData: {
           senderName,
@@ -292,6 +363,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           occasion,
           letter: message,
           photoUrls: pagePhotos,
+          collageLayout,
           musicTrack: currentTrack,
           musicType: musicOption,
           isProposal,
@@ -438,15 +510,15 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-bold text-white">Custom Tier</span>
                     <span className="text-xs font-bold text-amber-400">
-                      {symbol}{PRICING_TIERS[region].customPrice}
+                      {productType === "CARD" ? `${symbol}${PRICING_TIERS[region].customCardPrice}` : `${symbol}${PRICING_TIERS[region].customPrice}`}
                     </span>
                   </div>
-                  <p className="text-[10px] text-neutral-400">
-                    Founder manual polish & bespoke styling (within 24-48h).
+                  <p className="text-[10px] text-neutral-400 leading-relaxed">
+                    Founder handcrafted edition with bespoke typography, photo styling & review (24-48h).
                   </p>
                 </button>
 
-                {/* Emergency Rush Tier */}
+                {/* Custom Emergency Rush Tier */}
                 <button
                   type="button"
                   onClick={() => setTier("RUSH")}
@@ -459,14 +531,14 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center space-x-1">
                       <Zap className="h-3.5 w-3.5 text-red-400" />
-                      <span className="text-xs font-bold text-white">Emergency Rush</span>
+                      <span className="text-xs font-bold text-white">Custom Emergency Rush</span>
                     </div>
                     <span className="text-xs font-bold text-red-400">
-                      {symbol}{PRICING_TIERS[region].rushPrice}
+                      {productType === "CARD" ? `${symbol}${PRICING_TIERS[region].rushCardPrice}` : `${symbol}${PRICING_TIERS[region].rushPrice}`}
                     </span>
                   </div>
-                  <p className="text-[10px] text-neutral-400">
-                    Same-Day Priority Queue (delivered within 12 hours).
+                  <p className="text-[10px] text-neutral-400 leading-relaxed">
+                    Priority Same-Day queue jump. Founder handcrafts & delivers within 6-12 hours.
                   </p>
                 </button>
               </div>
@@ -635,6 +707,12 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 placeholder="Write what's in your heart..."
                 className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3.5 text-xs sm:text-sm text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none leading-relaxed font-serif"
               />
+
+              {/* Hindi & Punjabi Virtual Keyboards with Quick Phrases */}
+              <HindiPunjabiKeyboard
+                language={selectedLanguage}
+                onInsertChar={(char) => setMessage((prev) => prev + char)}
+              />
             </div>
 
             {/* Step 4: Voice Memo Audio Note (Phase 2 Feature) */}
@@ -657,24 +735,39 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               )}
 
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Add an audio memo speaking to your loved one. They can play and hear your real voice with an animated sound waveform!
+                Record your voice speaking to your loved one directly with your microphone, or upload an audio file!
               </p>
 
-              <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-4 hover:border-rose-500/60 transition">
+              {/* Live Microphone Browser Recorder */}
+              <VoiceRecorder
+                onRecorded={(url, filename) => {
+                  setVoiceMemoUrl(url);
+                  setVoiceMemoName(filename);
+                }}
+                currentAudioUrl={voiceMemoUrl}
+              />
+
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-neutral-800"></div>
+                <span className="flex-shrink mx-3 text-[11px] text-neutral-500 uppercase tracking-wider">or upload file</span>
+                <div className="flex-grow border-t border-neutral-800"></div>
+              </div>
+
+              <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-3.5 hover:border-rose-500/60 transition">
                 <input
                   type="file"
                   accept="audio/mpeg, audio/mp3, audio/wav, audio/ogg, audio/webm, audio/m4a"
                   onChange={handleVoiceUpload}
                   className="hidden"
                 />
-                <div className="flex flex-col items-center text-center">
+                <div className="flex items-center space-x-2.5 text-center">
                   {isUploadingVoice ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
+                    <Loader2 className="h-4 w-4 animate-spin text-rose-400" />
                   ) : (
-                    <Mic className="h-6 w-6 text-rose-400" />
+                    <Upload className="h-4 w-4 text-neutral-400" />
                   )}
-                  <span className="mt-2 text-xs font-medium text-neutral-300">
-                    {voiceMemoName ? `Recorded: ${voiceMemoName}` : "Click to upload voice memo (MP3, WAV, WEBM, max 2MB)"}
+                  <span className="text-xs font-medium text-neutral-300">
+                    {voiceMemoName ? `Uploaded: ${voiceMemoName}` : "Choose audio file from device (MP3/WAV, max 2MB)"}
                   </span>
                 </div>
               </label>
@@ -848,6 +941,66 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   </div>
                 </label>
               </div>
+
+              {/* Phase 2: Collage Layout Style for Interactive Pages */}
+              {productType === "PAGE" && (
+                <div className="pt-3 border-t border-neutral-800/80">
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold text-neutral-300">
+                      Interactive Page Collage Layout
+                    </label>
+                    <span className="text-[10px] text-rose-400">
+                      Multimedia Rich
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      {
+                        id: "masonry",
+                        label: "Masonry Pinboard",
+                        desc: "Staggered polaroids & badges",
+                        icon: Camera,
+                      },
+                      {
+                        id: "timeline",
+                        label: "Memory Lane",
+                        desc: "Chronological story milestones",
+                        icon: Calendar,
+                      },
+                      {
+                        id: "filmstrip",
+                        label: "35mm Filmstrip",
+                        desc: "Cinematic retro movie reel",
+                        icon: Film,
+                      },
+                    ].map((col) => {
+                      const IconComp = col.icon;
+                      return (
+                        <button
+                          key={col.id}
+                          type="button"
+                          onClick={() => setCollageLayout(col.id as CollageLayoutStyle)}
+                          className={`rounded-2xl border p-3 text-left transition ${
+                            collageLayout === col.id
+                              ? "border-rose-500 bg-rose-500/20 text-rose-300 shadow-sm"
+                              : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700 hover:text-white"
+                          }`}
+                        >
+                          <div className="flex items-center space-x-1.5 mb-1">
+                            <IconComp className="h-3.5 w-3.5 text-rose-400" />
+                            <span className="text-xs font-bold text-white">
+                              {col.label}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-neutral-400 leading-tight">
+                            {col.desc}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Step 8: Color Palette */}
@@ -927,23 +1080,50 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                       <div
                         key={track.id}
                         onClick={() => setSelectedBuiltinTrack(track.id)}
-                        className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                        className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
                           selectedBuiltinTrack === track.id
-                            ? "border-rose-500 bg-rose-500/10 text-white"
+                            ? "border-rose-500 bg-rose-500/10 text-white shadow-sm"
                             : "border-neutral-800 bg-neutral-950 text-neutral-300 hover:border-neutral-700"
                         }`}
                       >
-                        <div className="flex items-center space-x-2.5">
-                          <Music className="h-4 w-4 text-rose-400" />
+                        <div className="flex items-center space-x-3">
+                          <button
+                            type="button"
+                            onClick={(e) => toggleAudioPreview(track, e)}
+                            className={`flex h-8 w-8 items-center justify-center rounded-xl border transition shrink-0 ${
+                              playingPreviewTrackId === track.id
+                                ? "border-rose-500 bg-rose-500 text-white shadow-md shadow-rose-500/30"
+                                : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-rose-500 hover:text-white"
+                            }`}
+                            title={playingPreviewTrackId === track.id ? "Pause Preview" : "Play Preview"}
+                          >
+                            {playingPreviewTrackId === track.id ? (
+                              <Pause className="h-4 w-4" />
+                            ) : (
+                              <Play className="h-4 w-4 ml-0.5" />
+                            )}
+                          </button>
+
                           <div>
-                            <div className="text-xs font-semibold">{track.title}</div>
+                            <div className="text-xs font-semibold flex items-center space-x-2">
+                              <span>{track.title}</span>
+                              {playingPreviewTrackId === track.id && (
+                                <span className="text-[10px] text-rose-400 font-mono animate-pulse">
+                                  Playing...
+                                </span>
+                              )}
+                            </div>
                             <div className="text-[10px] text-neutral-400 capitalize">
                               {track.category} • {track.genre}
                             </div>
                           </div>
                         </div>
+
                         {selectedBuiltinTrack === track.id && (
-                          <Check className="h-4 w-4 text-rose-400" />
+                          <div className="flex items-center space-x-1.5 text-xs text-rose-400 font-semibold">
+                            <span>Selected</span>
+                            <Check className="h-4 w-4" />
+                          </div>
                         )}
                       </div>
                     ))}
@@ -993,9 +1173,21 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   </h3>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold text-white">
-                    {symbol}{displayPrice}
+                  <div className="flex items-baseline justify-end space-x-2">
+                    {isDiscounted && originalDisplayPrice && (
+                      <span className="text-sm font-semibold text-neutral-500 line-through">
+                        {symbol}{originalDisplayPrice}
+                      </span>
+                    )}
+                    <span className="text-2xl font-bold text-white">
+                      {symbol}{displayPrice}
+                    </span>
                   </div>
+                  {isDiscounted && (
+                    <span className="inline-block rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-300 border border-emerald-500/30 uppercase mt-0.5">
+                      50% Off Regift
+                    </span>
+                  )}
                   <div className="text-[10px] text-neutral-400 uppercase">
                     {currency} • {isBundle ? "Bundle Edition" : "Single Order"}
                   </div>
@@ -1008,6 +1200,44 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <span>{formError}</span>
                 </div>
               )}
+
+              {/* Coupon / Regift 50% discount box */}
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-3.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-neutral-300 flex items-center space-x-1.5">
+                    <Tag className="h-3.5 w-3.5 text-rose-400" />
+                    <span>Have a coupon or regift code?</span>
+                  </span>
+                  {isRegiftDiscount && (
+                    <span className="text-[11px] text-emerald-400 font-semibold">
+                      50% OFF Active
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    placeholder="Enter REGIFT50"
+                    className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs font-mono uppercase text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyCoupon()}
+                    className="rounded-xl bg-neutral-800 hover:bg-neutral-700 px-4 py-2 text-xs font-semibold text-white transition shrink-0"
+                  >
+                    Apply
+                  </button>
+                </div>
+
+                {couponFeedback && (
+                  <p className={`text-[11px] font-medium ${isRegiftDiscount ? "text-emerald-400" : "text-amber-400"}`}>
+                    {couponFeedback}
+                  </p>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
@@ -1063,9 +1293,9 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
             </form>
           </div>
 
-          {/* RIGHT: LIVE PREVIEW (5 cols on desktop, sticky) */}
+          {/* RIGHT: LIVE PREVIEW (5 cols on desktop, isolated sticky scroll container) */}
           <div
-            className={`lg:col-span-5 lg:sticky lg:top-24 space-y-4 ${
+            className={`lg:col-span-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto overscroll-contain pr-1 space-y-4 ${
               mobileTab === "edit" ? "hidden lg:block" : "block"
             }`}
           >
@@ -1101,6 +1331,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 letter={message}
                 photoUrls={pagePhotos}
                 colorTheme={selectedTheme}
+                collageLayout={collageLayout}
                 isProposal={isProposal}
                 venueName={venueName}
                 venueAddress={venueAddress}
