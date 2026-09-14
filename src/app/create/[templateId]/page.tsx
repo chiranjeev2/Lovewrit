@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, use } from "react";
+import React, { useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
@@ -15,7 +15,11 @@ import {
   PhotoShapeKey,
   COLOR_THEMES,
 } from "@/lib/templates-data";
-import { PRICING_TIERS } from "@/lib/currency";
+import {
+  PRICING_TIERS,
+  TierType,
+  calculateOrderTotal,
+} from "@/lib/currency";
 import { BUILTIN_AUDIO_TRACKS } from "@/lib/audio-tracks";
 import { LanguageCode, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
 import {
@@ -26,8 +30,14 @@ import {
   Music,
   Check,
   CreditCard,
-  Image as ImageIcon,
-  Palette,
+  Mic,
+  Calendar,
+  Clock,
+  MapPin,
+  Flame,
+  Zap,
+  Info,
+  Layers,
   Loader2,
   AlertCircle,
   Eye,
@@ -46,16 +56,22 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   const templateId = resolvedParams.templateId;
   const template = getTemplateById(templateId) || TEMPLATES[0];
 
-  // Selected format
+  // Selected format & tier
   const [productType, setProductType] = useState<"CARD" | "PAGE">(
     template.supportedFormats.includes("PAGE") ? "PAGE" : "CARD"
   );
+  const [tier, setTier] = useState<TierType>("SELF_SERVICE");
+  const [isBundle, setIsBundle] = useState<boolean>(false);
+  const [customNotes, setCustomNotes] = useState<string>("");
 
   // Form states
   const [senderName, setSenderName] = useState<string>(template.sampleSender);
   const [recipientName, setRecipientName] = useState<string>(template.sampleRecipient);
   const [occasion, setOccasion] = useState<string>(template.occasion);
   const [location, setLocation] = useState<string>(template.sampleLocation || "");
+  const [venueName, setVenueName] = useState<string>("");
+  const [venueAddress, setVenueAddress] = useState<string>("");
+  const [venueMapUrl, setVenueMapUrl] = useState<string>("");
   const [message, setMessage] = useState<string>(template.sampleMessage);
   const [selectedTheme, setSelectedTheme] = useState<ColorThemeKey>(template.defaultTheme);
   const [photoShape, setPhotoShape] = useState<PhotoShapeKey>(template.defaultShape);
@@ -75,6 +91,16 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   const [isUploadingAudio, setIsUploadingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
 
+  // Phase 2: Voice memo upload (2MB cap)
+  const [voiceMemoUrl, setVoiceMemoUrl] = useState<string | null>(null);
+  const [voiceMemoName, setVoiceMemoName] = useState<string>("");
+  const [isUploadingVoice, setIsUploadingVoice] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  // Phase 2: Timed reveal
+  const [enableRevealCountdown, setEnableRevealCountdown] = useState<boolean>(false);
+  const [revealDateTime, setRevealDateTime] = useState<string>("");
+
   // Proposal toggle
   const [isProposal, setIsProposal] = useState<boolean>(
     template.hasInteractiveDodging || template.occasion === "proposal"
@@ -89,12 +115,12 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   // Mobile view toggle (edit vs preview)
   const [mobileTab, setMobileTab] = useState<"edit" | "preview">("edit");
 
-  // Sync selected language sample prompt if requested
+  // Sample prompt insert helper
   const handleInsertSamplePrompt = () => {
     const langKey = selectedLanguage in TRANSLATIONS ? selectedLanguage : "en";
     const prompts = TRANSLATIONS[langKey].samplePrompts;
     const occKey = occasion as keyof typeof prompts;
-    if (prompts[occKey]) {
+    if (prompts && prompts[occKey]) {
       setMessage(prompts[occKey]);
     }
   };
@@ -116,7 +142,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
 
         const res = await fetch("/api/upload", { method: "POST", body: formData });
         const data = await res.json();
-
         if (!res.ok) throw new Error(data.error || "Upload failed");
         setCardPhoto(data.url);
         if (!pagePhotos.includes(data.url)) {
@@ -148,7 +173,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     }
   };
 
-  // Audio upload handler (per user requirement)
+  // Audio upload handler
   const handleAudioUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -164,7 +189,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
 
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || "Audio upload failed");
       setCustomAudioUrl(data.url);
       setCustomAudioName(file.name);
@@ -176,10 +200,46 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     }
   };
 
-  // Pricing
-  const pricing = PRICING_TIERS[region];
-  const currentPrice =
-    productType === "CARD" ? pricing.cardPrice : pricing.pagePrice;
+  // Voice memo upload handler (capped at 2MB)
+  const handleVoiceUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    setIsUploadingVoice(true);
+    setVoiceError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("kind", "voice");
+
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Voice upload failed");
+      setVoiceMemoUrl(data.url);
+      setVoiceMemoName(file.name);
+    } catch (err: unknown) {
+      setVoiceError(err instanceof Error ? err.message : "Voice memo upload failed");
+    } finally {
+      setIsUploadingVoice(false);
+    }
+  };
+
+  // Pricing calculation
+  const { displayPrice, symbol } = calculateOrderTotal(
+    region,
+    productType,
+    tier,
+    isBundle
+  );
+
+  // Smart check for Rush vs Countdown distance
+  const isCountdownOver48Hours = () => {
+    if (!revealDateTime) return false;
+    const diff = new Date(revealDateTime).getTime() - Date.now();
+    return diff > 48 * 60 * 60 * 1000;
+  };
 
   // Checkout submission
   const handleProceedToCheckout = async (e: React.FormEvent) => {
@@ -207,6 +267,9 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         customerEmail,
         customerName: customerName || senderName || "Valued Customer",
         currency,
+        tier,
+        isBundle,
+        customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         cardData: {
           senderName,
           recipientName,
@@ -216,6 +279,11 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           photoShape,
           colorTheme: selectedTheme,
           location,
+          venueName,
+          venueAddress,
+          venueMapUrl,
+          voiceMessageUrl: voiceMemoUrl,
+          revealAt: enableRevealCountdown && revealDateTime ? revealDateTime : null,
           language: selectedLanguage,
         },
         pageData: {
@@ -226,8 +294,13 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           photoUrls: pagePhotos,
           musicTrack: currentTrack,
           musicType: musicOption,
-          isProposal: isProposal,
+          isProposal,
           colorTheme: selectedTheme,
+          venueName,
+          venueAddress,
+          venueMapUrl,
+          voiceMessageUrl: voiceMemoUrl,
+          revealAt: enableRevealCountdown && revealDateTime ? revealDateTime : null,
           language: selectedLanguage,
         },
       };
@@ -239,13 +312,9 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Checkout initiation failed");
-      }
+      if (!res.ok) throw new Error(data.error || "Checkout initiation failed");
 
       if (data.checkoutUrl) {
-        // Redirect to Stripe checkout or simulator
         window.location.href = data.checkoutUrl;
       } else {
         throw new Error("Missing checkout redirection URL");
@@ -287,7 +356,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         </div>
       </div>
 
-      {/* Mobile Tab switcher (Edit vs Live Preview) */}
+      {/* Mobile Tab switcher */}
       <div className="lg:hidden flex border-b border-neutral-900 bg-neutral-900/90 sticky top-[57px] z-30">
         <button
           onClick={() => setMobileTab("edit")}
@@ -313,7 +382,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         </button>
       </div>
 
-      {/* Main Studio Workspace */}
+      {/* Studio Workspace */}
       <main className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* LEFT: FORM CUSTOMIZER (7 cols on desktop) */}
@@ -322,68 +391,163 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               mobileTab === "preview" ? "hidden lg:block" : "block"
             }`}
           >
-            {/* Format Picker */}
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl">
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                Step 1: Choose Product Format
-              </span>
-              <div className="mt-3 grid grid-cols-2 gap-3">
+            {/* Step 1: Tier & Format Selection (Phase 2 Upgrade) */}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
+                  Step 1: Fulfillment Tier & Format
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  Region: <strong className="text-neutral-200">{PRICING_TIERS[region].regionLabel}</strong>
+                </span>
+              </div>
+
+              {/* Tiers Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* Self Service Tier */}
                 <button
                   type="button"
-                  onClick={() => setProductType("CARD")}
+                  onClick={() => setTier("SELF_SERVICE")}
                   className={`rounded-2xl border p-4 text-left transition ${
-                    productType === "CARD"
-                      ? "border-rose-500 bg-rose-500/10 shadow-lg shadow-rose-500/10"
-                      : "border-neutral-800 bg-neutral-950/50 hover:border-neutral-700"
+                    tier === "SELF_SERVICE"
+                      ? "border-rose-500 bg-rose-500/10 shadow-md"
+                      : "border-neutral-800 bg-neutral-950/60 hover:border-neutral-700"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif font-bold text-white text-base">
-                      Digital Card
-                    </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-white">Self-Service</span>
                     <span className="text-xs font-bold text-rose-400">
-                      {pricing.symbol}{pricing.cardPrice}
+                      {productType === "CARD" ? `${symbol}${PRICING_TIERS[region].cardPrice}` : `${symbol}${PRICING_TIERS[region].pagePrice}`}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-neutral-400">
-                    High-res shareable image with custom photo frame.
+                  <p className="text-[10px] text-neutral-400">
+                    Instant automated generation. Customize yourself.
                   </p>
                 </button>
 
+                {/* Custom Handcrafted Tier */}
                 <button
                   type="button"
-                  onClick={() => setProductType("PAGE")}
+                  onClick={() => setTier("CUSTOM")}
                   className={`rounded-2xl border p-4 text-left transition ${
-                    productType === "PAGE"
-                      ? "border-rose-500 bg-rose-500/10 shadow-lg shadow-rose-500/10"
-                      : "border-neutral-800 bg-neutral-950/50 hover:border-neutral-700"
+                    tier === "CUSTOM"
+                      ? "border-amber-500 bg-amber-500/10 shadow-md"
+                      : "border-neutral-800 bg-neutral-950/60 hover:border-neutral-700"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif font-bold text-white text-base">
-                      Interactive Page
-                    </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-white">Custom Tier</span>
                     <span className="text-xs font-bold text-amber-400">
-                      {pricing.symbol}{pricing.pagePrice}
+                      {symbol}{PRICING_TIERS[region].customPrice}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-neutral-400">
-                    Full emotional webpage with music, unboxing & collage.
+                  <p className="text-[10px] text-neutral-400">
+                    Founder manual polish & bespoke styling (within 24-48h).
+                  </p>
+                </button>
+
+                {/* Emergency Rush Tier */}
+                <button
+                  type="button"
+                  onClick={() => setTier("RUSH")}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    tier === "RUSH"
+                      ? "border-red-500 bg-red-500/10 shadow-md"
+                      : "border-neutral-800 bg-neutral-950/60 hover:border-neutral-700"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center space-x-1">
+                      <Zap className="h-3.5 w-3.5 text-red-400" />
+                      <span className="text-xs font-bold text-white">Emergency Rush</span>
+                    </div>
+                    <span className="text-xs font-bold text-red-400">
+                      {symbol}{PRICING_TIERS[region].rushPrice}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-neutral-400">
+                    Same-Day Priority Queue (delivered within 12 hours).
                   </p>
                 </button>
               </div>
+
+              {/* Format Buttons (Card vs Page) */}
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setProductType("CARD")}
+                  className={`rounded-xl border py-2.5 px-3 text-center text-xs font-semibold transition ${
+                    productType === "CARD"
+                      ? "border-neutral-400 bg-neutral-800 text-white"
+                      : "border-neutral-800 bg-neutral-950 text-neutral-400"
+                  }`}
+                >
+                  Digital Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProductType("PAGE")}
+                  className={`rounded-xl border py-2.5 px-3 text-center text-xs font-semibold transition ${
+                    productType === "PAGE"
+                      ? "border-neutral-400 bg-neutral-800 text-white"
+                      : "border-neutral-800 bg-neutral-950 text-neutral-400"
+                  }`}
+                >
+                  Interactive Page
+                </button>
+              </div>
+
+              {/* Multi-template bundle addon */}
+              <div className="flex items-center justify-between rounded-xl border border-neutral-800 bg-neutral-950 p-3 pt-2">
+                <div className="flex items-center space-x-2">
+                  <Layers className="h-4 w-4 text-rose-400" />
+                  <div>
+                    <span className="text-xs font-semibold text-white block">
+                      Multi-Template Bundle Addon (+{symbol}{PRICING_TIERS[region].bundleAddonPrice})
+                    </span>
+                    <span className="text-[10px] text-neutral-400 block">
+                      Receive 2-3 style variations; pick your favorite with 1 revision included.
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isBundle}
+                  onChange={(e) => setIsBundle(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-600 focus:ring-rose-500"
+                />
+              </div>
+
+              {/* Custom Notes input if Custom or Rush selected */}
+              {(tier === "CUSTOM" || tier === "RUSH") && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4 space-y-2 animate-in fade-in duration-300">
+                  <span className="text-xs font-semibold text-amber-300 block">
+                    Special Instructions for the Founder
+                  </span>
+                  <p className="text-[11px] text-neutral-400">
+                    Tell us about your theme preferences, custom color ideas, or any specific details you want hand-styled.
+                  </p>
+                  <textarea
+                    rows={3}
+                    value={customNotes}
+                    onChange={(e) => setCustomNotes(e.target.value)}
+                    placeholder="e.g. Please add a special quote section from our first trip together..."
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Names & Language */}
+            {/* Step 2: Names, Language & Occasion */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                Step 2: Names & Language
+                Step 2: Names, Occasion & Language
               </span>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                    Your Name (Sender)
+                    Your Name (Sender / Family)
                   </label>
                   <input
                     type="text"
@@ -396,7 +560,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                    Their Name (Recipient)
+                    Their Name (Recipient / Honoree)
                   </label>
                   <input
                     type="text"
@@ -409,6 +573,27 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Occasion
+                  </label>
+                  <select
+                    value={occasion}
+                    onChange={(e) => setOccasion(e.target.value)}
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white focus:border-rose-500 focus:outline-none capitalize"
+                  >
+                    <option value="proposal">Romantic Proposal</option>
+                    <option value="anniversary">Anniversary</option>
+                    <option value="sorry">I'm Sorry</option>
+                    <option value="reminiscing">Reminiscing & Memory Lane</option>
+                    <option value="birthday">Birthday Celebration</option>
+                    <option value="memorial">In Loving Memory (Sacred Memorial)</option>
+                    <option value="godhbharai">Baby Shower / Godhbharai</option>
+                    <option value="jagrata_kirtan">Mata Ka Jagrata & Kirtan</option>
+                    <option value="kitty_party">Kitty Party & Social Gathering</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-neutral-300 mb-1">
                     Language Selection
@@ -425,23 +610,10 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                     ))}
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                    Location / Landmark (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="e.g. Udaipur, Lake Pichola"
-                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
-                  />
-                </div>
               </div>
             </div>
 
-            {/* Heartfelt Message */}
+            {/* Step 3: Heartfelt Message & Letter */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
@@ -452,7 +624,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   onClick={handleInsertSamplePrompt}
                   className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 underline transition"
                 >
-                  Insert Sample Message
+                  Insert Sample Words
                 </button>
               </div>
 
@@ -465,10 +637,152 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               />
             </div>
 
-            {/* Photo Upload & Frame Shape */}
+            {/* Step 4: Voice Memo Audio Note (Phase 2 Feature) */}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5 text-rose-400">
+                  <Mic className="h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Step 4: Personal Voice Note (Optional)
+                  </span>
+                </div>
+                <span className="text-[10px] text-neutral-400">Max 90s / 2MB</span>
+              </div>
+
+              {voiceError && (
+                <div className="flex items-center space-x-2 rounded-xl bg-red-950/80 border border-red-800 p-3 text-xs text-red-300">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{voiceError}</span>
+                </div>
+              )}
+
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Add an audio memo speaking to your loved one. They can play and hear your real voice with an animated sound waveform!
+              </p>
+
+              <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-4 hover:border-rose-500/60 transition">
+                <input
+                  type="file"
+                  accept="audio/mpeg, audio/mp3, audio/wav, audio/ogg, audio/webm, audio/m4a"
+                  onChange={handleVoiceUpload}
+                  className="hidden"
+                />
+                <div className="flex flex-col items-center text-center">
+                  {isUploadingVoice ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
+                  ) : (
+                    <Mic className="h-6 w-6 text-rose-400" />
+                  )}
+                  <span className="mt-2 text-xs font-medium text-neutral-300">
+                    {voiceMemoName ? `Recorded: ${voiceMemoName}` : "Click to upload voice memo (MP3, WAV, WEBM, max 2MB)"}
+                  </span>
+                </div>
+              </label>
+            </div>
+
+            {/* Step 5: Timed / Countdown Reveal (Phase 2 Feature) */}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-1.5 text-rose-400">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-xs font-bold uppercase tracking-wider">
+                    Step 5: Timed Surprise / Countdown Reveal
+                  </span>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={enableRevealCountdown}
+                  onChange={(e) => setEnableRevealCountdown(e.target.checked)}
+                  className="h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-600 focus:ring-rose-500"
+                />
+              </div>
+
+              {enableRevealCountdown && (
+                <div className="space-y-3 pt-2 animate-in fade-in duration-300">
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Set a target date & time. The link will display an anticipatory ticking countdown until that exact moment, then automatically unveil!
+                  </p>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                      Reveal Unlock Date & Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={revealDateTime}
+                      onChange={(e) => setRevealDateTime(e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
+                    />
+                  </div>
+
+                  {/* Trust warning: If Rush selected and reveal is >48h */}
+                  {tier === "RUSH" && isCountdownOver48Hours() && (
+                    <div className="flex items-center space-x-2 rounded-xl bg-amber-950/70 border border-amber-800 p-3 text-xs text-amber-300">
+                      <Info className="h-4 w-4 shrink-0" />
+                      <span>
+                        Tip: Your reveal date is more than 48 hours away! You don't need the Emergency Rush fee. Switch to the <strong>Custom Tier</strong> to save money.
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Step 6: Venue & Maps (for Invites or Events) */}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
+              <div className="flex items-center space-x-1.5 text-rose-400">
+                <MapPin className="h-4 w-4" />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Step 6: Venue & Location (Optional / Invites)
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Venue / Hall Name
+                  </label>
+                  <input
+                    type="text"
+                    value={venueName}
+                    onChange={(e) => setVenueName(e.target.value)}
+                    placeholder="e.g. Grand Banquet Hall"
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Google Maps Link
+                  </label>
+                  <input
+                    type="url"
+                    value={venueMapUrl}
+                    onChange={(e) => setVenueMapUrl(e.target.value)}
+                    placeholder="https://maps.google.com/?q=..."
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                  Full Address
+                </label>
+                <input
+                  type="text"
+                  value={venueAddress}
+                  onChange={(e) => setVenueAddress(e.target.value)}
+                  placeholder="e.g. Plot 12, Sector 17, Chandigarh"
+                  className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Step 7: Photo Upload & Frame Shape */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                Step 4: Photo & Framing
+                Step 7: Photos & Frame Shape
               </span>
 
               {uploadError && (
@@ -478,10 +792,10 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 </div>
               )}
 
-              {/* Photo shape selector (for Cards) */}
+              {/* Photo shape selector */}
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 mb-2">
-                  Photo Shape
+                  Photo Frame Shape
                 </label>
                 <div className="grid grid-cols-5 gap-2">
                   {(
@@ -511,42 +825,35 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
 
               {/* File upload input */}
               <div className="pt-2">
-                <label className="block text-xs font-semibold text-neutral-300 mb-1.5">
-                  {productType === "CARD"
-                    ? "Upload Photo (Max 10MB JPG, PNG, WEBP)"
-                    : "Upload Moments (1-6 photos for collage)"}
+                <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-5 hover:border-rose-500/60 transition">
+                  <input
+                    type="file"
+                    accept="image/png, image/jpeg, image/webp, image/heic"
+                    multiple={productType === "PAGE"}
+                    onChange={(e) => handlePhotoUpload(e, productType === "CARD")}
+                    className="hidden"
+                  />
+                  <div className="flex flex-col items-center text-center">
+                    {isUploadingPhoto ? (
+                      <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
+                    ) : (
+                      <Upload className="h-6 w-6 text-neutral-400" />
+                    )}
+                    <span className="mt-2 text-xs font-medium text-neutral-300">
+                      {isUploadingPhoto ? "Uploading..." : "Click or drag photos to upload"}
+                    </span>
+                    <span className="text-[10px] text-neutral-500">
+                      Strict 10MB limit enforced
+                    </span>
+                  </div>
                 </label>
-                <div className="flex items-center space-x-4">
-                  <label className="flex flex-1 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-5 hover:border-rose-500/60 transition">
-                    <input
-                      type="file"
-                      accept="image/png, image/jpeg, image/webp, image/heic"
-                      multiple={productType === "PAGE"}
-                      onChange={(e) => handlePhotoUpload(e, productType === "CARD")}
-                      className="hidden"
-                    />
-                    <div className="flex flex-col items-center text-center">
-                      {isUploadingPhoto ? (
-                        <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
-                      ) : (
-                        <Upload className="h-6 w-6 text-neutral-400" />
-                      )}
-                      <span className="mt-2 text-xs font-medium text-neutral-300">
-                        {isUploadingPhoto ? "Uploading..." : "Click or drag photos to upload"}
-                      </span>
-                      <span className="text-[10px] text-neutral-500">
-                        Strict 10MB limit enforced
-                      </span>
-                    </div>
-                  </label>
-                </div>
               </div>
             </div>
 
-            {/* Color Palette Choice */}
+            {/* Step 8: Color Palette */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-3">
               <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                Step 5: Color Palette & Aesthetics
+                Step 8: Color Palette & Aesthetics
               </span>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -565,71 +872,55 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                       className="h-6 w-6 rounded-full shrink-0 shadow-md"
                       style={{ backgroundColor: thm.accentColor }}
                     />
-                    <div>
-                      <div className="text-xs font-bold text-white">{thm.name}</div>
-                    </div>
+                    <div className="text-xs font-bold text-white truncate">{thm.name}</div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Page-Specific Music & Dodging Button Settings */}
+            {/* Step 9: Background Audio Soundtrack */}
             {productType === "PAGE" && (
               <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
                 <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                  Step 6: Music & Interactions (Page Feature)
+                  Step 9: Background Soundtrack & Music
                 </span>
 
-                {audioError && (
-                  <div className="flex items-center space-x-2 rounded-xl bg-red-950/80 border border-red-800 p-3 text-xs text-red-300">
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>{audioError}</span>
-                  </div>
-                )}
-
-                {/* Music Source Option */}
-                <div>
-                  <label className="block text-xs font-semibold text-neutral-300 mb-2">
-                    Background Music Track
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setMusicOption("builtin")}
-                      className={`rounded-xl border py-2 text-xs font-medium transition ${
-                        musicOption === "builtin"
-                          ? "border-rose-500 bg-rose-500/20 text-rose-300"
-                          : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
-                      }`}
-                    >
-                      Curated Soundtracks
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMusicOption("custom")}
-                      className={`rounded-xl border py-2 text-xs font-medium transition ${
-                        musicOption === "custom"
-                          ? "border-rose-500 bg-rose-500/20 text-rose-300"
-                          : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
-                      }`}
-                    >
-                      Upload Song (MP3)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setMusicOption("none")}
-                      className={`rounded-xl border py-2 text-xs font-medium transition ${
-                        musicOption === "none"
-                          ? "border-rose-500 bg-rose-500/20 text-rose-300"
-                          : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
-                      }`}
-                    >
-                      No Music
-                    </button>
-                  </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setMusicOption("builtin")}
+                    className={`rounded-xl border py-2 text-xs font-medium transition ${
+                      musicOption === "builtin"
+                        ? "border-rose-500 bg-rose-500/20 text-rose-300"
+                        : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    Occasion Soundtracks
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMusicOption("custom")}
+                    className={`rounded-xl border py-2 text-xs font-medium transition ${
+                      musicOption === "custom"
+                        ? "border-rose-500 bg-rose-500/20 text-rose-300"
+                        : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    Upload Song
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMusicOption("none")}
+                    className={`rounded-xl border py-2 text-xs font-medium transition ${
+                      musicOption === "none"
+                        ? "border-rose-500 bg-rose-500/20 text-rose-300"
+                        : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    No Music
+                  </button>
                 </div>
 
-                {/* Built-in Tracks List */}
                 {musicOption === "builtin" && (
                   <div className="space-y-2 pt-2">
                     {BUILTIN_AUDIO_TRACKS.map((track) => (
@@ -646,7 +937,9 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                           <Music className="h-4 w-4 text-rose-400" />
                           <div>
                             <div className="text-xs font-semibold">{track.title}</div>
-                            <div className="text-[10px] text-neutral-400">{track.genre} • {track.duration}</div>
+                            <div className="text-[10px] text-neutral-400 capitalize">
+                              {track.category} • {track.genre}
+                            </div>
                           </div>
                         </div>
                         {selectedBuiltinTrack === track.id && (
@@ -657,7 +950,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   </div>
                 )}
 
-                {/* Custom Audio Upload (per user requirement) */}
                 {musicOption === "custom" && (
                   <div className="pt-2">
                     <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-4 hover:border-rose-500/60 transition">
@@ -674,37 +966,16 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                           <Music className="h-6 w-6 text-neutral-400" />
                         )}
                         <span className="mt-2 text-xs font-medium text-neutral-300">
-                          {customAudioName ? `Selected: ${customAudioName}` : "Choose couple audio track (max 15MB)"}
-                        </span>
-                        <span className="text-[10px] text-neutral-500">
-                          Supports MP3, M4A, WAV
+                          {customAudioName ? `Selected: ${customAudioName}` : "Choose audio track (max 15MB)"}
                         </span>
                       </div>
                     </label>
                   </div>
                 )}
-
-                {/* Interactive Dodging Proposal Button Toggle */}
-                <div className="flex items-center justify-between rounded-2xl border border-neutral-800 bg-neutral-950 p-4 pt-3">
-                  <div>
-                    <span className="text-xs font-semibold text-white block">
-                      Playful Dodging "No" Button
-                    </span>
-                    <span className="text-[11px] text-neutral-400 block">
-                      The "No" button will playfully dodge the cursor so "Yes" is guaranteed!
-                    </span>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={isProposal}
-                    onChange={(e) => setIsProposal(e.target.checked)}
-                    className="h-5 w-5 rounded border-neutral-700 bg-neutral-900 text-rose-600 focus:ring-rose-500"
-                  />
-                </div>
               </div>
             )}
 
-            {/* ORDER CHECKOUT PANEL */}
+            {/* CHECKOUT ORDER SUMMARY PANEL */}
             <form
               onSubmit={handleProceedToCheckout}
               className="rounded-3xl border border-rose-500/30 bg-gradient-to-b from-neutral-900/90 to-neutral-950 p-6 sm:p-8 shadow-2xl space-y-4"
@@ -712,18 +983,21 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
                 <div>
                   <span className="text-[10px] uppercase tracking-wider text-rose-400 font-bold">
-                    Instant Delivery Checkout
+                    Order Confirmation
                   </span>
                   <h3 className="font-serif text-xl font-bold text-white">
-                    {productType === "CARD" ? "Digital Card" : "Interactive Couple Page"}
+                    {productType === "CARD" ? "Digital Card" : "Interactive Page"}{" "}
+                    <span className="text-xs text-neutral-400">
+                      ({tier === "RUSH" ? "Emergency Rush" : tier === "CUSTOM" ? "Custom Handcrafted" : "Self-Service"})
+                    </span>
                   </h3>
                 </div>
                 <div className="text-right">
                   <div className="text-2xl font-bold text-white">
-                    {pricing.symbol}{currentPrice}
+                    {symbol}{displayPrice}
                   </div>
                   <div className="text-[10px] text-neutral-400 uppercase">
-                    {currency} • One-Time
+                    {currency} • {isBundle ? "Bundle Edition" : "Single Order"}
                   </div>
                 </div>
               </div>
@@ -752,7 +1026,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
 
                 <div>
                   <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                    Your Email (For Order Confirmation)
+                    Your Email (To receive unique link & receipt)
                   </label>
                   <input
                     type="email"
@@ -778,13 +1052,13 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 ) : (
                   <div className="flex items-center space-x-2">
                     <CreditCard className="h-4 w-4" />
-                    <span>Proceed to Secure Payment ({pricing.symbol}{currentPrice})</span>
+                    <span>Proceed to Checkout ({symbol}{displayPrice})</span>
                   </div>
                 )}
               </button>
 
               <p className="text-center text-[10px] text-neutral-500">
-                🔒 Safe 256-bit encrypted checkout via Stripe • Instant unique link & download delivered immediately
+                🔒 Safe 256-bit encrypted checkout via Stripe • Multi-currency regional pricing guaranteed
               </p>
             </form>
           </div>
@@ -814,6 +1088,10 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 photoShape={photoShape}
                 colorTheme={selectedTheme}
                 location={location}
+                venueName={venueName}
+                venueAddress={venueAddress}
+                venueMapUrl={venueMapUrl}
+                voiceMessageUrl={voiceMemoUrl}
               />
             ) : (
               <PagePreview
@@ -824,6 +1102,10 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 photoUrls={pagePhotos}
                 colorTheme={selectedTheme}
                 isProposal={isProposal}
+                venueName={venueName}
+                venueAddress={venueAddress}
+                venueMapUrl={venueMapUrl}
+                voiceMessageUrl={voiceMemoUrl}
                 musicTrackName={activeTrackObj?.title}
                 previewOnly={true}
               />
@@ -836,4 +1118,3 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     </div>
   );
 }
-

@@ -2,8 +2,9 @@
 
 import React, { useState, useRef } from "react";
 import { COLOR_THEMES, ColorThemeKey } from "@/lib/templates-data";
-import { Heart, Sparkles, Music, MapPin, CheckCircle } from "lucide-react";
+import { Heart, Sparkles, Music, MapPin, CheckCircle, Navigation } from "lucide-react";
 import confetti from "canvas-confetti";
+import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
 
 interface PagePreviewProps {
   senderName: string;
@@ -14,6 +15,10 @@ interface PagePreviewProps {
   colorTheme: ColorThemeKey;
   isProposal?: boolean;
   musicTrackName?: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueMapUrl?: string;
+  voiceMessageUrl?: string | null;
   previewOnly?: boolean;
 }
 
@@ -26,6 +31,10 @@ export default function PagePreview({
   colorTheme,
   isProposal = false,
   musicTrackName,
+  venueName,
+  venueAddress,
+  venueMapUrl,
+  voiceMessageUrl,
   previewOnly = false,
 }: PagePreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
@@ -50,8 +59,6 @@ export default function PagePreview({
 
   const handleYes = () => {
     setAccepted(true);
-
-    // Multi-stage confetti celebration
     confetti({
       particleCount: 100,
       spread: 80,
@@ -68,10 +75,17 @@ export default function PagePreview({
     }, 400);
   };
 
-  const photos = photoUrls.length > 0 ? photoUrls : [
-    "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
-    "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
-  ];
+  const isMemorial = occasion === "memorial";
+  const isBirthday = occasion === "birthday";
+  const isInvite = ["godhbharai", "jagrata_kirtan", "kitty_party"].includes(occasion);
+
+  const photos =
+    photoUrls.length > 0
+      ? photoUrls
+      : [
+          "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
+          "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
+        ];
 
   return (
     <div
@@ -92,8 +106,8 @@ export default function PagePreview({
             <span className="text-[10px] font-semibold uppercase tracking-widest text-rose-300">
               A Memoir Experience
             </span>
-            <h4 className="font-serif text-sm font-bold text-white">
-              {occasion.toUpperCase()}
+            <h4 className="font-serif text-sm font-bold text-white capitalize">
+              {occasion.replace("_", " ")}
             </h4>
           </div>
         </div>
@@ -111,19 +125,67 @@ export default function PagePreview({
       {/* Hero Headline */}
       <div className="relative z-10 my-10 text-center">
         <span className="inline-block rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300 mb-3">
-          To My Dearest {recipientName || "Love"}
+          {isMemorial ? "In Blessed Remembrance" : `To ${recipientName || "Honored One"}`}
         </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
-          Every Moment With You Is A Gift
+          {isMemorial
+            ? "A Life Beautifully Remembered"
+            : isBirthday
+            ? "Wishing You The Happiest Birthday!"
+            : isInvite
+            ? "Cordially Invited To Celebrate"
+            : "Every Moment With You Is A Gift"}
         </h1>
         <p className="mt-3 text-xs sm:text-sm text-neutral-300">
-          Written with love by <span className="font-semibold text-white underline decoration-rose-400">{senderName || "Yours Always"}</span>
+          {isMemorial
+            ? `Cherished forever by ${senderName || "Family & Friends"}`
+            : `Presented with love by ${senderName || "Always"}`}
         </p>
       </div>
 
-      {/* Photo Collage Montage */}
+      {/* Venue & Maps Card (for Event Invites) */}
+      {(venueName || venueAddress) && (
+        <div className="relative z-10 mx-auto max-w-xl rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-xl shadow-xl my-6 text-center">
+          <div className="flex items-center justify-center space-x-1.5 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-1">
+            <MapPin className="h-4 w-4" />
+            <span>Event Venue Details</span>
+          </div>
+          <h3 className="font-serif text-lg font-bold text-white">{venueName}</h3>
+          {venueAddress && <p className="text-xs text-neutral-300 mt-1">{venueAddress}</p>}
+          {venueMapUrl && (
+            <div className="mt-3">
+              <a
+                href={venueMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-400/30 px-3.5 py-1.5 text-xs text-amber-200 hover:bg-amber-500/30 transition"
+              >
+                <Navigation className="h-3.5 w-3.5" />
+                <span>Get Driving Directions</span>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Voice Message Player (if recorded) */}
+      {voiceMessageUrl && (
+        <div className="relative z-10 my-6">
+          <VoiceMessagePlayer audioUrl={voiceMessageUrl} senderName={senderName} />
+        </div>
+      )}
+
+      {/* Photo Montage Collage */}
       <div className="relative z-10 my-10">
-        <div className={`grid gap-4 ${photos.length === 1 ? "grid-cols-1 max-w-md mx-auto" : photos.length === 2 ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto" : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-4xl mx-auto"}`}>
+        <div
+          className={`grid gap-4 ${
+            photos.length === 1
+              ? "grid-cols-1 max-w-md mx-auto"
+              : photos.length === 2
+              ? "grid-cols-1 sm:grid-cols-2 max-w-2xl mx-auto"
+              : "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-w-4xl mx-auto"
+          }`}
+        >
           {photos.slice(0, 6).map((img, i) => (
             <div
               key={i}
@@ -144,19 +206,19 @@ export default function PagePreview({
         </div>
       </div>
 
-      {/* Heartfelt Letter Section */}
+      {/* Heartfelt Message / Letter Section */}
       <div className="relative z-10 mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-10 backdrop-blur-xl shadow-2xl my-10">
         <div className="flex items-center space-x-2 text-rose-300 mb-4">
           <Sparkles className="h-4 w-4" />
           <span className="text-xs uppercase tracking-widest font-semibold">
-            Heartfelt Letter
+            {isMemorial ? "Eulogy & Remembrance" : isInvite ? "Event Note" : "Heartfelt Words"}
           </span>
         </div>
         <p className="font-serif text-sm sm:text-base leading-relaxed text-neutral-100 whitespace-pre-wrap">
-          {letter || "I wanted to take a moment to express what words often fail to capture. Thank you for bringing light, joy, and peace to my everyday life."}
+          {letter || "A timeless message crafted with all my heart."}
         </p>
         <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400">
-          <span>Forever Yours,</span>
+          <span>{isMemorial ? "Forever In Our Hearts," : "Warmest Regards,"}</span>
           <span className="font-serif italic font-semibold text-white">
             {senderName || "Always"}
           </span>
@@ -180,7 +242,6 @@ export default function PagePreview({
 
               {/* Action Buttons */}
               <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4 min-h-[90px]">
-                {/* YES Button */}
                 <button
                   onClick={handleYes}
                   className="w-full sm:w-auto rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
@@ -188,7 +249,6 @@ export default function PagePreview({
                   YES! A Million Times Yes! 💍
                 </button>
 
-                {/* NO Button (dodges on hover and touch) */}
                 <div
                   style={{
                     transform: isDodged
@@ -226,9 +286,8 @@ export default function PagePreview({
 
       {/* Footer watermark */}
       <div className="relative z-10 mt-12 text-center text-xs text-neutral-400">
-        <p>Memoir • Personal Couple Moments</p>
+        <p>Memoir • Personal Occasion Moments</p>
       </div>
     </div>
   );
 }
-

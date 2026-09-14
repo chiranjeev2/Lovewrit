@@ -1,16 +1,23 @@
 export type RegionKey = "asia_africa" | "americas" | "europe" | "uk";
 export type CurrencyCode = "INR" | "USD" | "EUR" | "GBP";
 export type ProductType = "CARD" | "PAGE";
+export type TierType = "SELF_SERVICE" | "CUSTOM" | "RUSH";
 
 export interface PricingTier {
   region: RegionKey;
   regionLabel: string;
   currency: CurrencyCode;
   symbol: string;
-  cardPrice: number;       // Display amount (e.g. 49 or 2)
-  pagePrice: number;       // Display amount (e.g. 200 or 10)
-  cardPriceUnit: number;   // Stripe smallest unit (paise / cents / pence)
+  cardPrice: number;         // ₹49 / $2 / €2 / £2
+  pagePrice: number;         // ₹200 / $10 / €10 / £10
+  customPrice: number;       // ₹1000 / $50 / €50 / £50
+  rushPrice: number;         // ₹2000 / $100 / €100 / £100
+  bundleAddonPrice: number;  // ₹99 / $5 / €5 / £5
+  cardPriceUnit: number;     // In smallest currency units (paise / cents / pence)
   pagePriceUnit: number;
+  customPriceUnit: number;
+  rushPriceUnit: number;
+  bundleAddonUnit: number;
 }
 
 export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
@@ -21,8 +28,14 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     symbol: "₹",
     cardPrice: 49,
     pagePrice: 200,
+    customPrice: 1000,
+    rushPrice: 2000,
+    bundleAddonPrice: 99,
     cardPriceUnit: 4900,
     pagePriceUnit: 20000,
+    customPriceUnit: 100000,
+    rushPriceUnit: 200000,
+    bundleAddonUnit: 9900,
   },
   americas: {
     region: "americas",
@@ -31,8 +44,14 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     symbol: "$",
     cardPrice: 2,
     pagePrice: 10,
+    customPrice: 50,
+    rushPrice: 100,
+    bundleAddonPrice: 5,
     cardPriceUnit: 200,
     pagePriceUnit: 1000,
+    customPriceUnit: 5000,
+    rushPriceUnit: 10000,
+    bundleAddonUnit: 500,
   },
   europe: {
     region: "europe",
@@ -41,8 +60,14 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     symbol: "€",
     cardPrice: 2,
     pagePrice: 10,
+    customPrice: 50,
+    rushPrice: 100,
+    bundleAddonPrice: 5,
     cardPriceUnit: 200,
     pagePriceUnit: 1000,
+    customPriceUnit: 5000,
+    rushPriceUnit: 10000,
+    bundleAddonUnit: 500,
   },
   uk: {
     region: "uk",
@@ -51,8 +76,14 @@ export const PRICING_TIERS: Record<RegionKey, PricingTier> = {
     symbol: "£",
     cardPrice: 2,
     pagePrice: 10,
+    customPrice: 50,
+    rushPrice: 100,
+    bundleAddonPrice: 5,
     cardPriceUnit: 200,
     pagePriceUnit: 1000,
+    customPriceUnit: 5000,
+    rushPriceUnit: 10000,
+    bundleAddonUnit: 500,
   },
 };
 
@@ -100,3 +131,42 @@ export function formatPrice(amount: number, currency: CurrencyCode): string {
   return `${symbol}${amount}`;
 }
 
+export function calculateOrderTotal(
+  region: RegionKey,
+  productType: ProductType,
+  tier: TierType = "SELF_SERVICE",
+  isBundle = false
+): { totalUnit: number; displayPrice: number; currency: CurrencyCode; symbol: string } {
+  const p = PRICING_TIERS[region];
+  let unit = 0;
+  let display = 0;
+
+  if (tier === "RUSH") {
+    unit = p.rushPriceUnit;
+    display = p.rushPrice;
+  } else if (tier === "CUSTOM") {
+    unit = p.customPriceUnit;
+    display = p.customPrice;
+  } else {
+    // SELF_SERVICE
+    if (productType === "CARD") {
+      unit = p.cardPriceUnit;
+      display = p.cardPrice;
+    } else {
+      unit = p.pagePriceUnit;
+      display = p.pagePrice;
+    }
+  }
+
+  if (isBundle) {
+    unit += p.bundleAddonUnit;
+    display += p.bundleAddonPrice;
+  }
+
+  return {
+    totalUnit: unit,
+    displayPrice: display,
+    currency: p.currency,
+    symbol: p.symbol,
+  };
+}

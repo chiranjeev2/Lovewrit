@@ -5,22 +5,30 @@ import { nanoid } from "nanoid";
 import {
   validateImageFile,
   validateAudioFile,
-  MAX_IMAGE_SIZE_BYTES,
-  MAX_AUDIO_SIZE_BYTES,
+  validateVoiceMemoFile,
 } from "@/lib/validation";
 
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const kind = (formData.get("kind") as string) || "image"; // "image" | "audio"
+    const kind = (formData.get("kind") as string) || "image"; // "image" | "audio" | "voice"
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Validation checks per user requirement
-    if (kind === "audio") {
+    // Validation checks per requirement
+    if (kind === "voice") {
+      const validation = validateVoiceMemoFile({
+        size: file.size,
+        type: file.type,
+        name: file.name,
+      });
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error }, { status: 400 });
+      }
+    } else if (kind === "audio") {
       const validation = validateAudioFile({
         size: file.size,
         type: file.type,
@@ -44,9 +52,11 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Sanitize extension
-    const ext = path.extname(file.name) || (kind === "audio" ? ".mp3" : ".jpg");
+    const ext =
+      path.extname(file.name) ||
+      (kind === "image" ? ".jpg" : kind === "voice" ? ".webm" : ".mp3");
     const sanitizedExt = ext.toLowerCase().replace(/[^a-z0-9.]/g, "");
-    const filename = `${Date.now()}-${nanoid(8)}${sanitizedExt}`;
+    const filename = `${Date.now()}-${kind}-${nanoid(8)}${sanitizedExt}`;
 
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
@@ -60,6 +70,7 @@ export async function POST(req: NextRequest) {
       success: true,
       url: publicUrl,
       filename,
+      kind,
       size: file.size,
       mimeType: file.type,
     });
@@ -71,4 +82,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

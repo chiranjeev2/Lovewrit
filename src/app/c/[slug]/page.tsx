@@ -4,6 +4,8 @@ import React, { useEffect, useState, useRef, use } from "react";
 import Link from "next/link";
 import CardPreview from "@/components/editor/CardPreview";
 import OpeningMoment from "@/components/shared/OpeningMoment";
+import CountdownReveal from "@/components/interactive/CountdownReveal";
+import QRCodeModal from "@/components/interactive/QRCodeModal";
 import { ColorThemeKey, PhotoShapeKey, TEMPLATES } from "@/lib/templates-data";
 import {
   Download,
@@ -12,7 +14,7 @@ import {
   Heart,
   Loader2,
   Sparkles,
-  ArrowLeft,
+  QrCode,
 } from "lucide-react";
 import { toPng, toJpeg } from "html-to-image";
 
@@ -29,6 +31,8 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const [copied, setCopied] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showOpeningMoment, setShowOpeningMoment] = useState(true);
+  const [isLockedCountdown, setIsLockedCountdown] = useState(false);
+  const [showQRModal, setShowQRModal] = useState(false);
 
   const cardRef = useRef<HTMLDivElement | null>(null);
 
@@ -39,6 +43,13 @@ export default function CardSharePage({ params }: CardSharePageProps) {
         const data = await res.json();
         if (res.ok && data.order) {
           setOrder(data.order);
+          // Check countdown lock
+          if (data.order.cardData?.revealAt) {
+            const targetTime = new Date(data.order.cardData.revealAt).getTime();
+            if (targetTime > Date.now()) {
+              setIsLockedCountdown(true);
+            }
+          }
         }
       } catch (err) {
         console.error("Error loading card:", err);
@@ -57,7 +68,6 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     }
   };
 
-  // High-res Image Download using html-to-image
   const handleDownloadImage = async (format: "png" | "jpeg" = "png") => {
     const node = document.getElementById("memoir-card-node");
     if (!node) return;
@@ -88,7 +98,6 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     );
   }
 
-  // Fallback demo data if not found or testing directly
   const cardData = order?.cardData || {
     senderName: "Dev",
     recipientName: "Ananya",
@@ -102,10 +111,30 @@ export default function CardSharePage({ params }: CardSharePageProps) {
 
   const template = TEMPLATES.find((t) => t.id === order?.templateId) || TEMPLATES[1];
 
+  const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+
   return (
     <div className="relative min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8">
-      {/* Heartfelt Opening Moment Reveal */}
-      {showOpeningMoment && (
+      {/* QR Code Printable Modal */}
+      <QRCodeModal
+        url={currentUrl}
+        title={`Memoir Card for ${cardData.recipientName}`}
+        isOpen={showQRModal}
+        onClose={() => setShowQRModal(false)}
+      />
+
+      {/* Countdown Reveal Lock (if scheduled for the future) */}
+      {isLockedCountdown && cardData.revealAt && (
+        <CountdownReveal
+          revealAt={cardData.revealAt}
+          recipientName={cardData.recipientName}
+          senderName={cardData.senderName}
+          onUnlocked={() => setIsLockedCountdown(false)}
+        />
+      )}
+
+      {/* Tailored Opening Moment Reveal */}
+      {showOpeningMoment && !isLockedCountdown && (
         <OpeningMoment
           revealType={template.revealType}
           senderName={cardData.senderName}
@@ -128,6 +157,15 @@ export default function CardSharePage({ params }: CardSharePageProps) {
         </Link>
 
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowQRModal(true)}
+            className="flex items-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition"
+            title="Generate QR Code"
+          >
+            <QrCode className="h-3.5 w-3.5 text-rose-400" />
+            <span className="hidden sm:inline">QR Code</span>
+          </button>
+
           <button
             onClick={copyLink}
             className="flex items-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-3.5 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition"
@@ -159,6 +197,10 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           photoShape={cardData.photoShape as PhotoShapeKey}
           colorTheme={cardData.colorTheme as ColorThemeKey}
           location={cardData.location}
+          venueName={cardData.venueName}
+          venueAddress={cardData.venueAddress}
+          venueMapUrl={cardData.venueMapUrl}
+          voiceMessageUrl={cardData.voiceMessageUrl}
         />
 
         {/* Action Controls */}
@@ -186,11 +228,9 @@ export default function CardSharePage({ params }: CardSharePageProps) {
         </div>
       </main>
 
-      {/* Footer watermark */}
       <footer className="py-4 text-center text-xs text-neutral-500">
         <p>Created with Memoir • Personalized Keepsakes</p>
       </footer>
     </div>
   );
 }
-

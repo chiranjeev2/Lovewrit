@@ -1,5 +1,6 @@
 export const MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
-export const MAX_AUDIO_SIZE_BYTES = 15 * 1024 * 1024; // 15MB
+export const MAX_AUDIO_SIZE_BYTES = 15 * 1024 * 1024; // 15MB for background songs
+export const MAX_VOICE_MEMO_SIZE_BYTES = 2 * 1024 * 1024; // 2MB for voice memos (~90-120 seconds speech)
 
 export const ALLOWED_IMAGE_MIME_TYPES = [
   "image/jpeg",
@@ -18,6 +19,7 @@ export const ALLOWED_AUDIO_MIME_TYPES = [
   "audio/x-m4a",
   "audio/m4a",
   "audio/aac",
+  "audio/webm",
 ];
 
 export interface ValidationResult {
@@ -56,12 +58,31 @@ export function validateAudioFile(file: { size: number; type: string; name: stri
 
   const normalizedType = file.type.toLowerCase();
   const ext = file.name.split(".").pop()?.toLowerCase() || "";
-  const allowedExtensions = ["mp3", "wav", "ogg", "m4a", "aac"];
+  const allowedExtensions = ["mp3", "wav", "ogg", "m4a", "aac", "webm"];
 
   if (!ALLOWED_AUDIO_MIME_TYPES.includes(normalizedType) && !allowedExtensions.includes(ext)) {
-    return { valid: false, error: "Invalid audio format. Allowed: MP3, WAV, OGG, M4A." };
+    return { valid: false, error: "Invalid audio format. Allowed: MP3, WAV, OGG, M4A, WEBM." };
   }
 
   return { valid: true };
 }
 
+export function validateVoiceMemoFile(file: { size: number; type: string; name: string }): ValidationResult {
+  if (!file) {
+    return { valid: false, error: "No voice memo file provided" };
+  }
+
+  if (file.size > MAX_VOICE_MEMO_SIZE_BYTES) {
+    return { valid: false, error: "Voice memo exceeds 2MB limit (approx. 90s). Please keep it under 2MB." };
+  }
+
+  const normalizedType = file.type.toLowerCase();
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  const allowedExtensions = ["mp3", "wav", "ogg", "m4a", "webm", "aac"];
+
+  if (!ALLOWED_AUDIO_MIME_TYPES.includes(normalizedType) && !allowedExtensions.includes(ext)) {
+    return { valid: false, error: "Invalid voice audio format. Allowed: MP3, M4A, WAV, WEBM." };
+  }
+
+  return { valid: true };
+}

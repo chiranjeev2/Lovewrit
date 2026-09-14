@@ -8,54 +8,88 @@ datasource db {
 }
 
 model Order {
-  id              String    @id @default(cuid())
-  slug            String    @unique
-  customerEmail   String
-  customerName    String
-  productType     String    // "CARD" | "PAGE"
-  templateId      String
-  status          String    @default("PENDING") // "PENDING" | "PAID" | "FAILED"
-  currency        String    // "INR" | "USD" | "EUR" | "GBP"
-  amountTotal     Int       // in cents / paise / pence
-  region          String    // "asia_africa" | "americas" | "europe" | "uk"
-  stripeSessionId String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  slug                String    @unique
+  customerEmail       String
+  customerName        String
+  productType         String    // "CARD" | "PAGE"
+  templateId          String
+  tier                String    @default("SELF_SERVICE") // "SELF_SERVICE" | "CUSTOM" | "RUSH"
+  isBundle            Boolean   @default(false)
+  customNotes         String?   // Buyer instructions for Custom / Rush tiers
+  status              String    @default("PENDING") // "PENDING" | "PAID" | "FAILED"
+  founderStatus       String    @default("NOT_APPLICABLE") // "NOT_APPLICABLE" | "QUEUED" | "IN_PROGRESS" | "COMPLETED"
+  founderAssignedLink String?
+  adminToken          String?   // Secret token for buyer/family moderation
+  currency            String    // "INR" | "USD" | "EUR" | "GBP"
+  amountTotal         Int       // in cents / paise / pence
+  region              String    // "asia_africa" | "americas" | "europe" | "uk"
+  stripeSessionId     String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
-  cardData        CardData?
-  pageData        PageData?
+  cardData            CardData?
+  pageData            PageData?
 }
 
 model CardData {
-  id            String   @id @default(cuid())
-  orderId       String   @unique
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  senderName    String
-  recipientName String
-  occasion      String   // "proposal" | "anniversary" | "sorry" | "reminiscing"
-  message       String
-  photoUrl      String
-  photoShape    String   @default("oval") // "oval" | "square" | "rounded" | "heart" | "circle"
-  colorTheme    String   @default("rose")
-  location      String?
-  language      String   @default("en") // "en" | "pa" | "hi"
-  createdAt     DateTime @default(now())
+  id              String    @id @default(cuid())
+  orderId         String    @unique
+  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName      String
+  recipientName   String
+  occasion        String    // "proposal" | "anniversary" | "sorry" | "reminiscing" | "birthday" | "memorial" | "godhbharai" | "jagrata_kirtan" | "kitty_party"
+  message         String
+  photoUrl        String
+  photoShape      String    @default("oval") // "oval" | "square" | "rounded" | "heart" | "circle"
+  colorTheme      String    @default("rose")
+  location        String?
+  venueName       String?
+  venueAddress    String?
+  venueMapUrl     String?
+  voiceMessageUrl String?
+  revealAt        DateTime?
+  language        String    @default("en") // "en" | "pa" | "hi"
+  createdAt       DateTime  @default(now())
 }
 
 model PageData {
-  id            String   @id @default(cuid())
-  orderId       String   @unique
-  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  senderName    String
-  recipientName String
-  occasion      String   // "proposal" | "anniversary" | "sorry" | "reminiscing"
-  letter        String
-  photoUrls     String   // JSON stringified array of URLs
-  musicTrack    String?  // Built-in track ID or custom uploaded audio URL
-  musicType     String?  @default("builtin") // "builtin" | "custom"
-  isProposal    Boolean  @default(false)
-  colorTheme    String   @default("rose")
-  language      String   @default("en") // "en" | "pa" | "hi"
-  createdAt     DateTime @default(now())
+  id                       String           @id @default(cuid())
+  orderId                  String           @unique
+  order                    Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName               String
+  recipientName            String
+  occasion                 String
+  letter                   String
+  photoUrls                String           // JSON stringified array of URLs
+  musicTrack               String?          // Built-in track ID or custom uploaded audio URL
+  musicType                String?          @default("builtin") // "builtin" | "custom"
+  isProposal               Boolean          @default(false)
+  colorTheme               String           @default("rose")
+  venueName                String?
+  venueAddress             String?
+  venueMapUrl              String?
+  voiceMessageUrl          String?
+  revealAt                 DateTime?
+  requireGuestbookApproval Boolean          @default(false)
+  language                 String           @default("en") // "en" | "pa" | "hi"
+  createdAt                DateTime         @default(now())
+
+  guestbookEntries         GuestbookEntry[]
 }
 
+model GuestbookEntry {
+  id         String   @id @default(cuid())
+  pageDataId String
+  pageData   PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
+  authorName String
+  message    String
+  status     String   @default("APPROVED") // "PENDING" | "APPROVED" | "FLAGGED"
+  createdAt  DateTime @default(now())
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}

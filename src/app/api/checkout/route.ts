@@ -7,6 +7,8 @@ import {
   CurrencyCode,
   RegionKey,
   ProductType,
+  TierType,
+  calculateOrderTotal,
 } from "@/lib/currency";
 import { nanoid } from "nanoid";
 
@@ -19,6 +21,9 @@ export async function POST(req: NextRequest) {
       customerEmail,
       customerName,
       currency: requestedCurrency,
+      tier: requestedTier = "SELF_SERVICE",
+      isBundle = false,
+      customNotes,
       cardData,
       pageData,
     } = body;
@@ -32,27 +37,55 @@ export async function POST(req: NextRequest) {
 
     const currency: CurrencyCode = (requestedCurrency as CurrencyCode) || "USD";
     const region: RegionKey = CURRENCY_TO_REGION[currency] || "americas";
-    const tier = PRICING_TIERS[region];
+    const tier: TierType = (requestedTier as TierType) || "SELF_SERVICE";
 
-    const amountTotal =
-      productType === "CARD" ? tier.cardPriceUnit : tier.pagePriceUnit;
-    const displayPrice =
-      productType === "CARD" ? tier.cardPrice : tier.pagePrice;
+    // If Rush tier requested, verify if Rush is currently active
+    if (tier === "RUSH") {
+      const rushSetting = await db.platformSetting.findUnique({
+        where: { key: "rush_available" },
+      });
+      if (rushSetting && rushSetting.value === "false") {
+        return NextResponse.json(
+          { error: "Emergency Rush orders are temporarily paused by the founder. Please select Custom or Self-Service." },
+          { status: 400 }
+        );
+      }
+    }
 
-    // Generate unique human-friendly short slug for the finished card/page
+    const { totalUnit, displayPrice, symbol } = calculateOrderTotal(
+      region,
+      productType,
+      tier,
+      isBundle
+    );
+
+    // Generate unique short slug & secret buyer admin token for moderation
     const slug = nanoid(10);
+    const adminToken = nanoid(16);
 
-    // Save pending order and data in database
+    const isMemorial =
+      cardData?.occasion === "memorial" || pageData?.occasion === "memorial";
+
+    // Determine initial founder status
+    const initialFounderStatus =
+      tier === "RUSH" ? "QUEUED" : tier === "CUSTOM" ? "QUEUED" : "NOT_APPLICABLE";
+
+    // Save order in database
     const order = await db.order.create({
       data: {
         slug,
+        adminToken,
         customerEmail,
         customerName,
         productType,
         templateId,
+        tier,
+        isBundle: Boolean(isBundle),
+        customNotes: customNotes || null,
         status: "PENDING",
+        founderStatus: initialFounderStatus,
         currency,
-        amountTotal,
+        amountTotal: totalUnit,
         region,
         ...(productType === "CARD" && cardData
           ? {
@@ -66,6 +99,11 @@ export async function POST(req: NextRequest) {
                   photoShape: cardData.photoShape || "oval",
                   colorTheme: cardData.colorTheme || "rose",
                   location: cardData.location || null,
+                  venueName: cardData.venueName || null,
+                  venueAddress: cardData.venueAddress || null,
+                  venueMapUrl: cardData.venueMapUrl || null,
+                  voiceMessageUrl: cardData.voiceMessageUrl || null,
+                  revealAt: cardData.revealAt ? new Date(cardData.revealAt) : null,
                   language: cardData.language || "en",
                 },
               },
@@ -84,6 +122,14 @@ export async function POST(req: NextRequest) {
                   musicType: pageData.musicType || "builtin",
                   isProposal: Boolean(pageData.isProposal),
                   colorTheme: pageData.colorTheme || "rose",
+                  venueName: pageData.venueName || null,
+                  venueAddress: pageData.venueAddress || null,
+                  venueMapUrl: pageData.venueMapUrl || null,
+                  voiceMessageUrl: pageData.voiceMessageUrl || null,
+                  revealAt: pageData.revealAt ? new Date(pageData.revealAt) : null,
+                  requireGuestbookApproval: Boolean(
+                    pageData.requireGuestbookApproval ?? isMemorial
+                  ),
                   language: pageData.language || "en",
                 },
               },
@@ -99,6 +145,13 @@ export async function POST(req: NextRequest) {
 
     // 1. Production / Live Stripe Mode
     if (isStripeConfigured() && stripe) {
+      const tierTitle =
+        tier === "RUSH"
+          ? "Emergency Rush Priority"
+          : tier === "CUSTOM"
+          ? "Custom Handcrafted"
+          : "Self-Service";
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ["card"],
         customer_email: customerEmail,
@@ -107,22 +160,24 @@ export async function POST(req: NextRequest) {
             price_data: {
               currency: currency.toLowerCase(),
               product_data: {
-                name: `Memoir ${productType === "CARD" ? "Digital Card" : "Interactive Couple Page"}`,
-                description: `Occasion memory for ${
-                  cardData?.recipientName || pageData?.recipientName || "Couples"
+                name: `Memoir ${productType === "CARD" ? "Digital Card" : "Page"} (${tierTitle})`,
+                description: `${isBundle ? "[Bundle 2-3 Variations] " : ""}${
+                  cardData?.recipientName || pageData?.recipientName || "Honoree"
                 }`,
               },
-              unit_amount: amountTotal,
+              unit_amount: totalUnit,
             },
             quantity: 1,
           },
         ],
         mode: "payment",
-        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&slug=${slug}`,
+        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&slug=${slug}&token=${adminToken}`,
         cancel_url: `${origin}/create/${templateId}?canceled=true`,
         metadata: {
           orderId: order.id,
           slug,
+          tier,
+          adminToken,
         },
       });
 
@@ -135,10 +190,11 @@ export async function POST(req: NextRequest) {
         checkoutUrl: session.url,
         orderId: order.id,
         slug,
+        adminToken,
       });
     }
 
-    // 2. Dev / Simulation Mode (Immediate instant local testing)
+    // 2. Dev / Simulation Mode
     const simulatedSessionId = `sim_${order.id}`;
     await db.order.update({
       where: { id: order.id },
@@ -146,11 +202,12 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({
-      checkoutUrl: `${origin}/checkout/success?session_id=${simulatedSessionId}&slug=${slug}`,
+      checkoutUrl: `${origin}/checkout/success?session_id=${simulatedSessionId}&slug=${slug}&token=${adminToken}`,
       isSimulated: true,
       orderId: order.id,
       slug,
-      price: `${tier.symbol}${displayPrice}`,
+      adminToken,
+      price: `${symbol}${displayPrice}`,
     });
   } catch (err: unknown) {
     console.error("Checkout creation error:", err);
@@ -160,4 +217,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

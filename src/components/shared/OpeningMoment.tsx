@@ -2,11 +2,12 @@
 
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Sparkles, Music, Mail, Gift, Flame } from "lucide-react";
+import { Heart, Sparkles, Music, Mail, Gift, Flame, SunMedium, PartyPopper } from "lucide-react";
 import confetti from "canvas-confetti";
+import { RevealType } from "@/lib/templates-data";
 
 interface OpeningMomentProps {
-  revealType?: "velvet_box" | "champagne_seal" | "wax_heart" | "vintage_ribbon";
+  revealType?: RevealType;
   senderName: string;
   recipientName: string;
   occasion?: string;
@@ -28,18 +29,32 @@ export default function OpeningMoment({
     setIsOpen(true);
 
     // Burst festive petals or sparkles
-    if (revealType === "champagne_seal") {
+    if (revealType === "balloon_pop") {
       confetti({
-        particleCount: 70,
-        spread: 60,
+        particleCount: 120,
+        spread: 100,
+        origin: { y: 0.5 },
+        colors: ["#ec4899", "#a855f7", "#3b82f6", "#10b981", "#f59e0b"],
+      });
+    } else if (revealType === "champagne_seal" || revealType === "golden_invite") {
+      confetti({
+        particleCount: 80,
+        spread: 70,
         colors: ["#ffd700", "#e6ca65", "#fff2a1"],
         origin: { y: 0.6 },
       });
     } else if (revealType === "velvet_box") {
       confetti({
-        particleCount: 60,
+        particleCount: 70,
         spread: 70,
         colors: ["#e11d48", "#be123c", "#fda4af"],
+        origin: { y: 0.6 },
+      });
+    } else if (revealType === "diya_aarti") {
+      confetti({
+        particleCount: 80,
+        spread: 80,
+        colors: ["#f97316", "#eab308", "#ef4444"],
         origin: { y: 0.6 },
       });
     }
@@ -99,6 +114,30 @@ export default function OpeningMoment({
             </div>
           )}
 
+          {revealType === "balloon_pop" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-tr from-purple-500 to-pink-500 shadow-xl shadow-purple-500/30 ring-4 ring-pink-400/20 animate-pulse">
+              <PartyPopper className="h-12 w-12 text-white" />
+            </div>
+          )}
+
+          {revealType === "memorial_candle" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-stone-700 to-amber-800 shadow-xl ring-4 ring-amber-400/20">
+              <Flame className="h-12 w-12 text-amber-300 animate-pulse" />
+            </div>
+          )}
+
+          {revealType === "golden_invite" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-tr from-yellow-600 to-amber-500 shadow-xl ring-4 ring-yellow-300/30">
+              <Mail className="h-12 w-12 text-yellow-100" />
+            </div>
+          )}
+
+          {revealType === "diya_aarti" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-orange-600 to-amber-500 shadow-xl ring-4 ring-orange-400/30 animate-pulse">
+              <SunMedium className="h-12 w-12 text-yellow-100" />
+            </div>
+          )}
+
           {/* Heading and recipient note */}
           <div className="space-y-2">
             <span className="inline-block rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-semibold tracking-wider text-rose-300 uppercase border border-rose-500/20">
@@ -108,15 +147,25 @@ export default function OpeningMoment({
                 ? "Anniversary Celebration"
                 : revealType === "wax_heart"
                 ? "A Sincere Message"
+                : revealType === "balloon_pop"
+                ? "Happy Birthday!"
+                : revealType === "memorial_candle"
+                ? "Sacred Tribute & Remembrance"
+                : revealType === "diya_aarti"
+                ? "Jai Mata Di • Aarti & Chowki"
+                : revealType === "golden_invite"
+                ? "Special Celebration Invite"
                 : "A Memory Stream"}
             </span>
 
             <h2 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              For {recipientName}
+              {revealType === "memorial_candle" ? "Tribute to" : "For"} {recipientName}
             </h2>
 
             <p className="text-sm text-neutral-400">
-              {senderName} has crafted a deeply personal moment just for you.
+              {revealType === "memorial_candle"
+                ? `Cherished and remembered with deep love by ${senderName}.`
+                : `${senderName} has crafted a deeply personal moment just for you.`}
             </p>
           </div>
 
@@ -128,7 +177,13 @@ export default function OpeningMoment({
             >
               <Heart className="mr-2 h-5 w-5 fill-white transition group-hover:scale-125" />
               <span>
-                {hasMusic ? "Tap to Open & Play Music" : "Tap to Open Your Memoir"}
+                {revealType === "memorial_candle"
+                  ? "Light Candle & Pay Tribute"
+                  : revealType === "balloon_pop"
+                  ? "Pop Balloons to Celebrate! 🎈"
+                  : hasMusic
+                  ? "Tap to Open & Play Music"
+                  : "Tap to Open Your Memoir"}
               </span>
               {hasMusic && <Music className="ml-2 h-4 w-4 text-rose-200 animate-pulse" />}
             </button>
@@ -141,4 +196,3 @@ export default function OpeningMoment({
     </AnimatePresence>
   );
 }
-
