@@ -174,6 +174,19 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         (fKeyParam === "memoir_master_founder_secret_2026" || fKeyParam === "founder_master")
       ) {
         setIsFounderFree(true);
+        try {
+          localStorage.setItem("memoir_founder_pass", fKeyParam);
+        } catch {}
+      } else {
+        try {
+          const savedKey = localStorage.getItem("memoir_founder_pass");
+          if (
+            savedKey === "memoir_master_founder_secret_2026" ||
+            savedKey === "founder_master"
+          ) {
+            setIsFounderFree(true);
+          }
+        } catch {}
       }
     }
     return () => {
@@ -191,6 +204,9 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
       setIsFounderFree(true);
       setShowFounderInput(false);
       setFormError(null);
+      try {
+        localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+      } catch {}
     } else {
       setFormError("Invalid Founder Master Key.");
     }
@@ -268,6 +284,34 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     const occKey = occasion as keyof typeof prompts;
     if (prompts && prompts[occKey]) {
       setMessage(prompts[occKey]);
+    }
+  };
+
+  // Dynamic Occasion & Theme handler
+  const handleOccasionChange = (newOccasion: string) => {
+    setOccasion(newOccasion);
+    const isNowProposal = newOccasion === "proposal";
+    setIsProposal(isNowProposal);
+
+    // Find the template that natively matches this occasion
+    const matchingTemplate = TEMPLATES.find((t) => t.occasion === newOccasion);
+    if (matchingTemplate) {
+      setSelectedTheme(matchingTemplate.defaultTheme);
+      setPhotoShape(matchingTemplate.defaultShape);
+      if (matchingTemplate.samplePhotos && matchingTemplate.samplePhotos.length > 0) {
+        setPagePhotos(matchingTemplate.samplePhotos);
+        setCardPhoto(matchingTemplate.samplePhotos[0]);
+      }
+    }
+
+    // Set default sample prompt for this occasion in current language
+    const langKey = selectedLanguage in TRANSLATIONS ? selectedLanguage : "en";
+    const prompts = TRANSLATIONS[langKey]?.samplePrompts;
+    const promptForOccasion = prompts && (prompts as Record<string, string>)[newOccasion];
+    if (promptForOccasion) {
+      setMessage(promptForOccasion);
+    } else if (matchingTemplate?.sampleMessage) {
+      setMessage(matchingTemplate.sampleMessage);
     }
   };
 
@@ -480,8 +524,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           collageLayout,
           musicTrack: currentTrack,
           musicType: musicOption,
-          isProposal,
-          proposalQuestion: isProposal ? proposalQuestion : undefined,
+          isProposal: isProposal && occasion === "proposal",
+          proposalQuestion: isProposal && occasion === "proposal" ? proposalQuestion : undefined,
           colorTheme: selectedTheme,
           venueName,
           venueAddress,
@@ -801,7 +845,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   </label>
                   <select
                     value={occasion}
-                    onChange={(e) => setOccasion(e.target.value)}
+                    onChange={(e) => handleOccasionChange(e.target.value)}
                     className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white focus:border-rose-500 focus:outline-none capitalize"
                   >
                     <option value="proposal">Romantic Proposal</option>
@@ -835,11 +879,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               </div>
 
               {/* Proposal & Asking Out Question Customizer */}
-              {(isProposal ||
-                occasion === "proposal" ||
-                template.occasion === "proposal" ||
-                template.id.includes("proposal") ||
-                template.id.includes("girlfriend")) && (
+              {occasion === "proposal" && (
                 <div className="rounded-2xl border border-rose-500/30 bg-rose-950/20 p-4 space-y-2 mt-3 animate-in fade-in">
                   <div className="flex items-center space-x-2 text-rose-400">
                     <Heart className="h-4 w-4 fill-rose-500" />
@@ -1731,7 +1771,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 photoUrls={pagePhotos}
                 colorTheme={selectedTheme}
                 collageLayout={collageLayout}
-                isProposal={isProposal}
+                isProposal={isProposal && occasion === "proposal"}
                 proposalQuestion={proposalQuestion}
                 venueName={venueName}
                 venueAddress={venueAddress}

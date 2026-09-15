@@ -1,136 +1,88 @@
-# Project Brief: Personalized Occasion Cards & Pages Platform
+# Project Brief: Memoir — Personalized Occasion Cards & Pages Platform
 
 ## What this is
-A commercial web platform where customers order personalized digital cards and
-mini-websites ("pages") for emotional occasions — primarily couples
-(proposals, anniversaries, "sorry" messages, reminiscing) and secondarily
-other life events (childbirth/godhbharai/baby showers, funerals, jagrata,
-kirtan, kitty parties, birthdays, invites).
+A commercial web platform where customers order personalized digital cards and mini-websites ("pages") for emotional occasions — primarily couples (proposals, anniversaries, "sorry" messages, reminiscing) and secondarily other life events (childbirth/godhbharai/baby showers, memorials, jagrata/kirtan, kitty parties, birthdays, event invites).
 
-This is a **self-funded, bootstrapped** project. Build the smallest working
-version first (Phase 1), not the entire feature list at once.
+This is a **self-funded, bootstrapped** project built incrementally from Phase 1 MVP to Phase 2 Commercial Edition.
 
 ---
 
-## Phase 1 (MVP — build this first)
+## 1. Fulfillment Tiers & Multi-Currency Pricing Matrix (Updated)
 
-Scope: **Digital Cards + Template Pages for Couples only.** No AI features
-yet. No mobile app yet — web only, responsive.
-
-### Core user flow
-1. Customer lands on the site, browses a gallery of templates (couples-focused:
-   proposal, anniversary, sorry, reminiscing).
-2. Customer picks Digital Card or Template Page.
-3. Customer fills a form: name(s), short heartfelt message, photo upload,
-   color scheme choice, photo shape choice (oval/square/etc. for cards).
-4. Customer selects language: English, Punjabi, or Hindi.
-5. Customer pays via Stripe (one-time payment), with price shown based on
-   detected region (see Pricing below).
-6. System auto-generates:
-   - A shareable unique link to the finished page/card
-   - A downloadable JPG or PNG version
-7. Customer receives both via on-screen confirmation + email.
-
-### Card design requirements
-- Central photo area with selectable shape (oval, square, rounded, etc.)
-- Optional location field (used for invite-style cards later, not required
-  for Phase 1 couples cards)
-- Customizable heartfelt message text area
-- Selectable color scheme / theme
-- Output: downloadable JPG/PNG
-
-### Template Page requirements (richer than a card)
-- Supports: photo collage/montage, a message/letter area, optional background
-  music track (from a small built-in library — no user upload needed yet)
-- Proposal template variant: "Yes/No" button interaction — the "No" button
-  visually dodges the cursor on hover/approach so it can't be clicked; "Yes"
-  is the only real option
-- Each page gets a unique shareable URL (e.g. yoursite.com/p/{short-id})
-
-### Region-based pricing (Phase 1)
-Detect region via a combination of:
-- IP-based geolocation (best guess, shown before checkout)
-- Currency actually used at Stripe checkout (source of truth, confirms/
-  overrides region if there's a mismatch)
-
-| Product | Asia/Africa | Americas | Europe | UK |
-|---|---|---|---|---|
-| Digital Card | ₹49 | $2 | €2 | £2 |
-| Template Page | ₹200 | $10 | €10 | £10 |
-
-(Custom and Emergency tiers below are Phase 2+ since they require manual
-work from the founder, not pure automation.)
-
-### Admin
-- A single admin/"master key" account for the founder to view orders,
-  manage templates, and see basic analytics. Keep this simple in Phase 1
-  (a basic protected dashboard page is enough — no need for a full admin
-  framework yet).
-
-### Tech stack suggestion (adjust to your comfort level)
-- **Frontend:** React (or Next.js for easier routing + SEO on the template
-  gallery pages)
-- **Backend:** Node.js/Express, or Next.js API routes to keep it one
-  codebase
-- **Database:** PostgreSQL or a simple hosted option like Supabase (handles
-  DB + auth + file storage together, good for a solo bootstrapped build)
-- **File storage:** Supabase Storage or Cloudflare R2 for uploaded photos
-  and generated card images
-- **Card/page image generation:** Server-side HTML-to-image rendering
-  (e.g. a headless browser tool like Puppeteer, or a canvas-based library)
-  to turn the customer's filled template into a downloadable JPG/PNG
-- **Payments:** Stripe Checkout (supports multi-currency out of the box)
-- **Hosting:** Vercel (frontend + API routes) — simplest option for a solo
-  founder, generous free tier to start
-- **Domain:** Buy from Namecheap or Google Domains equivalent, point DNS to
-  Vercel
+| Tier | Asia & Africa (INR) | Americas (USD) | Europe (EUR) | UK (GBP) | Fulfillment & Details |
+|---|---|---|---|---|---|
+| **Tier 1: Digital Card (Self-Service)** | **₹49** | **$2** | **€2** | **£2** | Automated instant generation, 1-3 photo polaroid layout, high-res PNG download, unique link |
+| **Tier 2: Interactive Page (Self-Service)** | **₹99** | **$5** | **€5** | **£5** | Automated mini-site, 1-6 photo collage (masonry/timeline/filmstrip), background music, countdown surprise, voice memo |
+| **Tier 3: Custom Handcrafted (Founder Styled)** | **₹499** (Card: ₹149) | **$25** (Card: $8) | **€25** (Card: €8) | **£25** (Card: £8) | Handcrafted founder review, custom typography, color adjustments, special buyer instructions (24-48h) |
+| **Tier 4: Custom Emergency Rush** | **₹1,459** (Card: ₹449) | **$75** (Card: $22) | **€75** (Card: €22) | **£75** (Card: £22) | Priority queue jump, same-day expedited delivery (6-12h), founder priority queue toggle |
+| **Multi-Template Bundle Addon** | **+₹49** | **+$3** | **+$3** | **+$3** | 2-3 variations with favorite pick |
 
 ---
 
-## Phase 2 (after Phase 1 is live and getting real orders)
+## 2. Platform Architecture & Feature Specifications
 
-- Add Custom Page tier (₹1000/$50/€50/£50) and Emergency/Rush tier
-  (₹2000/$100/€100/£100/A$100) — these involve the founder manually
-  personalizing a template per order, so build a simple order-queue/
-  dashboard for this before launching the tier
-- Add multi-template bundle option (2-3 variations per order, buyer picks
-  favorite, one revision included)
-- Expand occasions beyond couples: birthdays, funerals/memorials, invites,
-  pregnancy/godhbharai/baby showers, jagrata/kirtan/kitty party cards
-- Add venue/location field for invite-type cards
-- Add features: voice message upload, countdown/timed page reveal,
-  guestbook/reply wall for the recipient, QR code generator for the page
-  link, multi-photo "chapters"/scrolling story format, auto-generated
-  video from photos + music, occasion-specific curated soundtrack packs
-- Design a dedicated "opening moment" intro animation/experience before
-  the recipient sees the main page content (tone should match the
-  occasion — playful for proposals, calm for memorials, festive for
-  birthdays)
-- Add a special/customizable features section as a distinct product area
+### Core Engine & Tech Stack
+- **Frontend & Fullstack API:** Next.js 16 (App Router, Turbopack, React 19, TypeScript, Tailwind CSS)
+- **Database:** Prisma ORM with SQLite (local development) / PostgreSQL (production)
+- **Payments:** Stripe Checkout with multi-currency handling + Founder VIP master key bypass
+- **Audio & Media:** Web Audio API, native HTML5 media recorder, client-side dynamic preview canvas
 
-## Phase 3 (once validated and scaling)
+### Phase 1 Features (Completed)
+1. **Couples Occasion Catalog**:
+   - Romantic Proposal (`midnight-rose`, `be-my-girlfriend`)
+   - Anniversary Celebration (`golden-anniversary`, `modern-romance`)
+   - Apology / Forgiveness (`from-my-heart`)
+   - Memory Lane / Nostalgia (`sweet-reminiscing`)
+2. **Digital Card vs Interactive Page Formats**:
+   - Card: Framed polaroid cards, selectable shapes (oval, square, rounded, circle), high-res PNG/JPEG export.
+   - Page: Full-bleed emotional mini-website, animated entrance reveals, soundtrack playback.
+3. **Region Detection & Multi-Currency**:
+   - Auto-detects INR (₹), USD ($), EUR (€), GBP (£).
 
-- Integrate AI (e.g. Gemini API or similar): AI-assisted heartfelt message
-  writing (language-aware — English/Punjabi/Hindi), AI-stylized photo
-  filters (e.g. Ghibli-style rendering)
-- Auto-generate video downloads (photos + music, not just static images)
-- Consider a mobile app once web traffic/orders justify the investment
-- Expand template/language library further based on which occasions and
-  languages are actually converting
+### Phase 2 Commercial Features (Completed)
+1. **Multi-Photo Arrangement Tray & One-by-One Upload**:
+   - Upload multiple photos simultaneously or add them one-by-one via `+ Add One Photo`.
+   - Visual photo management tray with thumbnails, `#1 Cover` badge, and `← Left` / `Right →` reordering controls.
+   - Limit enforcement: up to 3 photos for Digital Cards, up to 6 photos for Interactive Pages.
+2. **Dynamic Occasion & Theme Customizer**:
+   - Switching occasions automatically swaps color themes, sample heartfelt letters, and sample photos.
+   - Proposal customizer (Marry Me, Be My Girlfriend, Be My Boyfriend, Go On A Date) with dodging "No" button appears strictly on romantic proposal occasions.
+3. **Confirmed-Only 50% Regift Discount**:
+   - Viral reply loop: recipient viewing their card/page can click *"Reply with Gift (50% OFF)"*.
+   - Strictly locked against genuine paid orders in the database — no arbitrary promo code entry loopholes.
+4. **Founder VIP Master Pass**:
+   - Master key `memoir_master_founder_secret_2026` allows the founder to generate unlimited free test cards/pages with instant ₹0 bypass.
+   - Dedicated template launcher in `/admin` with persistent `localStorage` access.
+5. **Expanded Life Occasions**:
+   - Birthdays: `festive-birthday` with balloon pop unboxing & celebratory music.
+   - Memorials: `in-loving-memory` with serene candle-lighting reveal & pre-moderated condolence wall.
+   - Baby Showers / Godhbharai: `godhbharai-blessings` with baby lullaby soundtrack & venue directions.
+   - Devotional: `jagrata-kirtan-invitation` with traditional Aarti/Bhajan soundtrack & temple map.
+   - Social: `chic-kitty-party` with high-tea theme, dress code, & RSVP registry.
+6. **Voice Memo Upload & Direct Recording**:
+   - In-browser microphone recorder allowing buyers to speak their emotions directly into the gift (max 2MB / 90s).
+7. **Timed Surprise Countdown Reveal**:
+   - Reveal countdown timer with 1-click presets ("Tonight at Midnight", "Tomorrow Morning", "In 24 Hours", "This Weekend").
+8. **QR Code Generator**:
+   - Instant scan-ready QR code modal with 1-click PNG download for physical cards and gift boxes.
+9. **Multilingual Keyboard Support**:
+   - On-screen phonetic virtual keyboards for Hindi and Punjabi script entry.
+10. **Founder Fulfillment Queue & Rush Availability Switch**:
+    - Dedicated `/admin` tab for tracking and fulfilling Custom and Rush orders with priority badges.
 
 ---
 
-## Instructions for the coding agent
+## 3. Roadmap & Strategic Direction
 
-Start with Phase 1 only. Build incrementally:
-1. Set up the project skeleton (Next.js + chosen backend/DB)
-2. Build the template gallery page (static content is fine to start —
-   hardcode 3-5 couple templates)
-3. Build the order form + file upload for photos
-4. Build the card/page generation logic (server-side rendering to image)
-5. Integrate Stripe Checkout with region-based pricing
-6. Build the delivery flow (unique link + downloadable file)
-7. Build a minimal admin view to see orders
+### Next Focus: Service Depth & Polished Polish (Recommended Before Phase 3)
+Before adding AI writing or automated video rendering (Phase 3), the highest ROI comes from deepening the distinction of each individual service:
+- Occasion-specific unboxing animations (e.g. envelope unsealing for Apologies, garland/floral animations for Godhbharai, diya lighting for Kirtan).
+- Curated background soundtracks per occasion.
+- Interactive RSVP counters & guest gift registries for event invitations.
+- High-res PDF printable card variants.
 
-Ask clarifying questions before Phase 2/3 features — do not build ahead of
-what's specified above without checking in first.
+### Phase 3 (Scaling & Automation)
+- **AI-Powered Heartfelt Writing Assistant**: Multilingual emotion-guided letter writer (English, Hindi, Punjabi) powered by Gemini API.
+- **AI Stylized Photos**: Optional cartoon/Ghibli/watercolor artistic filters for user photos.
+- **Automated Video Montage Generator**: Server-side MP4 generation compiling photos, message captions, and audio into an exportable video for Instagram/WhatsApp status.
+- **Mobile Native App**: React Native / Flutter wrapper once web sales reach target volume.

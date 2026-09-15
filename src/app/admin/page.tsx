@@ -22,7 +22,9 @@ import {
   Filter,
   Crown,
   Sparkles,
+  X,
 } from "lucide-react";
+import { TEMPLATES } from "@/lib/templates-data";
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -30,6 +32,7 @@ export default function AdminPage() {
   const [masterKey, setMasterKey] = useState("");
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [showFounderModal, setShowFounderModal] = useState(false);
 
   // Tab navigation
   const [activeTab, setActiveTab] = useState<"orders" | "queue">("orders");
@@ -293,15 +296,26 @@ export default function AdminPage() {
           </div>
 
           <div className="flex items-center space-x-3">
-            <Link
-              href="/create/be-my-girlfriend?founderKey=memoir_master_founder_secret_2026"
-              className="inline-flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-500 px-3.5 py-1.5 text-xs font-bold text-neutral-950 hover:opacity-95 shadow-md shadow-amber-500/20 transition"
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                } catch {}
+                setShowFounderModal(true);
+              }}
+              className="inline-flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-500 px-3.5 py-1.5 text-xs font-bold text-neutral-950 hover:opacity-95 shadow-md shadow-amber-500/20 transition cursor-pointer"
             >
               <Crown className="h-3.5 w-3.5" />
               <span>Create Free Memoir (Founder Pass)</span>
-            </Link>
+            </button>
             <Link
-              href="/"
+              href="/?founderKey=memoir_master_founder_secret_2026#templates"
+              onClick={() => {
+                try {
+                  localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                } catch {}
+              }}
               className="text-xs text-neutral-400 hover:text-white transition px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900"
             >
               Public Site
@@ -711,6 +725,88 @@ export default function AdminPage() {
           </div>
         )}
       </main>
+
+      {/* Founder Free Pass Template Picker Modal */}
+      {showFounderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-2xl rounded-3xl border border-amber-500/40 bg-neutral-950 p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-4">
+              <div className="flex items-center space-x-2.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-400">
+                  <Crown className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-white">
+                    Founder VIP Memoir Creator
+                  </h3>
+                  <p className="text-xs text-neutral-400">
+                    Select any template or occasion to create free test gifts with instant bypass
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFounderModal(false)}
+                className="rounded-xl p-1.5 text-neutral-400 hover:bg-neutral-900 hover:text-white transition"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto pr-1">
+              {TEMPLATES.map((tmpl) => (
+                <Link
+                  key={tmpl.id}
+                  href={`/create/${tmpl.id}?founderKey=memoir_master_founder_secret_2026`}
+                  onClick={() => {
+                    try {
+                      localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                    } catch {}
+                    setShowFounderModal(false);
+                  }}
+                  className="flex items-center space-x-3 rounded-2xl border border-neutral-800 bg-neutral-900/80 p-3 hover:border-amber-500/50 hover:bg-amber-950/20 transition group"
+                >
+                  <span className="text-2xl">{tmpl.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-white group-hover:text-amber-300 transition block truncate">
+                      {tmpl.name}
+                    </span>
+                    <span className="text-[10px] text-neutral-400 capitalize block">
+                      {tmpl.occasion.replace("_", " ")}
+                    </span>
+                  </div>
+                  <span className="rounded-lg bg-neutral-800 px-2 py-1 text-[10px] font-semibold text-amber-400 border border-neutral-700">
+                    ₹0 Free
+                  </span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
+              <Link
+                href="/?founderKey=memoir_master_founder_secret_2026#templates"
+                onClick={() => {
+                  try {
+                    localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                  } catch {}
+                  setShowFounderModal(false);
+                }}
+                className="text-xs text-amber-400 hover:underline flex items-center space-x-1"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Browse Full Public Catalog with Founder Pass Active</span>
+              </Link>
+              <button
+                type="button"
+                onClick={() => setShowFounderModal(false)}
+                className="rounded-xl border border-neutral-800 bg-neutral-900 px-4 py-2 text-xs font-semibold text-neutral-300 hover:text-white"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

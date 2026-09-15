@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Memoir • Personalized Occasions & Digital Keepsakes
 
-## Getting Started
+Memoir is a commercial web platform where customers create, personalize, and share intimate digital greeting cards and multimedia keepsake mini-websites for life's most meaningful moments.
 
-First, run the development server:
+---
+
+## 🌟 Key Features
+
+- **2 Distinct Fulfillment Formats**:
+  - **Digital Card**: Polaroid-style photo keepsake with custom shapes (oval, square, rounded, circle), heartfelt message, and 1-click high-res PNG/JPEG export.
+  - **Interactive Page**: Full mini-website with entrance unboxing reveals, background music, rich photo collages (masonry, memory lane timeline, 35mm filmstrip), voice memos, and recipient reply guestbooks.
+- **4 Commercial Tiers Across 4 Currencies**:
+  - **Tier 1 (Digital Card Self-Service)**: ₹49 / $2 / €2 / £2
+  - **Tier 2 (Interactive Page Self-Service)**: ₹99 / $5 / €5 / £5
+  - **Tier 3 (Custom Handcrafted Founder Edition)**: ₹499 / $25 / €25 / £25 (Card: ₹149 / $8)
+  - **Tier 4 (Custom Emergency Rush Priority)**: ₹1,459 / $75 / €75 / £75 (Card: ₹449 / $22)
+- **Multi-Photo Arrangement Tray**:
+  - Upload multiple photos at once or add them one-by-one (`+ Add One Photo`).
+  - Interactive reordering controls (`← Left`, `Right →`), order badges (`★ #1 Cover`, `#2`, etc.), and individual delete buttons.
+- **Dynamic Occasion Engine**:
+  - Automatically updates themes, sample messages, and photos when selecting occasions.
+  - Interactive proposal question selector (Marry Me, Be My Girlfriend, Be My Boyfriend, Go On A Date) with dodging "No" mechanics.
+- **Strictly Confirmed 50% Regift Reply Loop**:
+  - Recipient can reply with their own gift and receive 50% off, verified strictly against completed paid orders in the database.
+- **Founder VIP Master Pass**:
+  - Founder secret key (`memoir_master_founder_secret_2026`) enables unlimited ₹0 testing with instant order bypass and dedicated template launcher in `/admin`.
+- **Emotional Media**:
+  - In-browser microphone voice recorder.
+  - Timed countdown reveals for surprise moments.
+  - Instant scan-ready QR code modal with PNG download.
+  - Hindi & Punjabi on-screen phonetic keyboards.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: Next.js 16 (App Router, Turbopack, React 19)
+- **Styling**: Tailwind CSS, Lucide Icons, Canvas Confetti
+- **Database**: Prisma ORM with SQLite (dev) / PostgreSQL (prod)
+- **Payments**: Stripe Checkout (multi-currency handling: INR, USD, EUR, GBP)
+- **Image Generation**: HTML-to-Image client rendering
+
+---
+
+## 🚀 Getting Started
+
+### 1. Installation
+
+```bash
+npm install
+```
+
+### 2. Database Setup
+
+```bash
+npx prisma db push
+```
+
+### 3. Environment Variables
+
+Create `.env` in the root:
+
+```env
+DATABASE_URL="file:./dev.db"
+ADMIN_MASTER_KEY="memoir_master_founder_secret_2026"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+
+# Optional Stripe configuration (falls back to mock success in dev):
+STRIPE_SECRET_KEY="sk_test_..."
+STRIPE_WEBHOOK_SECRET="whsec_..."
+```
+
+### 4. Running the Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Visit [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔒 Admin Dashboard & Founder Pass
 
-## Learn More
+- **Admin URL**: `/admin`
+- **Master Key**: `memoir_master_founder_secret_2026`
+- Features:
+  - Full order management & metrics
+  - Founder order fulfillment queue for Custom & Rush tiers
+  - Emergency Rush availability pause switch
+  - Direct 1-click **Create Free Memoir (Founder Pass)** template launcher
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🧪 Build & Test
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+# Verify TypeScript & Next.js production build:
+npm run build
+```
