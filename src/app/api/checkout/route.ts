@@ -23,8 +23,7 @@ export async function POST(req: NextRequest) {
       currency: requestedCurrency,
       tier: requestedTier = "SELF_SERVICE",
       isBundle = false,
-      isRegiftDiscount = false,
-      couponCode,
+      replyTo,
       customNotes,
       masterKey,
       cardData,
@@ -55,9 +54,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const hasDiscount = Boolean(
-      isRegiftDiscount || (couponCode && couponCode.trim().toUpperCase() === "REGIFT50")
-    );
+    // Strict Regift Discount Verification:
+    // Only granted if confirmed that replyTo corresponds to an existing, paid order in the database.
+    let hasDiscount = false;
+    if (replyTo) {
+      const originalOrder = await db.order.findUnique({
+        where: { slug: String(replyTo).trim() },
+        select: { status: true, founderStatus: true },
+      });
+      if (
+        originalOrder &&
+        (originalOrder.status === "PAID" ||
+          originalOrder.status === "DELIVERED" ||
+          originalOrder.founderStatus === "COMPLETED")
+      ) {
+        hasDiscount = true;
+      }
+    }
 
     const { totalUnit, displayPrice, symbol } = calculateOrderTotal(
       region,

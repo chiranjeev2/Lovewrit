@@ -54,6 +54,10 @@ import {
   Tag,
   Film,
   Camera,
+  Plus,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface CreatePageProps {
@@ -130,16 +134,14 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   const [founderKeyInput, setFounderKeyInput] = useState<string>("");
   const [showFounderInput, setShowFounderInput] = useState<boolean>(false);
 
-  // Regift 50% discount & reply details
-  const [couponCode, setCouponCode] = useState<string>("");
+  // Regift 50% discount & confirmed reply details
+  const [replyToSlug, setReplyToSlug] = useState<string | null>(null);
   const [isRegiftDiscount, setIsRegiftDiscount] = useState<boolean>(false);
-  const [couponFeedback, setCouponFeedback] = useState<string | null>(null);
   const [replySender, setReplySender] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
-      const discountParam = urlParams.get("discount");
       const replyParam = urlParams.get("replyTo");
       const toParam = urlParams.get("to");
       const fKeyParam = urlParams.get("founderKey");
@@ -149,10 +151,23 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         setRecipientName(decodedTo);
         setReplySender(decodedTo);
       }
-      if (replyParam && discountParam && discountParam.toUpperCase() === "REGIFT50") {
-        setIsRegiftDiscount(true);
-        setCouponCode("REGIFT50");
-        setCouponFeedback("50% Regift Reply Discount Applied!");
+      if (replyParam) {
+        setReplyToSlug(replyParam);
+        // Strictly verify with database that this is a genuine completed order
+        fetch(`/api/reply/verify?slug=${encodeURIComponent(replyParam)}`)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.valid) {
+              setIsRegiftDiscount(true);
+              if (data.senderName) {
+                setRecipientName(data.senderName);
+                setReplySender(data.senderName);
+              }
+            } else {
+              setIsRegiftDiscount(false);
+            }
+          })
+          .catch((err) => console.error("Error verifying reply regift:", err));
       }
       if (
         fKeyParam &&
@@ -215,19 +230,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     setEnableRevealCountdown(true);
   };
 
-  const handleApplyCoupon = (codeToApply?: string) => {
-    const code = (codeToApply || couponCode).trim().toUpperCase();
-    if (code === "REGIFT50") {
-      setIsRegiftDiscount(true);
-      setCouponFeedback("Success! 50% OFF Regift discount applied.");
-    } else if (!code) {
-      setIsRegiftDiscount(false);
-      setCouponFeedback(null);
-    } else {
-      setCouponFeedback("Invalid coupon code.");
-    }
-  };
-
   const toggleAudioPreview = (track: typeof BUILTIN_AUDIO_TRACKS[0], e: React.MouseEvent) => {
     e.stopPropagation();
     if (playingPreviewTrackId === track.id) {
@@ -269,19 +271,57 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     }
   };
 
-  // Photo upload handler
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Photo arranging and reordering handlers
+  const movePhoto = (index: number, direction: "left" | "right") => {
+    const targetIndex = direction === "left" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= pagePhotos.length) return;
+    const updated = [...pagePhotos];
+    const temp = updated[index];
+    updated[index] = updated[targetIndex];
+    updated[targetIndex] = temp;
+    setPagePhotos(updated);
+    if (updated.length > 0) {
+      setCardPhoto(updated[0]);
+    }
+  };
+
+  const removePhoto = (index: number) => {
+    const updated = pagePhotos.filter((_, i) => i !== index);
+    setPagePhotos(updated);
+    setCardPhoto(updated[0] || "");
+  };
+
+  // Photo upload handler supporting both batch upload & one-by-one appending
+  const handlePhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    mode: "append" | "replace" = "append"
+  ) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setIsUploadingPhoto(true);
     setUploadError(null);
 
+    const maxCount = productType === "CARD" ? 3 : 6;
+    const currentCount = mode === "append" ? pagePhotos.length : 0;
+    const availableSlots = Math.max(0, maxCount - currentCount);
+
+    if (availableSlots <= 0) {
+      setUploadError(
+        `Maximum ${maxCount} photos reached for ${
+          productType === "CARD" ? "Digital Card (1-3 photos)" : "Interactive Page (1-6 photos)"
+        }. Remove a photo or switch formats to add more.`
+      );
+      setIsUploadingPhoto(false);
+      e.target.value = "";
+      return;
+    }
+
     try {
-      const maxCount = productType === "CARD" ? 3 : 6;
       const uploadedUrls: string[] = [];
-      for (let i = 0; i < Math.min(files.length, maxCount); i++) {
-        const file = files[i];
+      const filesToUpload = Array.from(files).slice(0, availableSlots);
+
+      for (const file of filesToUpload) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("kind", "image");
@@ -293,14 +333,17 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           uploadedUrls.push(data.url);
         }
       }
+
       if (uploadedUrls.length > 0) {
-        setPagePhotos(uploadedUrls);
-        setCardPhoto(uploadedUrls[0]);
+        const nextPhotos = mode === "append" ? [...pagePhotos, ...uploadedUrls] : uploadedUrls;
+        setPagePhotos(nextPhotos);
+        setCardPhoto(nextPhotos[0]);
       }
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Error uploading photo");
     } finally {
       setIsUploadingPhoto(false);
+      e.target.value = "";
     }
   };
 
@@ -409,9 +452,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
         currency,
         tier,
         isBundle,
-        isRegiftDiscount,
+        replyTo: replyToSlug || undefined,
         masterKey: isFounderFree ? "memoir_master_founder_secret_2026" : undefined,
-        couponCode: isRegiftDiscount ? "REGIFT50" : couponCode,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         cardData: {
           senderName,
@@ -579,54 +621,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 </span>
               </div>
             )}
-
-            {/* In-Studio Seamless Template Switcher */}
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-5 shadow-xl space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="h-4 w-4 text-rose-400" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-white">
-                    Template Theme Switcher
-                  </span>
-                </div>
-                <span className="text-[10px] text-neutral-400">
-                  Switch anytime without losing your entered message or photos
-                </span>
-              </div>
-
-              <div className="flex items-center space-x-2.5 overflow-x-auto pb-2 scrollbar-none">
-                {TEMPLATES.map((tmpl) => (
-                  <button
-                    key={tmpl.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedTheme(tmpl.defaultTheme);
-                      if (tmpl.occasion) setOccasion(tmpl.occasion);
-                      if (tmpl.hasInteractiveDodging || tmpl.occasion === "proposal") {
-                        setIsProposal(true);
-                        if (tmpl.id.includes("girlfriend")) {
-                          setProposalQuestion("be_my_girlfriend");
-                        }
-                      }
-                      if (typeof window !== "undefined") {
-                        window.history.replaceState(null, "", `/create/${tmpl.id}${window.location.search}`);
-                      }
-                    }}
-                    className={`flex items-center space-x-2 rounded-2xl border px-3.5 py-2 shrink-0 transition text-left ${
-                      tmpl.id === template.id
-                        ? "border-rose-500 bg-rose-500/20 text-white shadow-md shadow-rose-500/20"
-                        : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:border-neutral-700 hover:text-white"
-                    }`}
-                  >
-                    <span className="text-base">{tmpl.icon}</span>
-                    <div>
-                      <span className="text-xs font-semibold block whitespace-nowrap">{tmpl.name}</span>
-                      <span className="text-[9px] text-neutral-400 block capitalize">{tmpl.occasion.replace("_", " ")}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
 
             {/* Step 1: Tier & Format Selection (Phase 2 Upgrade) */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
@@ -1108,10 +1102,20 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
             </div>
 
             {/* Step 7: Photo Upload & Frame Shape */}
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                Step 7: Photos & Frame Shape
-              </span>
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-rose-400 block">
+                    Step 7: Photos & Arrangement
+                  </span>
+                  <span className="text-[11px] text-neutral-400">
+                    Add photos one by one or batch select. Arrange order with arrows.
+                  </span>
+                </div>
+                <span className="rounded-full bg-neutral-800 px-3 py-1 text-xs font-mono font-medium text-neutral-300 border border-neutral-700">
+                  {pagePhotos.length} / {productType === "CARD" ? 3 : 6} Photos
+                </span>
+              </div>
 
               {uploadError && (
                 <div className="flex items-center space-x-2 rounded-xl bg-red-950/80 border border-red-800 p-3 text-xs text-red-300">
@@ -1150,34 +1154,137 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 </div>
               </div>
 
-              {/* File upload input */}
-              <div className="pt-2">
-                <label className="flex cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 bg-neutral-950/60 p-5 hover:border-rose-500/60 transition">
-                  <input
-                    type="file"
-                    accept="image/png, image/jpeg, image/webp, image/heic"
-                    multiple={true}
-                    onChange={handlePhotoUpload}
-                    className="hidden"
-                  />
-                  <div className="flex flex-col items-center text-center">
-                    {isUploadingPhoto ? (
-                      <Loader2 className="h-6 w-6 animate-spin text-rose-400" />
-                    ) : (
-                      <Upload className="h-6 w-6 text-neutral-400" />
-                    )}
-                    <span className="mt-2 text-xs font-medium text-neutral-300">
-                      {isUploadingPhoto
-                        ? "Uploading..."
-                        : productType === "CARD"
-                        ? "Click or drag photos to upload (up to 3 for multi-card polaroid layout)"
-                        : "Click or drag photos to upload (up to 6 for interactive collage)"}
-                    </span>
-                    <span className="text-[10px] text-neutral-500">
-                      Strict 10MB limit per photo
-                    </span>
+              {/* Visual Photo Arrangement Tray */}
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Camera className="h-4 w-4 text-rose-400" />
+                    <label className="text-xs font-semibold text-neutral-300">
+                      Arranged Gallery ({pagePhotos.length} Added)
+                    </label>
                   </div>
-                </label>
+                  {pagePhotos.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPagePhotos([]);
+                        setCardPhoto("");
+                      }}
+                      className="text-[11px] text-neutral-500 hover:text-red-400 transition"
+                    >
+                      Clear All
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {pagePhotos.map((photo, idx) => (
+                    <div
+                      key={idx}
+                      className={`relative group rounded-2xl border p-2 flex flex-col justify-between transition ${
+                        idx === 0
+                          ? "border-rose-500/60 bg-rose-950/20 shadow-md shadow-rose-950/40"
+                          : "border-neutral-800 bg-neutral-950/80 hover:border-neutral-700"
+                      }`}
+                    >
+                      {/* Photo Thumbnail */}
+                      <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800">
+                        <img
+                          src={photo}
+                          alt={`Photo ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        {/* Order badge */}
+                        <div className="absolute top-1.5 left-1.5">
+                          <span
+                            className={`rounded-lg px-2 py-0.5 text-[10px] font-bold shadow-md ${
+                              idx === 0
+                                ? "bg-rose-600 text-white"
+                                : "bg-neutral-900/90 text-neutral-200 border border-neutral-700"
+                            }`}
+                          >
+                            {idx === 0 ? "★ #1 Cover" : `#${idx + 1}`}
+                          </span>
+                        </div>
+                        {/* Delete button */}
+                        <button
+                          type="button"
+                          onClick={() => removePhoto(idx)}
+                          className="absolute top-1.5 right-1.5 rounded-lg bg-black/70 hover:bg-red-600 text-white p-1 transition shadow-md"
+                          title="Remove Photo"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Arranging Controls (Move Left / Move Right) */}
+                      <div className="mt-2 flex items-center justify-between pt-1 border-t border-neutral-800/60">
+                        <button
+                          type="button"
+                          onClick={() => movePhoto(idx, "left")}
+                          disabled={idx === 0}
+                          className="flex items-center space-x-1 rounded-lg border border-neutral-800 bg-neutral-900 px-2 py-1 text-[10px] font-medium text-neutral-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+                          title="Move Left (Earlier in sequence)"
+                        >
+                          <ChevronLeft className="h-3 w-3" />
+                          <span>Left</span>
+                        </button>
+
+                        <span className="text-[9px] text-neutral-500 font-mono">
+                          #{idx + 1}
+                        </span>
+
+                        <button
+                          type="button"
+                          onClick={() => movePhoto(idx, "right")}
+                          disabled={idx === pagePhotos.length - 1}
+                          className="flex items-center space-x-1 rounded-lg border border-neutral-800 bg-neutral-900 px-2 py-1 text-[10px] font-medium text-neutral-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+                          title="Move Right (Later in sequence)"
+                        >
+                          <span>Right</span>
+                          <ChevronRight className="h-3 w-3" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* One-by-One Add Slot (if limit not reached) */}
+                  {pagePhotos.length < (productType === "CARD" ? 3 : 6) && (
+                    <label className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 hover:border-rose-500 bg-neutral-950/40 p-4 cursor-pointer transition min-h-[140px] text-center group">
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/webp, image/heic"
+                        multiple={false}
+                        onChange={(e) => handlePhotoUpload(e, "append")}
+                        className="hidden"
+                      />
+                      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-900 text-neutral-400 group-hover:bg-rose-500/20 group-hover:text-rose-400 transition mb-2">
+                        <Plus className="h-5 w-5" />
+                      </div>
+                      <span className="text-xs font-semibold text-neutral-300 group-hover:text-white transition">
+                        + Add One Photo
+                      </span>
+                      <span className="text-[10px] text-neutral-500 mt-0.5">
+                        Append next photo
+                      </span>
+                    </label>
+                  )}
+                </div>
+
+                {/* Batch upload bar */}
+                <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+                  <label className="flex-1 w-full flex items-center justify-center space-x-2 rounded-xl border border-dashed border-neutral-700 bg-neutral-950/50 hover:border-rose-500/60 p-3 cursor-pointer text-xs text-neutral-300 hover:text-white transition">
+                    <input
+                      type="file"
+                      accept="image/png, image/jpeg, image/webp, image/heic"
+                      multiple={true}
+                      onChange={(e) => handlePhotoUpload(e, "append")}
+                      className="hidden"
+                    />
+                    <Upload className="h-4 w-4 text-rose-400" />
+                    <span>Upload multiple photos all at once (Appends to gallery)</span>
+                  </label>
+                </div>
               </div>
 
               {/* Phase 2: Collage Layout Style for Interactive Pages */}
@@ -1443,42 +1550,28 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 </div>
               )}
 
-              {/* Coupon / Regift 50% discount box */}
+              {/* Confirmed Regift 50% discount status banner */}
               {!isFounderFree && (
-                <div className="rounded-2xl border border-neutral-800 bg-neutral-950/80 p-3.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-neutral-300 flex items-center space-x-1.5">
-                      <Tag className="h-3.5 w-3.5 text-rose-400" />
-                      <span>Have a reply or regift coupon?</span>
-                    </span>
-                    {isRegiftDiscount && (
-                      <span className="text-[11px] text-emerald-400 font-semibold">
-                        50% OFF Active
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      placeholder="Enter REGIFT50"
-                      className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs font-mono uppercase text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => handleApplyCoupon()}
-                      className="rounded-xl bg-neutral-800 hover:bg-neutral-700 px-4 py-2 text-xs font-semibold text-white transition shrink-0"
-                    >
-                      Apply
-                    </button>
-                  </div>
-
-                  {couponFeedback && (
-                    <p className={`text-[11px] font-medium ${isRegiftDiscount ? "text-emerald-400" : "text-amber-400"}`}>
-                      {couponFeedback}
-                    </p>
+                <div>
+                  {isRegiftDiscount ? (
+                    <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-emerald-950/40 via-neutral-900 to-emerald-950/20 p-4 shadow-lg flex items-center space-x-3 text-left">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 shrink-0">
+                        <Gift className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
+                          Verified Regift Recipient • 50% OFF Active
+                        </span>
+                        <p className="text-xs text-neutral-200 mt-0.5">
+                          Replying to <strong>{replySender || "your sender"}</strong>. 50% discount has been verified and applied!
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-3.5 text-left flex items-center space-x-2.5 text-[11px] text-neutral-400">
+                      <Tag className="h-4 w-4 text-neutral-500 shrink-0" />
+                      <span>50% regift discount automatically unlocks when replying to any Memoir gift you received.</span>
+                    </div>
                   )}
                 </div>
               )}
