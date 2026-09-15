@@ -17,9 +17,7 @@ import {
   AlertCircle,
   ToggleLeft,
   ToggleRight,
-  Send,
   Mail,
-  Filter,
   Crown,
   Sparkles,
   X,
@@ -474,7 +472,14 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-neutral-800/60">
-                    {filteredOrders.length === 0 ? (
+                    {loadingOrders ? (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-xs text-neutral-400">
+                          <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2 text-rose-400" />
+                          <span>Loading orders...</span>
+                        </td>
+                      </tr>
+                    ) : filteredOrders.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="py-8 text-center text-xs text-neutral-500">
                           No orders found matching your filters.

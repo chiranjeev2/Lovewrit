@@ -850,7 +850,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   >
                     <option value="proposal">Romantic Proposal</option>
                     <option value="anniversary">Anniversary</option>
-                    <option value="sorry">I'm Sorry</option>
+                    <option value="sorry">I&apos;m Sorry</option>
                     <option value="reminiscing">Reminiscing & Memory Lane</option>
                     <option value="birthday">Birthday Celebration</option>
                     <option value="memorial">In Loving Memory (Sacred Memorial)</option>
@@ -1082,7 +1082,7 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                     <div className="flex items-center space-x-2 rounded-xl bg-amber-950/70 border border-amber-800 p-3 text-xs text-amber-300">
                       <Info className="h-4 w-4 shrink-0" />
                       <span>
-                        Tip: Your reveal date is more than 48 hours away! You don't need the Emergency Rush fee. Switch to the <strong>Custom Tier</strong> to save money.
+                        Tip: Your reveal date is more than 48 hours away! You don&apos;t need the Emergency Rush fee. Switch to the <strong>Custom Tier</strong> to save money.
                       </span>
                     </div>
                   )}
@@ -1512,6 +1512,13 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                         )}
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {audioError && (
+                  <div className="flex items-center space-x-2 rounded-xl bg-red-950/80 border border-red-800 p-3 text-xs text-red-300 mb-3">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{audioError}</span>
                   </div>
                 )}
 
