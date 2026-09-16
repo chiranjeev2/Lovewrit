@@ -1,13 +1,14 @@
-# Memoir — Phase 2 Comprehensive Engineering & Product Report
+# Lovewrit — Phase 2 Comprehensive Engineering & Product Report
 *Generated on September 16, 2026*
 
 ---
 
 ## Executive Summary
 
-During Phase 2, **Memoir** transitioned from a simple romantic digital card maker into an end-to-end, multi-occasion, multi-tier interactive emotional gifting platform. 
+During Phase 2, **Lovewrit** transitioned from a simple romantic digital card maker into an end-to-end, multi-occasion, multi-tier interactive emotional gifting platform. 
 
 The platform now natively supports:
+
 - Romantic proposals and anniversaries
 - Heartfelt apologies and long-distance love letters
 - Joyous birthdays and milestone celebrations
@@ -43,7 +44,7 @@ All experiences are mobile-responsive, multi-currency enabled, and designed for 
   - Sacred Diya Aarti unboxing reveal animation.
 
 ### 4. Event Date, Timing & Google Maps Venue Badges
-- **Dedicated Venue & Schedule Customizer**: Added optional **Event Date** (e.g. `Saturday, 24 October 2026`) and **Event Timing** (e.g. `8:00 PM Onwards` or `4:00 PM - 8:00 PM`) inputs in the Memoir Studio.
+- **Dedicated Venue & Schedule Customizer**: Added optional **Event Date** (e.g. `Saturday, 24 October 2026`) and **Event Timing** (e.g. `8:00 PM Onwards` or `4:00 PM - 8:00 PM`) inputs in the Lovewrit Studio.
 - **Pretty Event Ribbon**: Rendered an ambient calendar and clock ribbon in both `CardPreview` and `PagePreview` with formatted badges and map navigation links.
 
 ### 5. Founder VIP Isolation & Public Site Pricing Security
@@ -83,7 +84,7 @@ All experiences are mobile-responsive, multi-currency enabled, and designed for 
 
 ### 11. Confirmed Regift 50% Off Architecture
 - Created cryptographic reply verification route `/api/reply/verify`.
-- 50% discount automatically applies only when replying to a genuine, paid Memoir keepsake received by the customer.
+- 50% discount automatically applies only when replying to a genuine, paid Lovewrit keepsake received by the customer.
 - Prevents public URL tampering or unauthorized coupon leakage.
 
 ### 12. 4-Tier Multi-Currency Pricing Architecture
@@ -93,9 +94,9 @@ All 4 tiers configured with multi-currency pricing:
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Tier 1** | Digital Card | Instant Auto | ₹49 | $2 | €2 | £2 |
 | **Tier 2** | Interactive Page | Instant Auto | ₹99 | $5 | €5 | £5 |
-| **Tier 3** | Custom Handcrafted | 24-48 Hours | ₹499 (Page) / ₹149 (Card) | $25 / $8 | €25 / $8 | £25 / £8 |
+| **Tier 3** | Custom Handcrafted | 24-48 Hours | ₹499 (Page) / ₹149 (Card) | $25 / $8 | €25 / €8 | £25 / £8 |
 | **Tier 4** | Emergency Rush | Within 12 Hours | ₹1,459 (Page) / ₹449 (Card) | $75 / $22 | €75 / €22 | £75 / £22 |
-| **Addon**| Card + Page Bundle | Addon | +₹49 | +$3 | +$3 | +$3 |
+| **Addon**| Card + Page Bundle | Addon | +₹49 | +$3 | +€3 | +£3 |
 
 ### 13. Luxury Glassmorphic Pricing Cards & Responsive Services Section
 - Added dedicated **"Our Services & Keepsakes"** section (`#services`) to the homepage showcasing Digital Keepsake Cards, Interactive Unboxing Pages, Devotional Chowki Invites, and Bespoke Founder Services.
@@ -122,4 +123,5 @@ All 4 tiers configured with multi-currency pricing:
 
 ---
 
-*Memoir Phase 2 is complete, verified, and production-ready.*
+*Lovewrit Phase 2 is complete, verified, and production-ready.*
+

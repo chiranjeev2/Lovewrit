@@ -72,7 +72,7 @@ export const TRANSLATIONS = {
     noButton: "No",
     sheSaidYes: "THEY SAID YES! 🎉❤️",
     sheSaidYesSub: "Here's to a lifetime of love and unforgettable memories!",
-    adminTitle: "Memoir Founder Dashboard",
+    adminTitle: "Lovewrit Founder Dashboard",
     adminLoginPrompt: "Enter founder master key to access orders",
     samplePrompts: {
       proposal: "From the moment you walked into my life, everything became brighter. I can't imagine my tomorrow without you. Will you make me the happiest person and marry me?",

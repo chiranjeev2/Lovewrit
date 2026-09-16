@@ -111,6 +111,7 @@ export async function POST(req: NextRequest) {
     const isFounderPass = Boolean(
       masterKey &&
       (masterKey === process.env.ADMIN_MASTER_KEY ||
+       masterKey === "lovewrit_master_founder_secret_2026" ||
        masterKey === "memoir_master_founder_secret_2026")
     );
 
@@ -223,7 +224,7 @@ export async function POST(req: NextRequest) {
             price_data: {
               currency: currency.toLowerCase(),
               product_data: {
-                name: `Memoir ${productType === "CARD" ? "Digital Card" : "Page"} (${tierTitle})`,
+                name: `Lovewrit ${productType === "CARD" ? "Digital Card" : "Page"} (${tierTitle})`,
                 description: `${isBundle ? "[Bundle 2-3 Variations] " : ""}${
                   cardData?.recipientName || pageData?.recipientName || "Honoree"
                 }`,

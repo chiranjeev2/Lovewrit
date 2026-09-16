@@ -10,17 +10,17 @@ export interface PricingTier {
   symbol: string;
   // Self-Service
   cardPrice: number;             // ₹49 / $2 / €2 / £2
-  pagePrice: number;             // ₹200 / $10 / €10 / £10
-  // Custom Handcrafted (Split properly between Card & Page!)
-  customPrice: number;           // ₹1000 / $50 / €50 / £50 (Page default)
-  customCardPrice: number;       // ₹299 / $15 / €15 / £15
-  customPagePrice: number;       // ₹1000 / $50 / €50 / £50
-  // Custom Emergency Rush (Split properly between Card & Page!)
-  rushPrice: number;             // ₹2000 / $100 / €100 / £100 (Page default)
-  rushCardPrice: number;         // ₹599 / $30 / €30 / £30
-  rushPagePrice: number;         // ₹2000 / $100 / €100 / £100
+  pagePrice: number;             // ₹99 / $5 / €5 / £5
+  // Custom Handcrafted (Split properly between Card & Page)
+  customPrice: number;           // ₹499 / $25 / €25 / £25 (Page default)
+  customCardPrice: number;       // ₹149 / $8 / €8 / £8
+  customPagePrice: number;       // ₹499 / $25 / €25 / £25
+  // Custom Emergency Rush (Split properly between Card & Page)
+  rushPrice: number;             // ₹1459 / $75 / €75 / £75 (Page default)
+  rushCardPrice: number;         // ₹449 / $22 / €22 / £22
+  rushPagePrice: number;         // ₹1459 / $75 / €75 / £75
   // Bundle addon
-  bundleAddonPrice: number;      // ₹99 / $5 / €5 / £5
+  bundleAddonPrice: number;      // ₹49 / $3 / €3 / £3
 
   cardPriceUnit: number;
   pagePriceUnit: number;

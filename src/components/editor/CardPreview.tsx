@@ -71,7 +71,7 @@ export default function CardPreview({
     <div className="w-full flex flex-col items-center">
       <div
         ref={cardRef}
-        id="memoir-card-node"
+        id="lovewrit-card-node"
         className={`relative mx-auto w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[32px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-2xl border transition-all duration-300 ${
           isJagrata
             ? "bg-gradient-to-b from-red-950/85 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
@@ -277,7 +277,7 @@ export default function CardPreview({
 
           {/* Card watermark/footer mark */}
           <div className="mt-3 flex items-center justify-center space-x-1 text-[9px] tracking-widest uppercase opacity-40">
-            <span>Memoir</span>
+            <span>Lovewrit</span>
             <Heart className="h-2 w-2 fill-current" />
             <span>Keepsake</span>
           </div>

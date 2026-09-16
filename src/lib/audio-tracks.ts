@@ -13,7 +13,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
   {
     id: "acoustic-romance",
     title: "Acoustic Romance",
-    artist: "Memoir Studio",
+    artist: "Lovewrit Studio",
     duration: "2:45",
     genre: "Warm Acoustic",
     category: "couples",
@@ -22,7 +22,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
   {
     id: "piano-waltz",
     title: "Forever Piano Waltz",
-    artist: "Memoir Studio",
+    artist: "Lovewrit Studio",
     duration: "3:12",
     genre: "Emotional Piano",
     category: "couples",
@@ -32,7 +32,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
   {
     id: "joyful-celebration",
     title: "Joyful Birthday Groove",
-    artist: "Memoir Festive",
+    artist: "Lovewrit Festive",
     duration: "2:15",
     genre: "Upbeat Pop",
     category: "birthday",
@@ -42,7 +42,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
   {
     id: "serene-peace",
     title: "In Sacred Memory",
-    artist: "Memoir Serenity",
+    artist: "Lovewrit Serenity",
     duration: "3:40",
     genre: "Tranquil Strings",
     category: "memorial",
@@ -52,7 +52,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
   {
     id: "sacred-bhajan",
     title: "Divine Aarti & Sitar",
-    artist: "Memoir Devotion",
+    artist: "Lovewrit Devotion",
     duration: "4:10",
     genre: "Traditional Devotional",
     category: "devotional",
@@ -62,7 +62,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
   {
     id: "chic-lounge",
     title: "High Tea Sunset Chill",
-    artist: "Memoir Chill",
+    artist: "Lovewrit Chill",
     duration: "2:50",
     genre: "Lounge Jazz",
     category: "social",

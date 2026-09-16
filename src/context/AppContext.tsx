@@ -33,14 +33,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           ? "EUR"
           : "USD";
 
-      const savedCurrency = localStorage.getItem("memoir_currency") as CurrencyCode;
+      const savedCurrency = (localStorage.getItem("lovewrit_currency") ||
+        localStorage.getItem("memoir_currency")) as CurrencyCode;
       if (savedCurrency && ["INR", "USD", "EUR", "GBP"].includes(savedCurrency)) {
         setCurrencyState(savedCurrency);
       } else {
         setCurrencyState(initialCurrency);
       }
 
-      const savedLang = localStorage.getItem("memoir_lang") as LanguageCode;
+      const savedLang = (localStorage.getItem("lovewrit_lang") ||
+        localStorage.getItem("memoir_lang")) as LanguageCode;
       if (savedLang && ["en", "pa", "hi"].includes(savedLang)) {
         setLanguageState(savedLang);
       }
@@ -52,14 +54,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setCurrency = (c: CurrencyCode) => {
     setCurrencyState(c);
     if (typeof window !== "undefined") {
-      localStorage.setItem("memoir_currency", c);
+      localStorage.setItem("lovewrit_currency", c);
     }
   };
 
   const setLanguage = (l: LanguageCode) => {
     setLanguageState(l);
     if (typeof window !== "undefined") {
-      localStorage.setItem("memoir_lang", l);
+      localStorage.setItem("lovewrit_lang", l);
     }
   };
 

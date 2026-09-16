@@ -185,7 +185,7 @@ export default function AdminPage() {
           </div>
 
           <h2 className="font-serif text-2xl font-bold text-white text-center">
-            Memoir Founder Portal
+            Lovewrit Founder Portal
           </h2>
           <p className="mt-2 text-xs text-neutral-400 text-center">
             Enter your isolated founder master key to inspect orders and fulfillment queue.
@@ -229,7 +229,7 @@ export default function AdminPage() {
             </button>
           </form>
 
-          {/* Quick-Access Key Helper (Addressing User Feedback) */}
+          {/* Quick-Access Key Helper */}
           <div className="mt-5 rounded-2xl border border-rose-500/20 bg-neutral-950/90 p-3.5 text-left">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-neutral-300">
@@ -237,14 +237,14 @@ export default function AdminPage() {
               </span>
               <button
                 type="button"
-                onClick={() => setMasterKey("memoir_master_founder_secret_2026")}
+                onClick={() => setMasterKey("lovewrit_master_founder_secret_2026")}
                 className="rounded-md bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-300 hover:bg-rose-500/30 transition"
               >
                 Auto-Fill Key
               </button>
             </div>
             <code className="mt-1.5 block rounded-lg bg-neutral-900 px-2.5 py-1 text-[11px] font-mono text-rose-300 select-all border border-neutral-800">
-              memoir_master_founder_secret_2026
+              lovewrit_master_founder_secret_2026
             </code>
             <p className="mt-1.5 text-[10px] text-neutral-500">
               Configured in your local <code className="text-neutral-400">.env</code> file under <code className="text-neutral-400">ADMIN_MASTER_KEY</code>.
@@ -280,11 +280,11 @@ export default function AdminPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-600 text-white font-serif font-bold text-sm">
-              M
+              L
             </div>
             <div>
               <span className="font-serif font-bold text-white text-base">
-                Memoir Founder Dashboard
+                Lovewrit Founder Dashboard
               </span>
               <span className="hidden sm:inline ml-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[10px] text-emerald-400 font-medium">
                 Phase 2 Commercial Edition
@@ -297,20 +297,20 @@ export default function AdminPage() {
               type="button"
               onClick={() => {
                 try {
-                  localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                  localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
                 } catch {}
                 setShowFounderModal(true);
               }}
               className="inline-flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-500 px-3.5 py-1.5 text-xs font-bold text-neutral-950 hover:opacity-95 shadow-md shadow-amber-500/20 transition cursor-pointer"
             >
               <Crown className="h-3.5 w-3.5" />
-              <span>Create Free Memoir (Founder Pass)</span>
+              <span>Create Free Lovewrit (Founder Pass)</span>
             </button>
             <Link
-              href="/?founderKey=memoir_master_founder_secret_2026#templates"
+              href="/?founderKey=lovewrit_master_founder_secret_2026#templates"
               onClick={() => {
                 try {
-                  localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                  localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
                 } catch {}
               }}
               className="text-xs text-neutral-400 hover:text-white transition px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900"
@@ -684,7 +684,7 @@ export default function AdminPage() {
                           <div className="text-neutral-300">{order.customerEmail}</div>
                           <div className="mt-2">
                             <a
-                              href={`mailto:${order.customerEmail}?subject=Your Memoir Order [${order.slug}]`}
+                              href={`mailto:${order.customerEmail}?subject=Your Lovewrit Order [${order.slug}]`}
                               className="inline-flex items-center space-x-1 text-rose-400 hover:text-rose-300 text-[11px]"
                             >
                               <Mail className="h-3 w-3" />
@@ -741,7 +741,7 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <h3 className="font-serif text-lg font-bold text-white">
-                    Founder VIP Memoir Creator
+                    Founder VIP Lovewrit Creator
                   </h3>
                   <p className="text-xs text-neutral-400">
                     Select any template or occasion to create free test gifts with instant bypass
@@ -761,10 +761,10 @@ export default function AdminPage() {
               {TEMPLATES.map((tmpl) => (
                 <Link
                   key={tmpl.id}
-                  href={`/create/${tmpl.id}?founderKey=memoir_master_founder_secret_2026`}
+                  href={`/create/${tmpl.id}?founderKey=lovewrit_master_founder_secret_2026`}
                   onClick={() => {
                     try {
-                      localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                      localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
                     } catch {}
                     setShowFounderModal(false);
                   }}
@@ -780,7 +780,7 @@ export default function AdminPage() {
                     </span>
                   </div>
                   <span className="rounded-lg bg-neutral-800 px-2 py-1 text-[10px] font-semibold text-amber-400 border border-neutral-700">
-                    ₹0 Free
+                    Free
                   </span>
                 </Link>
               ))}
@@ -788,10 +788,10 @@ export default function AdminPage() {
 
             <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
               <Link
-                href="/?founderKey=memoir_master_founder_secret_2026#templates"
+                href="/?founderKey=lovewrit_master_founder_secret_2026#templates"
                 onClick={() => {
                   try {
-                    localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
+                    localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
                   } catch {}
                   setShowFounderModal(false);
                 }}

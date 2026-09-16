@@ -143,7 +143,7 @@ export default function PagePreview({
           </div>
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-rose-300">
-              A Memoir Experience
+              A Lovewrit Experience
             </span>
             <h4 className="font-serif text-sm font-bold text-white capitalize">
               {occasion.replace("_", " ")}
@@ -401,7 +401,7 @@ export default function PagePreview({
             />
             <div className="p-3 text-center">
               <span className="font-serif text-xs text-neutral-300">
-                A moment frozen in time • Memoir Keepsake
+                A moment frozen in time • Lovewrit Keepsake
               </span>
             </div>
           </div>
@@ -569,7 +569,7 @@ export default function PagePreview({
 
       {/* Footer watermark */}
       <div className="relative z-10 mt-12 text-center text-xs text-neutral-400">
-        <p>Memoir • Personal Occasion Moments</p>
+        <p>Lovewrit • Personal Occasion Moments</p>
       </div>
     </div>
   );

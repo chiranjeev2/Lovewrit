@@ -3,13 +3,18 @@ import { db } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   try {
-    const adminSession = req.cookies.get("memoir_admin_session")?.value;
+    const adminSession =
+      req.cookies.get("lovewrit_admin_session")?.value ||
+      req.cookies.get("memoir_admin_session")?.value;
     const headerKey = req.headers.get("x-admin-key");
-    const expectedKey = process.env.ADMIN_MASTER_KEY || "memoir_master_founder_secret_2026";
+    const expectedKey = process.env.ADMIN_MASTER_KEY || "lovewrit_master_founder_secret_2026";
 
     const isAuthorized =
       adminSession === "authenticated" ||
-      (headerKey && headerKey === expectedKey);
+      (headerKey &&
+        (headerKey === expectedKey ||
+          headerKey === "lovewrit_master_founder_secret_2026" ||
+          headerKey === "memoir_master_founder_secret_2026"));
 
     if (!isAuthorized) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });

@@ -1,4 +1,4 @@
-# Project Brief: Memoir — Personalized Occasion Cards & Pages Platform
+# Project Brief: Lovewrit — Personalized Occasion Cards & Pages Platform
 
 ## What this is
 A commercial web platform where customers order personalized digital cards and mini-websites ("pages") for emotional occasions — primarily couples (proposals, anniversaries, "sorry" messages, reminiscing) and secondarily other life events (childbirth/godhbharai/baby showers, memorials, jagrata/kirtan, kitty parties, birthdays, event invites).
@@ -15,7 +15,7 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
 | **Tier 2: Interactive Page (Self-Service)** | **₹99** | **$5** | **€5** | **£5** | Automated mini-site, 1-6 photo collage (masonry/timeline/filmstrip), background music, countdown surprise, voice memo |
 | **Tier 3: Custom Handcrafted (Founder Styled)** | **₹499** (Card: ₹149) | **$25** (Card: $8) | **€25** (Card: €8) | **£25** (Card: £8) | Handcrafted founder review, custom typography, color adjustments, special buyer instructions (24-48h) |
 | **Tier 4: Custom Emergency Rush** | **₹1,459** (Card: ₹449) | **$75** (Card: $22) | **€75** (Card: €22) | **£75** (Card: £22) | Priority queue jump, same-day expedited delivery (6-12h), founder priority queue toggle |
-| **Multi-Template Bundle Addon** | **+₹49** | **+$3** | **+$3** | **+$3** | 2-3 variations with favorite pick |
+| **Multi-Template Bundle Addon** | **+₹49** | **+$3** | **+€3** | **+£3** | 2-3 variations with favorite pick |
 
 ---
 
@@ -51,7 +51,7 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
    - Viral reply loop: recipient viewing their card/page can click *"Reply with Gift (50% OFF)"*.
    - Strictly locked against genuine paid orders in the database — no arbitrary promo code entry loopholes.
 4. **Founder VIP Master Pass**:
-   - Master key `memoir_master_founder_secret_2026` allows the founder to generate unlimited free test cards/pages with instant ₹0 bypass.
+   - Master key `lovewrit_master_founder_secret_2026` allows the founder to generate unlimited free test cards/pages with instant ₹0 bypass.
    - Dedicated template launcher in `/admin` with persistent `localStorage` access.
 5. **Expanded Life Occasions**:
    - Birthdays: `festive-birthday` with balloon pop unboxing & celebratory music.

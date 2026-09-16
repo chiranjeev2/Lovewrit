@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding Memoir database with Phase 1 & Phase 2 demo orders...");
+  console.log("Seeding Lovewrit database with Phase 1 & Phase 2 demo orders...");
 
   // 1. Proposal Page Demo
   await prisma.order.upsert({

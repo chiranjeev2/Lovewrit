@@ -1,6 +1,6 @@
-// End-to-end verification script for Memoir
+// End-to-end verification script for Lovewrit
 async function runTests() {
-  console.log("=== STARTING MEMOIR E2E VERIFICATION ===");
+  console.log("=== STARTING LOVEWRIT E2E VERIFICATION ===");
 
   const BASE_URL = "http://localhost:3000";
 
@@ -42,7 +42,7 @@ async function runTests() {
   const goodLogin = await fetch(`${BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ masterKey: "memoir_master_founder_secret_2026" }),
+    body: JSON.stringify({ masterKey: "lovewrit_master_founder_secret_2026" }),
   });
   console.log(`Good admin login status: ${goodLogin.status} (Expected: 200)`);
   const adminCookie = goodLogin.headers.get("set-cookie");
@@ -50,7 +50,7 @@ async function runTests() {
   const ordersRes = await fetch(`${BASE_URL}/api/admin/orders`, {
     headers: {
       cookie: adminCookie || "",
-      "x-admin-key": "memoir_master_founder_secret_2026",
+      "x-admin-key": "lovewrit_master_founder_secret_2026",
     },
   });
   const ordersData = await ordersRes.json();

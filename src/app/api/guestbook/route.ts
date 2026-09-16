@@ -110,7 +110,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Approve / Delete requires token or admin session
-    const adminSession = req.cookies.get("memoir_admin_session")?.value;
+    const adminSession =
+      req.cookies.get("lovewrit_admin_session")?.value ||
+      req.cookies.get("memoir_admin_session")?.value;
     const isMasterAdmin = adminSession === "authenticated";
 
     const entry = await db.guestbookEntry.findUnique({

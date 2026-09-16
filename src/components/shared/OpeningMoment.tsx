@@ -204,7 +204,7 @@ export default function OpeningMoment({
                   ? "Pop Balloons to Celebrate! 🎈"
                   : hasMusic
                   ? "Tap to Open & Play Music"
-                  : "Tap to Open Your Memoir"}
+                  : "Tap to Open Your Lovewrit"}
               </span>
               {hasMusic && <Music className="ml-2 h-4 w-4 text-rose-200 animate-pulse" />}
             </button>

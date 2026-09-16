@@ -13,7 +13,7 @@ interface QRCodeModalProps {
 
 export default function QRCodeModal({
   url,
-  title = "Scan to Open Memoir",
+  title = "Scan to Open Lovewrit",
   isOpen,
   onClose,
 }: QRCodeModalProps) {
@@ -40,7 +40,7 @@ export default function QRCodeModal({
   const downloadQR = () => {
     if (!dataUrl) return;
     const link = document.createElement("a");
-    link.download = `memoir-qr-code.png`;
+    link.download = `lovewrit-qr-code.png`;
     link.href = dataUrl;
     link.click();
   };
@@ -75,7 +75,7 @@ export default function QRCodeModal({
         {/* QR Code Canvas Frame */}
         <div className="mx-auto my-2 flex w-52 h-52 items-center justify-center overflow-hidden rounded-2xl bg-white p-3 shadow-xl">
           {dataUrl ? (
-            <img src={dataUrl} alt="Memoir QR Code" className="w-full h-full object-contain" />
+            <img src={dataUrl} alt="Lovewrit QR Code" className="w-full h-full object-contain" />
           ) : (
             <div className="text-xs text-neutral-400">Generating code...</div>
           )}

@@ -86,7 +86,7 @@ function SuccessContent() {
   const downloadQRCode = () => {
     if (!qrDataUrl) return;
     const a = document.createElement("a");
-    a.download = `memoir-${targetSlug}-qr.png`;
+    a.download = `lovewrit-${targetSlug}-qr.png`;
     a.href = qrDataUrl;
     a.click();
   };
@@ -105,7 +105,7 @@ function SuccessContent() {
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4">
         <Loader2 className="h-10 w-10 animate-spin text-rose-500" />
         <p className="text-sm font-medium text-neutral-300">
-          Confirming payment and preparing your Memoir link...
+          Confirming payment and preparing your Lovewrit link...
         </p>
       </div>
     );
@@ -141,7 +141,7 @@ function SuccessContent() {
         </span>
 
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white">
-          Your Memoir Is Ready!
+          Your Lovewrit Is Ready!
         </h1>
 
         <p className="mt-3 text-xs sm:text-sm text-neutral-300 max-w-md mx-auto leading-relaxed">
@@ -197,7 +197,7 @@ function SuccessContent() {
               <div className="rounded-2xl bg-white p-3 shadow-2xl border-4 border-rose-500/20">
                 <img
                   src={qrDataUrl}
-                  alt="Memoir QR Code"
+                  alt="Lovewrit QR Code"
                   className="h-44 w-44 object-contain rounded-lg"
                 />
               </div>

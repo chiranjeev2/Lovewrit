@@ -15,10 +15,10 @@ export default function Navbar() {
           </div>
           <div className="flex flex-col">
             <span className="font-serif text-xl font-bold tracking-tight text-white group-hover:text-rose-200 transition">
-              Memoir
+              Lovewrit
             </span>
             <span className="text-[10px] tracking-wider uppercase text-rose-300/80 font-medium">
-              Occasions & Memories
+              Occasions & Keepsakes
             </span>
           </div>
         </Link>

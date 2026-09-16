@@ -1,6 +1,6 @@
-// Automated test script for Memoir New Enhancements
+// Automated test script for Lovewrit New Enhancements
 async function runNewEnhancementsTests() {
-  console.log("=== STARTING MEMOIR NEW ENHANCEMENTS TEST SUITE ===");
+  console.log("=== STARTING LOVEWRIT NEW ENHANCEMENTS TEST SUITE ===");
   const BASE_URL = "http://localhost:3000";
 
   // 1. Test Split Pricing & 50% Regift Discount via API
@@ -126,7 +126,7 @@ async function runNewEnhancementsTests() {
   const adminLoginRes = await fetch(`${BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ masterKey: "memoir_master_founder_secret_2026" }),
+    body: JSON.stringify({ masterKey: "lovewrit_master_founder_secret_2026" }),
   });
   const adminLoginData = await adminLoginRes.json();
   console.log("Admin Login result:", {
@@ -147,7 +147,7 @@ async function runNewEnhancementsTests() {
   console.log(`Public Page experience status: ${pageViewRes.status} (Expected: 200)`);
   if (pageViewRes.status !== 200) throw new Error("Public page returned non-200");
 
-  console.log("\n=== ALL MEMOIR NEW ENHANCEMENTS VERIFIED SUCCESSFULLY! ===");
+  console.log("\n=== ALL LOVEWRIT NEW ENHANCEMENTS VERIFIED SUCCESSFULLY! ===");
 }
 
 runNewEnhancementsTests().catch((err) => {

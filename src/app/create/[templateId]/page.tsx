@@ -70,7 +70,7 @@ import {
   Mic,
 } from "lucide-react";
 
-export default function CreateMemoirPage({
+export default function CreateLovewritPage({
   params,
 }: {
   params: Promise<{ templateId: string }>;
@@ -182,16 +182,21 @@ export default function CreateMemoirPage({
       }
       if (
         fKeyParam &&
-        (fKeyParam === "memoir_master_founder_secret_2026" || fKeyParam === "founder_master")
+        (fKeyParam === "lovewrit_master_founder_secret_2026" ||
+          fKeyParam === "memoir_master_founder_secret_2026" ||
+          fKeyParam === "founder_master")
       ) {
         setIsFounderFree(true);
         try {
-          localStorage.setItem("memoir_founder_pass", fKeyParam);
+          localStorage.setItem("lovewrit_founder_pass", fKeyParam);
         } catch {}
       } else {
         try {
-          const savedKey = localStorage.getItem("memoir_founder_pass");
+          const savedKey =
+            localStorage.getItem("lovewrit_founder_pass") ||
+            localStorage.getItem("memoir_founder_pass");
           if (
+            savedKey === "lovewrit_master_founder_secret_2026" ||
             savedKey === "memoir_master_founder_secret_2026" ||
             savedKey === "founder_master"
           ) {
@@ -210,6 +215,7 @@ export default function CreateMemoirPage({
   const handleExitFounderMode = () => {
     setIsFounderFree(false);
     try {
+      localStorage.removeItem("lovewrit_founder_pass");
       localStorage.removeItem("memoir_founder_pass");
     } catch {}
   };
@@ -473,7 +479,7 @@ export default function CreateMemoirPage({
     e.preventDefault();
     setFormError(null);
 
-    const finalEmail = customerEmail || (isFounderFree ? "founder@memoir.app" : "");
+    const finalEmail = customerEmail || (isFounderFree ? "founder@lovewrit.com" : "");
     if (!finalEmail || !finalEmail.includes("@")) {
       setFormError("Please enter a valid email address to receive your order links.");
       return;
@@ -498,7 +504,7 @@ export default function CreateMemoirPage({
         tier,
         isBundle,
         replyTo: replyToSlug || undefined,
-        masterKey: isFounderFree ? "memoir_master_founder_secret_2026" : undefined,
+        masterKey: isFounderFree ? "lovewrit_master_founder_secret_2026" : undefined,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         cardData: {
           senderName,
@@ -577,7 +583,7 @@ export default function CreateMemoirPage({
         <div className="bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950 border-b border-amber-600/40 py-2.5 px-4 text-center text-xs text-amber-200 flex flex-wrap items-center justify-center gap-2.5 shadow-lg">
           <div className="flex items-center space-x-1.5 font-bold text-amber-300">
             <Crown className="h-4 w-4 text-amber-400" />
-            <span>Founder VIP Preview Active (₹0 Free Bypass)</span>
+            <span>Founder VIP Preview Active ({symbol}0 Free Bypass)</span>
           </div>
           <span className="hidden sm:inline text-amber-400/50">•</span>
           <button
@@ -662,7 +668,7 @@ export default function CreateMemoirPage({
                   </div>
                 </div>
                 <span className="rounded-full bg-amber-500/20 px-3 py-1 text-xs font-mono font-bold text-amber-300 border border-amber-500/40">
-                  ₹0 / $0 Free
+                  {symbol}0 Free
                 </span>
               </div>
             )}
@@ -716,7 +722,7 @@ export default function CreateMemoirPage({
                     <span className="text-xs font-bold text-white">Self-Service</span>
                     <span className="text-xs font-bold text-rose-400">
                       {isFounderFree
-                        ? "₹0 / Free"
+                        ? `${symbol}0 Free`
                         : productType === "CARD"
                         ? `${symbol}${PRICING_TIERS[region].cardPrice}`
                         : `${symbol}${PRICING_TIERS[region].pagePrice}`}
@@ -741,7 +747,7 @@ export default function CreateMemoirPage({
                     <span className="text-xs font-bold text-white">Custom Tier</span>
                     <span className="text-xs font-bold text-amber-400">
                       {isFounderFree
-                        ? "₹0 / Free"
+                        ? `${symbol}0 Free`
                         : productType === "CARD"
                         ? `${symbol}${PRICING_TIERS[region].customCardPrice}`
                         : `${symbol}${PRICING_TIERS[region].customPrice}`}
@@ -769,7 +775,7 @@ export default function CreateMemoirPage({
                     </div>
                     <span className="text-xs font-bold text-red-400">
                       {isFounderFree
-                        ? "₹0 / Free"
+                        ? `${symbol}0 Free`
                         : productType === "CARD"
                         ? `${symbol}${PRICING_TIERS[region].rushCardPrice}`
                         : `${symbol}${PRICING_TIERS[region].rushPrice}`}
@@ -804,6 +810,47 @@ export default function CreateMemoirPage({
                   }`}
                 >
                   Interactive Page
+                </button>
+              </div>
+
+              {/* Bundle Addon Option (Card + Interactive Page) */}
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsBundle(!isBundle)}
+                  className={`w-full rounded-2xl border p-3.5 text-left transition flex items-center justify-between ${
+                    isBundle
+                      ? "border-rose-500/80 bg-rose-500/15 shadow-md shadow-rose-950/20"
+                      : "border-neutral-800 bg-neutral-950/60 hover:border-neutral-700"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div
+                      className={`flex h-5 w-5 items-center justify-center rounded-md border transition ${
+                        isBundle
+                          ? "border-rose-500 bg-rose-500 text-white"
+                          : "border-neutral-700 bg-neutral-900"
+                      }`}
+                    >
+                      {isBundle && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-bold text-white">
+                          Bundle Keepsake (Digital Card + Interactive Page)
+                        </span>
+                        <span className="rounded-full bg-rose-500/20 px-2 py-0.5 text-[9px] font-bold text-rose-300 border border-rose-500/30 uppercase">
+                          Save 40%
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-neutral-400">
+                        Get both the printable card download and the interactive unboxing website link.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold text-rose-400 shrink-0 ml-3">
+                    +{symbol}{PRICING_TIERS[region].bundleAddonPrice}
+                  </span>
                 </button>
               </div>
 
@@ -1685,6 +1732,41 @@ export default function CreateMemoirPage({
                 </div>
               </div>
 
+              {/* Itemized Order Breakdown */}
+              <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-3.5 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-neutral-300">
+                  <span>
+                    {productType === "CARD" ? "Digital Card" : "Interactive Page"} ({tier === "RUSH" ? "Emergency Rush" : tier === "CUSTOM" ? "Custom Handcrafted" : "Self-Service"})
+                  </span>
+                  <span className="font-semibold text-white">
+                    {isFounderFree ? `${symbol}0` : `${symbol}${
+                      tier === "RUSH"
+                        ? (productType === "CARD" ? PRICING_TIERS[region].rushCardPrice : PRICING_TIERS[region].rushPrice)
+                        : tier === "CUSTOM"
+                        ? (productType === "CARD" ? PRICING_TIERS[region].customCardPrice : PRICING_TIERS[region].customPrice)
+                        : (productType === "CARD" ? PRICING_TIERS[region].cardPrice : PRICING_TIERS[region].pagePrice)
+                    }`}
+                  </span>
+                </div>
+                {isBundle && (
+                  <div className="flex items-center justify-between text-rose-300 pt-1.5 border-t border-neutral-800/80">
+                    <span className="flex items-center space-x-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-rose-400" />
+                      <span>Bundle Addon (Card + Interactive Page)</span>
+                    </span>
+                    <span className="font-semibold text-rose-300">
+                      +{symbol}{PRICING_TIERS[region].bundleAddonPrice}
+                    </span>
+                  </div>
+                )}
+                {isRegiftDiscount && (
+                  <div className="flex items-center justify-between text-emerald-400 pt-1.5 border-t border-neutral-800/80">
+                    <span>50% Off Regift Discount</span>
+                    <span className="font-semibold">-50%</span>
+                  </div>
+                )}
+              </div>
+
               {formError && (
                 <div className="flex items-center space-x-2 rounded-xl bg-red-950/80 border border-red-800 p-3 text-xs text-red-300">
                   <AlertCircle className="h-4 w-4 shrink-0" />
@@ -1712,7 +1794,7 @@ export default function CreateMemoirPage({
                   ) : (
                     <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-3.5 text-left flex items-center space-x-2.5 text-[11px] text-neutral-400">
                       <Tag className="h-4 w-4 text-neutral-500 shrink-0" />
-                      <span>50% regift discount automatically unlocks when replying to any Memoir gift you received.</span>
+                      <span>50% regift discount automatically unlocks when replying to any Lovewrit gift you received.</span>
                     </div>
                   )}
                 </div>
@@ -1760,14 +1842,14 @@ export default function CreateMemoirPage({
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    <span>Publishing Memoir...</span>
+                    <span>Publishing Lovewrit...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
                     {isFounderFree ? (
                       <>
                         <Crown className="h-4 w-4" />
-                        <span>Instant Publish (Founder Pass • ₹0 Free)</span>
+                        <span>Instant Publish (Founder Pass • {symbol}0 Free)</span>
                       </>
                     ) : (
                       <>

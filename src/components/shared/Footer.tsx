@@ -12,11 +12,11 @@ export default function Footer() {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500 text-white">
                 <Heart className="h-4 w-4 fill-white" />
               </div>
-              <span className="font-serif text-lg font-bold text-white">Memoir</span>
+              <span className="font-serif text-lg font-bold text-white">Lovewrit</span>
             </div>
             <p className="mt-3 max-w-sm text-xs leading-relaxed text-neutral-400">
-              Personalized occasion cards & emotional mini-websites created for couples.
-              Craft heartfelt memories for proposals, anniversaries, apologies, and love letters.
+              Personalized occasion cards & emotional mini-websites created for life's sacred moments.
+              Craft heartfelt keepsakes for proposals, anniversaries, apologies, birthdays, and love letters.
             </p>
             <div className="mt-4 flex items-center space-x-2 text-[11px] text-neutral-500">
               <span>Made with</span>
@@ -78,11 +78,11 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 border-t border-neutral-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500">
-          <p>© {new Date().getFullYear()} Memoir. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} Lovewrit. All rights reserved.</p>
           <div className="mt-2 sm:mt-0 flex items-center space-x-4">
             <span className="inline-flex items-center text-[11px] text-rose-400/80">
               <Sparkles className="mr-1 h-3 w-3" />
-              Phase 1 MVP Edition
+              Digital Keepsakes & Cards
             </span>
           </div>
         </div>

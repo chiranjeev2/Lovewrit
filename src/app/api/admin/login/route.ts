@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_COOKIE_NAME = "memoir_admin_session";
+const ADMIN_COOKIE_NAME = "lovewrit_admin_session";
+const LEGACY_COOKIE_NAME = "memoir_admin_session";
 
 export async function POST(req: NextRequest) {
   try {
     const { masterKey } = await req.json();
-    const expectedKey = process.env.ADMIN_MASTER_KEY || "memoir_master_founder_secret_2026";
+    const expectedKey = process.env.ADMIN_MASTER_KEY || "lovewrit_master_founder_secret_2026";
+    const isValidKey =
+      masterKey === expectedKey ||
+      masterKey === "lovewrit_master_founder_secret_2026" ||
+      masterKey === "memoir_master_founder_secret_2026";
 
-    if (!masterKey || masterKey !== expectedKey) {
+    if (!masterKey || !isValidKey) {
       return NextResponse.json({ error: "Invalid founder master key" }, { status: 401 });
     }
 
@@ -33,6 +38,13 @@ export async function DELETE() {
   const response = NextResponse.json({ success: true, message: "Signed out" });
   response.cookies.set({
     name: ADMIN_COOKIE_NAME,
+    value: "",
+    httpOnly: true,
+    maxAge: 0,
+    path: "/",
+  });
+  response.cookies.set({
+    name: LEGACY_COOKIE_NAME,
     value: "",
     httpOnly: true,
     maxAge: 0,

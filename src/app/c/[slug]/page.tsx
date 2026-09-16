@@ -69,7 +69,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   };
 
   const handleDownloadImage = async (format: "png" | "jpeg" = "png") => {
-    const node = document.getElementById("memoir-card-node");
+    const node = document.getElementById("lovewrit-card-node");
     if (!node) return;
 
     setIsDownloading(true);
@@ -80,7 +80,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           : await toJpeg(node, { quality: 0.95, pixelRatio: 2 });
 
       const link = document.createElement("a");
-      link.download = `memoir-card-${order?.cardData?.recipientName || "love"}.${format}`;
+      link.download = `lovewrit-card-${order?.cardData?.recipientName || "love"}.${format}`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -118,7 +118,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}
-        title={`Memoir Card for ${cardData.recipientName}`}
+        title={`Lovewrit Card for ${cardData.recipientName}`}
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
       />
@@ -153,7 +153,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500 text-white">
             <Heart className="h-3.5 w-3.5 fill-white" />
           </div>
-          <span className="font-bold">Memoir</span>
+          <span className="font-bold">Lovewrit</span>
         </Link>
 
         <div className="flex items-center space-x-2">
@@ -267,7 +267,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
       </main>
 
       <footer className="py-4 text-center text-xs text-neutral-500">
-        <p>Created with Memoir • Personalized Keepsakes</p>
+        <p>Created with Lovewrit • Personalized Keepsakes</p>
       </footer>
     </div>
   );

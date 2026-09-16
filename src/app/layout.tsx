@@ -19,9 +19,15 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Memoir | Personalized Occasion Cards & Mini-Websites",
+  title: "Lovewrit | Personalized Occasion Cards & Keepsake Pages",
   description:
-    "Handcrafted digital cards & emotional mini-websites for couples (proposals, anniversaries, apologies, and love letters).",
+    "Handcrafted digital greeting cards & emotional multimedia keepsake mini-websites for life's sacred moments, celebrations, and love letters.",
+  openGraph: {
+    title: "Lovewrit | Personalized Occasion Cards & Keepsake Pages",
+    description:
+      "Handcrafted digital greeting cards & emotional multimedia keepsake mini-websites for life's sacred moments.",
+    siteName: "Lovewrit",
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

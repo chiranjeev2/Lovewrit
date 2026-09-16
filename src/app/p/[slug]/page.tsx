@@ -115,7 +115,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}
-        title={`Memoir Page for ${pageData.recipientName}`}
+        title={`Lovewrit Page for ${pageData.recipientName}`}
         isOpen={showQRModal}
         onClose={() => setShowQRModal(false)}
       />
@@ -167,7 +167,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500 text-white">
             <Heart className="h-3.5 w-3.5 fill-white" />
           </div>
-          <span className="font-bold">Memoir</span>
+          <span className="font-bold">Lovewrit</span>
         </Link>
 
         <div className="flex items-center space-x-2">
@@ -252,7 +252,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
       </main>
 
       <footer className="py-6 text-center text-xs text-neutral-500">
-        <p>Created with Memoir • Personalized Occasion Moments</p>
+        <p>Created with Lovewrit • Personalized Occasion Moments</p>
       </footer>
     </div>
   );

@@ -1,6 +1,6 @@
-// Comprehensive automated test suite for Memoir Phase 2
+// Comprehensive automated test suite for Lovewrit Phase 2
 async function runPhase2Tests() {
-  console.log("=== STARTING MEMOIR PHASE 2 VERIFICATION ===");
+  console.log("=== STARTING LOVEWRIT PHASE 2 VERIFICATION ===");
   const BASE_URL = "http://localhost:3000";
 
   // 1. Check Dev Server
@@ -122,7 +122,7 @@ async function runPhase2Tests() {
   console.log("\n[5] Testing Founder Queue & Rush Availability Toggle...");
   const queueRes = await fetch(`${BASE_URL}/api/admin/queue`, {
     headers: {
-      "x-admin-key": "memoir_master_founder_secret_2026",
+      "x-admin-key": "lovewrit_master_founder_secret_2026",
     },
   });
   const queueData = await queueRes.json();
@@ -138,7 +138,7 @@ async function runPhase2Tests() {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-key": "memoir_master_founder_secret_2026",
+      "x-admin-key": "lovewrit_master_founder_secret_2026",
     },
     body: JSON.stringify({ action: "TOGGLE_RUSH", isRushAvailable: false }),
   });
@@ -150,7 +150,7 @@ async function runPhase2Tests() {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-key": "memoir_master_founder_secret_2026",
+      "x-admin-key": "lovewrit_master_founder_secret_2026",
     },
     body: JSON.stringify({ action: "TOGGLE_RUSH", isRushAvailable: true }),
   });
