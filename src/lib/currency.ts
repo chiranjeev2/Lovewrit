@@ -138,7 +138,7 @@ export function detectRegion(countryCode?: string | null, timezone?: string | nu
     const code = countryCode.toUpperCase();
     if (code === "GB") return "uk";
     if (["IN", "PK", "BD", "LK", "NP", "AE", "SA", "NG", "KE", "ZA", "EG"].includes(code)) return "asia_africa";
-    if (["US", "CA", "MX", "BR", "AR", "CO", "CL"].includes(code)) return "americas";
+    if (["US", "CA", "MX", "BR", "AR", "CO", "CL", "AU", "NZ"].includes(code)) return "americas";
     if (["DE", "FR", "IT", "ES", "NL", "BE", "SE", "PL", "IE", "AT", "PT", "CH"].includes(code)) return "europe";
   }
 
@@ -147,7 +147,7 @@ export function detectRegion(countryCode?: string | null, timezone?: string | nu
     if (timezone.includes("Calcutta") || timezone.includes("Kolkata") || timezone.includes("Asia") || timezone.includes("Africa")) {
       return "asia_africa";
     }
-    if (timezone.includes("America") || timezone.includes("Pacific") || timezone.includes("Eastern") || timezone.includes("Central")) {
+    if (timezone.includes("America") || timezone.includes("Pacific") || timezone.includes("Eastern") || timezone.includes("Central") || timezone.includes("Australia") || timezone.includes("Sydney") || timezone.includes("Melbourne")) {
       return "americas";
     }
     if (timezone.includes("Europe")) return "europe";

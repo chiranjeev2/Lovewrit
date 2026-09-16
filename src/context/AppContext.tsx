@@ -18,10 +18,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrencyState] = useState<CurrencyCode>("INR");
   const [language, setLanguageState] = useState<LanguageCode>("en");
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     // Auto-detect currency and region based on client timezone
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;

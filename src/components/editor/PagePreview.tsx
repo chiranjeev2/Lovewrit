@@ -14,6 +14,8 @@ import {
   Film,
   Camera,
   Calendar,
+  Clock,
+  Flame,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
@@ -34,6 +36,8 @@ interface PagePreviewProps {
   venueName?: string;
   venueAddress?: string;
   venueMapUrl?: string;
+  eventDate?: string;
+  eventTime?: string;
   voiceMessageUrl?: string | null;
   previewOnly?: boolean;
 }
@@ -52,6 +56,8 @@ export default function PagePreview({
   venueName,
   venueAddress,
   venueMapUrl,
+  eventDate,
+  eventTime,
   voiceMessageUrl,
   previewOnly = false,
 }: PagePreviewProps) {
@@ -420,6 +426,70 @@ export default function PagePreview({
           </span>
         </div>
       </div>
+
+      {/* Event Details, Date, Time & Venue Section */}
+      {(venueName || venueAddress || eventDate || eventTime) && (
+        <div className="relative z-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-neutral-900/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl my-8 text-center space-y-4">
+          {occasion === "jagrata_kirtan" && (
+            <div className="inline-flex items-center space-x-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-3.5 py-1 text-xs font-bold text-amber-300">
+              <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
+              <span>🚩 JAI MATA DI • SADAR NIMANTRAN 🚩</span>
+            </div>
+          )}
+
+          <div className="space-y-1">
+            <span className="text-[11px] font-semibold uppercase tracking-widest text-amber-300/90 block">
+              {occasion === "jagrata_kirtan" ? "Shubh Karyakram & Sthal" : "Event Schedule & Venue"}
+            </span>
+            {venueName && (
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
+                {venueName}
+              </h3>
+            )}
+          </div>
+
+          {/* Date & Time Ribbon */}
+          {(eventDate || eventTime) && (
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+              {eventDate && (
+                <div className="flex items-center space-x-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-amber-200">
+                  <Calendar className="h-4 w-4 text-amber-400" />
+                  <span>{eventDate}</span>
+                </div>
+              )}
+              {eventTime && (
+                <div className="flex items-center space-x-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-amber-200">
+                  <Clock className="h-4 w-4 text-amber-400" />
+                  <span>{eventTime}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Address */}
+          {venueAddress && (
+            <div className="flex items-center justify-center space-x-1.5 text-xs text-neutral-300">
+              <MapPin className="h-3.5 w-3.5 text-rose-400 shrink-0" />
+              <span>{venueAddress}</span>
+            </div>
+          )}
+
+          {/* Map Link */}
+          {venueMapUrl && (
+            <div className="pt-2">
+              <a
+                href={venueMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center space-x-2 rounded-full border border-rose-500/40 bg-rose-500/20 px-5 py-2 text-xs font-bold text-rose-200 hover:bg-rose-500 hover:text-white transition shadow-lg shadow-rose-500/20"
+              >
+                <Navigation className="h-3.5 w-3.5" />
+                <span>Get Directions via Google Maps</span>
+              </a>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Interactive Love Tap Counter */}
       <div className="relative z-10 my-6 text-center">

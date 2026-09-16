@@ -22,6 +22,7 @@ import {
 import {
   PRICING_TIERS,
   TierType,
+  CurrencyCode,
   calculateOrderTotal,
 } from "@/lib/currency";
 import { BUILTIN_AUDIO_TRACKS } from "@/lib/audio-tracks";
@@ -29,45 +30,54 @@ import { LanguageCode, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
 import {
   Heart,
   Sparkles,
-  Crown,
   ArrowLeft,
   Upload,
-  Music,
-  Check,
-  CreditCard,
-  Mic,
   Calendar,
   Clock,
-  MapPin,
-  Flame,
-  Zap,
-  Info,
-  Layers,
-  Loader2,
-  AlertCircle,
+  Sparkle,
+  Music,
   Eye,
   Sliders,
+  AlertCircle,
+  HelpCircle,
+  Check,
+  ShieldCheck,
+  Loader2,
+  Gift,
+  CreditCard,
+  Tag,
+  Volume2,
+  Lock,
+  Camera,
+  Film,
   Play,
   Pause,
-  Volume2,
-  Gift,
-  Tag,
-  Film,
-  Camera,
-  Plus,
-  Trash2,
+  MapPin,
+  Flame,
+  Crown,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  Info,
+  Layers,
+  FileText,
+  Plus,
+  Trash2,
+  ArrowRight,
+  ArrowUp,
+  ArrowDown,
+  Zap,
+  Mic,
 } from "lucide-react";
 
-interface CreatePageProps {
+export default function CreateMemoirPage({
+  params,
+}: {
   params: Promise<{ templateId: string }>;
-}
-
-export default function CreateTemplatePage({ params }: CreatePageProps) {
+}) {
   const resolvedParams = use(params);
   const router = useRouter();
-  const { currency, region, language, setLanguage, t } = useApp();
+  const { currency, setCurrency, region, language, setLanguage, t } = useApp();
 
   const templateId = resolvedParams.templateId;
   const template = getTemplateById(templateId) || TEMPLATES[0];
@@ -88,6 +98,9 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   const [venueName, setVenueName] = useState<string>("");
   const [venueAddress, setVenueAddress] = useState<string>("");
   const [venueMapUrl, setVenueMapUrl] = useState<string>("");
+  const [eventDate, setEventDate] = useState<string>(template.sampleEventDate || "");
+  const [eventTime, setEventTime] = useState<string>(template.sampleEventTime || "");
+  const [showCurrencyOverride, setShowCurrencyOverride] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(template.sampleMessage);
   const [selectedTheme, setSelectedTheme] = useState<ColorThemeKey>(template.defaultTheme);
   const [photoShape, setPhotoShape] = useState<PhotoShapeKey>(template.defaultShape);
@@ -131,8 +144,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
 
   // Founder Master Pass (Free All-Access)
   const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
-  const [founderKeyInput, setFounderKeyInput] = useState<string>("");
-  const [showFounderInput, setShowFounderInput] = useState<boolean>(false);
 
   // Regift 50% discount & confirmed reply details
   const [replyToSlug, setReplyToSlug] = useState<string | null>(null);
@@ -196,20 +207,11 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     };
   }, []);
 
-  const handleApplyFounderKey = () => {
-    if (
-      founderKeyInput.trim() === "memoir_master_founder_secret_2026" ||
-      founderKeyInput.trim().toLowerCase() === "founder_master"
-    ) {
-      setIsFounderFree(true);
-      setShowFounderInput(false);
-      setFormError(null);
-      try {
-        localStorage.setItem("memoir_founder_pass", "memoir_master_founder_secret_2026");
-      } catch {}
-    } else {
-      setFormError("Invalid Founder Master Key.");
-    }
+  const handleExitFounderMode = () => {
+    setIsFounderFree(false);
+    try {
+      localStorage.removeItem("memoir_founder_pass");
+    } catch {}
   };
 
   const applyDatePreset = (
@@ -301,6 +303,12 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
       if (matchingTemplate.samplePhotos && matchingTemplate.samplePhotos.length > 0) {
         setPagePhotos(matchingTemplate.samplePhotos);
         setCardPhoto(matchingTemplate.samplePhotos[0]);
+      }
+      if (matchingTemplate.sampleEventDate) setEventDate(matchingTemplate.sampleEventDate);
+      if (matchingTemplate.sampleEventTime) setEventTime(matchingTemplate.sampleEventTime);
+      if (newOccasion === "jagrata_kirtan") {
+        setRecipientName("Sadar Nimantran (सादर आमंत्रण)");
+        setSenderName("Goyal Parivaar");
       }
     }
 
@@ -460,13 +468,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
     ? calculatedPricing.displayPrice
     : calculatedPricing.originalDisplayPrice;
 
-  // Smart check for Rush vs Countdown distance
-  const isCountdownOver48Hours = () => {
-    if (!revealDateTime) return false;
-    const diff = new Date(revealDateTime).getTime() - Date.now();
-    return diff > 48 * 60 * 60 * 1000;
-  };
-
   // Checkout submission
   const handleProceedToCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -511,6 +512,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           venueName,
           venueAddress,
           venueMapUrl,
+          eventDate: eventDate || undefined,
+          eventTime: eventTime || undefined,
           voiceMessageUrl: voiceMemoUrl,
           revealAt: enableRevealCountdown && revealDateTime ? revealDateTime : null,
           language: selectedLanguage,
@@ -530,6 +533,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
           venueName,
           venueAddress,
           venueMapUrl,
+          eventDate: eventDate || undefined,
+          eventTime: eventTime || undefined,
           voiceMessageUrl: voiceMemoUrl,
           revealAt: enableRevealCountdown && revealDateTime ? revealDateTime : null,
           language: selectedLanguage,
@@ -566,6 +571,24 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-rose-500 selection:text-white">
       <Navbar />
+
+      {/* Founder Test Mode Active Notice */}
+      {isFounderFree && (
+        <div className="bg-gradient-to-r from-amber-950 via-amber-900 to-amber-950 border-b border-amber-600/40 py-2.5 px-4 text-center text-xs text-amber-200 flex flex-wrap items-center justify-center gap-2.5 shadow-lg">
+          <div className="flex items-center space-x-1.5 font-bold text-amber-300">
+            <Crown className="h-4 w-4 text-amber-400" />
+            <span>Founder VIP Preview Active (₹0 Free Bypass)</span>
+          </div>
+          <span className="hidden sm:inline text-amber-400/50">•</span>
+          <button
+            type="button"
+            onClick={handleExitFounderMode}
+            className="rounded-lg bg-amber-500/20 hover:bg-amber-500 hover:text-neutral-950 border border-amber-500/40 px-2.5 py-1 text-[11px] font-bold text-amber-300 transition"
+          >
+            Exit to Public View (Restore Standard Pricing)
+          </button>
+        </div>
+      )}
 
       {/* Breadcrumb Header */}
       <div className="border-b border-neutral-900 bg-neutral-900/50 py-3 px-4 sm:px-8">
@@ -1044,7 +1067,16 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                         <button
                           key={preset.id}
                           type="button"
-                          onClick={() => applyDatePreset(preset.id as any)}
+                          onClick={() =>
+                            applyDatePreset(
+                              preset.id as
+                                | "tonight"
+                                | "tomorrow_morning"
+                                | "tomorrow_evening"
+                                | "in_24h"
+                                | "weekend"
+                            )
+                          }
                           className="rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-neutral-300 hover:border-rose-500/60 hover:text-white transition"
                         >
                           {preset.label}
@@ -1077,12 +1109,12 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                     />
                   </div>
 
-                  {/* Trust warning: If Rush selected and reveal is >48h */}
-                  {tier === "RUSH" && isCountdownOver48Hours() && (
+                  {/* Trust warning: If Rush selected and reveal is far */}
+                  {tier === "RUSH" && revealDateTime && (
                     <div className="flex items-center space-x-2 rounded-xl bg-amber-950/70 border border-amber-800 p-3 text-xs text-amber-300">
                       <Info className="h-4 w-4 shrink-0" />
                       <span>
-                        Tip: Your reveal date is more than 48 hours away! You don&apos;t need the Emergency Rush fee. Switch to the <strong>Custom Tier</strong> to save money.
+                        Tip: If your reveal date is more than 48 hours away, you don&apos;t need the Emergency Rush fee. Switch to the <strong>Custom Tier</strong> to save money.
                       </span>
                     </div>
                   )}
@@ -1090,13 +1122,44 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
               )}
             </div>
 
-            {/* Step 6: Venue & Maps (for Invites or Events) */}
+            {/* Step 6: Venue & Location (for Invites or Events) */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
               <div className="flex items-center space-x-1.5 text-rose-400">
                 <MapPin className="h-4 w-4" />
                 <span className="text-xs font-bold uppercase tracking-wider">
-                  Step 6: Venue & Location (Optional / Invites)
+                  Step 6: Event Date, Timing & Venue (Optional)
                 </span>
+              </div>
+
+              {/* Event Date & Timing */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 border-b border-neutral-800/70">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1 flex items-center space-x-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Event Date (Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={eventDate}
+                    onChange={(e) => setEventDate(e.target.value)}
+                    placeholder="e.g. Saturday, 24 October 2026"
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1 flex items-center space-x-1.5">
+                    <Clock className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Event Timing (Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={eventTime}
+                    onChange={(e) => setEventTime(e.target.value)}
+                    placeholder="e.g. 8:00 PM Onwards (or 4:00 PM - 8:00 PM)"
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1587,6 +1650,38 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                   <div className="text-[10px] text-neutral-400 uppercase">
                     {currency} • {isFounderFree ? "Founder Edition" : "Direct Order"}
                   </div>
+                  {!isFounderFree && (
+                    <div className="mt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrencyOverride(!showCurrencyOverride)}
+                        className="text-[10px] text-neutral-400 hover:text-rose-300 underline transition"
+                      >
+                        {showCurrencyOverride ? "Hide currency options" : "Paying from another country? Change currency"}
+                      </button>
+                      {showCurrencyOverride && (
+                        <div className="mt-2 flex items-center justify-end space-x-1.5 animate-in fade-in">
+                          {(["INR", "USD", "EUR", "GBP"] as CurrencyCode[]).map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setCurrency(c);
+                                setShowCurrencyOverride(false);
+                              }}
+                              className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
+                                currency === c
+                                  ? "bg-rose-500 text-white shadow-sm"
+                                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                              }`}
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1618,54 +1713,6 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                     <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-3.5 text-left flex items-center space-x-2.5 text-[11px] text-neutral-400">
                       <Tag className="h-4 w-4 text-neutral-500 shrink-0" />
                       <span>50% regift discount automatically unlocks when replying to any Memoir gift you received.</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Founder Master Key Unlock Prompt */}
-              {!isFounderFree && (
-                <div className="pt-1">
-                  {!showFounderInput ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowFounderInput(true)}
-                      className="text-[11px] text-neutral-500 hover:text-amber-400 flex items-center space-x-1 transition"
-                    >
-                      <Crown className="h-3 w-3" />
-                      <span>Have Founder Master Key? Unlock Free All-Access</span>
-                    </button>
-                  ) : (
-                    <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-3 space-y-2 animate-in fade-in">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-amber-300 flex items-center space-x-1.5">
-                          <Crown className="h-3.5 w-3.5" />
-                          <span>Enter Founder Master Key</span>
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setShowFounderInput(false)}
-                          className="text-[10px] text-neutral-400 hover:text-white"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="password"
-                          value={founderKeyInput}
-                          onChange={(e) => setFounderKeyInput(e.target.value)}
-                          placeholder="Master key secret..."
-                          className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-500 focus:border-amber-500 focus:outline-none"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleApplyFounderKey}
-                          className="rounded-xl bg-amber-500 hover:bg-amber-400 px-4 py-2 text-xs font-bold text-neutral-950 transition shrink-0"
-                        >
-                          Unlock Free
-                        </button>
-                      </div>
                     </div>
                   )}
                 </div>
@@ -1767,6 +1814,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 venueName={venueName}
                 venueAddress={venueAddress}
                 venueMapUrl={venueMapUrl}
+                eventDate={eventDate}
+                eventTime={eventTime}
                 voiceMessageUrl={voiceMemoUrl}
               />
             ) : (
@@ -1783,6 +1832,8 @@ export default function CreateTemplatePage({ params }: CreatePageProps) {
                 venueName={venueName}
                 venueAddress={venueAddress}
                 venueMapUrl={venueMapUrl}
+                eventDate={eventDate}
+                eventTime={eventTime}
                 voiceMessageUrl={voiceMemoUrl}
                 musicTrackName={activeTrackObj?.title}
                 previewOnly={true}

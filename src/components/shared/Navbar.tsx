@@ -1,17 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { useApp } from "@/context/AppContext";
-import { CurrencyCode, PRICING_TIERS } from "@/lib/currency";
-import { Heart, Sparkles, Shield, ChevronDown } from "lucide-react";
+import { Heart, Sparkles, Shield, Layers } from "lucide-react";
 
 export default function Navbar() {
-  const { currency, setCurrency, region, t } = useApp();
-  const [showCurrencyDropdown, setShowCurrencyDropdown] = useState(false);
-
-  const tier = PRICING_TIERS[region];
-
   return (
     <header className="sticky top-0 z-40 w-full border-b border-rose-900/20 bg-neutral-950/80 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
@@ -30,84 +23,35 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* Navigation Links & Currency Selector */}
-        <div className="flex items-center space-x-2 sm:space-x-4">
+        {/* Navigation Links */}
+        <div className="flex items-center space-x-1 sm:space-x-3">
+          <Link
+            href="/#services"
+            className="inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
+          >
+            <Layers className="mr-1.5 h-3.5 w-3.5 text-rose-400" />
+            <span>Services</span>
+          </Link>
+
           <Link
             href="/#templates"
-            className="hidden sm:inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
+            className="inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
           >
-            <Sparkles className="mr-1.5 h-3.5 w-3.5 text-rose-400" />
+            <Sparkles className="mr-1.5 h-3.5 w-3.5 text-amber-400" />
             <span>Templates</span>
           </Link>
 
           <Link
             href="/#pricing"
-            className="hidden sm:inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
+            className="inline-flex items-center text-xs font-medium text-neutral-300 hover:text-white transition px-2.5 py-1.5 rounded-lg hover:bg-neutral-800/50"
           >
             <span>Pricing</span>
           </Link>
 
-          {/* Currency Selector */}
-          <div className="relative">
-            <button
-              onClick={() => setShowCurrencyDropdown(!showCurrencyDropdown)}
-              className="flex items-center space-x-1 rounded-full border border-neutral-800 bg-neutral-900/90 px-3 py-1.5 text-xs font-semibold text-neutral-200 hover:border-neutral-700 hover:text-white transition"
-              title="Change Currency & Region"
-            >
-              <span className="text-rose-400">{tier.symbol}</span>
-              <span>{currency}</span>
-              <ChevronDown className="h-3 w-3 text-neutral-400" />
-            </button>
-
-            {showCurrencyDropdown && (
-              <div
-                className="absolute right-0 mt-2 w-52 rounded-xl border border-neutral-800 bg-neutral-900 p-1.5 shadow-2xl z-50"
-                onMouseLeave={() => setShowCurrencyDropdown(false)}
-              >
-                <div className="px-2 py-1 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
-                  Select Currency & Region
-                </div>
-                {(["INR", "USD", "EUR", "GBP"] as CurrencyCode[]).map((code) => {
-                  const targetRegion =
-                    code === "INR"
-                      ? "asia_africa"
-                      : code === "USD"
-                      ? "americas"
-                      : code === "EUR"
-                      ? "europe"
-                      : "uk";
-                  const p = PRICING_TIERS[targetRegion];
-                  return (
-                    <button
-                      key={code}
-                      onClick={() => {
-                        setCurrency(code);
-                        setShowCurrencyDropdown(false);
-                      }}
-                      className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs transition ${
-                        currency === code
-                          ? "bg-rose-500/20 text-rose-300 font-medium"
-                          : "text-neutral-300 hover:bg-neutral-800"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-1.5">
-                        <span className="font-semibold text-rose-400">{p.symbol}</span>
-                        <span>{code}</span>
-                      </div>
-                      <span className="text-[11px] text-neutral-400">
-                        {p.symbol}{p.cardPrice} / {p.symbol}{p.pagePrice}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
           {/* Founder Admin Access link */}
           <Link
             href="/admin"
-            className="flex items-center justify-center p-1.5 text-neutral-500 hover:text-rose-400 transition rounded-lg hover:bg-neutral-900"
+            className="flex items-center justify-center p-1.5 text-neutral-500 hover:text-rose-400 transition rounded-lg hover:bg-neutral-900 ml-1"
             title="Founder Admin Portal"
           >
             <Shield className="h-4 w-4" />

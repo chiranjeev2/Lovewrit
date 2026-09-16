@@ -182,6 +182,8 @@ export interface TemplateDefinition {
   sampleRecipient: string;
   sampleMessage: string;
   sampleLocation?: string;
+  sampleEventDate?: string;
+  sampleEventTime?: string;
   venueRequired?: boolean;
   hasInteractiveDodging?: boolean;
   revealType: RevealType;
@@ -418,15 +420,18 @@ export const TEMPLATES: TemplateDefinition[] = [
     category: "invites",
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "sunset",
-    defaultShape: "square",
-    coverImage: "https://images.unsplash.com/photo-1609137144822-4a004f2f01f3?w=800&q=80",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1605649487212-47bdab064df8?w=800&q=80",
     samplePhotos: [
-      "https://images.unsplash.com/photo-1609137144822-4a004f2f01f3?w=800&q=80",
+      "https://images.unsplash.com/photo-1605649487212-47bdab064df8?w=800&q=80",
+      "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80",
     ],
     sampleSender: "Goyal Parivaar",
-    sampleRecipient: "Sadar Nimantran",
-    sampleMessage: "Jai Mata Di! You and your family are cordially invited to seek the divine blessings of Maa Durga on the auspicious occasion of Mata Ki Chowki & Jagrata.",
+    sampleRecipient: "Sadar Nimantran (सादर आमंत्रण)",
+    sampleMessage: "🚩 Jai Mata Di 🚩 With the divine grace and blessings of Maa Durga, we cordially invite you and your family to Mata Ki Chowki & Jagrata. Bhajan, Aarti & Prasad distribution to follow.",
     sampleLocation: "Shri Sanatan Dharam Mandir, Amritsar",
+    sampleEventDate: "Saturday, 24 October 2026",
+    sampleEventTime: "8:00 PM Onwards",
     venueRequired: true,
     hasInteractiveDodging: false,
     revealType: "diya_aarti",

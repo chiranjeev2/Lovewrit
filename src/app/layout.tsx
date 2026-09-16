@@ -23,7 +23,11 @@ export const metadata: Metadata = {
   description:
     "Handcrafted digital cards & emotional mini-websites for couples (proposals, anniversaries, apologies, and love letters).",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico" },
+    ],
+    apple: "/icon.svg",
   },
 };
 

@@ -20,6 +20,9 @@ import {
   ShieldCheck,
   Flame,
   PartyPopper,
+  Layers,
+  Crown,
+  Smartphone,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -98,6 +101,111 @@ export default function HomePage() {
               >
                 View All 4 Tiers
               </a>
+            </div>
+          </div>
+        </section>
+
+        {/* SERVICES & EXPERIENCES SHOWCASE */}
+        <section id="services" className="py-16 sm:py-20 border-b border-neutral-900 mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <span className="text-xs uppercase font-bold tracking-widest text-rose-400">
+              Our Services & Keepsakes
+            </span>
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white mt-2">
+              Bespoke Digital Gifting Designed for Every Device
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-400 mt-2.5 leading-relaxed">
+              From instant downloadable digital cards to interactive unboxing web-pages and sacred devotional invites, crafted for seamless viewing on phones, tablets, and desktops.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Service 1: Digital Keepsake Cards */}
+            <div className="group rounded-3xl border border-neutral-800 bg-gradient-to-b from-neutral-900/80 to-neutral-950 p-6 flex flex-col justify-between shadow-xl hover:border-emerald-500/40 hover:-translate-y-1 transition duration-300">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 mb-5 group-hover:scale-110 transition">
+                  <Smartphone className="h-6 w-6" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                  Instant Keepsake
+                </span>
+                <h3 className="font-serif text-xl font-bold text-white mt-1">
+                  Digital Keepsake Cards
+                </h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  High-resolution digital cards with 4 portrait frame shapes, romantic typography, voice memos, and printable QR codes for physical gifting.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-300">
+                <span className="font-semibold text-emerald-400">From {pricing.symbol}{pricing.cardPrice}</span>
+                <span className="text-[11px] text-neutral-500">Instant Download</span>
+              </div>
+            </div>
+
+            {/* Service 2: Interactive Emotional Web-Pages */}
+            <div className="group rounded-3xl border border-rose-500/40 bg-gradient-to-b from-rose-950/20 via-neutral-900/90 to-neutral-950 p-6 flex flex-col justify-between shadow-xl hover:border-rose-500/70 hover:-translate-y-1 transition duration-300">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-500/20 text-rose-400 mb-5 group-hover:scale-110 transition">
+                  <Heart className="h-6 w-6 fill-rose-500" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">
+                  Full Experience
+                </span>
+                <h3 className="font-serif text-xl font-bold text-white mt-1">
+                  Interactive Unboxing Pages
+                </h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  Dedicated emotional mini-websites with animated unboxing reveals, background audio soundtracks, voice notes, multi-photo collages, and guest replies.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-300">
+                <span className="font-semibold text-rose-400">From {pricing.symbol}{pricing.pagePrice}</span>
+                <span className="text-[11px] text-neutral-500">Live URL & RSVP</span>
+              </div>
+            </div>
+
+            {/* Service 3: Sacred Devotional Chowki & Invites */}
+            <div className="group rounded-3xl border border-amber-500/30 bg-gradient-to-b from-amber-950/20 via-neutral-900/90 to-neutral-950 p-6 flex flex-col justify-between shadow-xl hover:border-amber-500/60 hover:-translate-y-1 transition duration-300">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-400 mb-5 group-hover:scale-110 transition">
+                  <Flame className="h-6 w-6" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                  Devotional & Invites
+                </span>
+                <h3 className="font-serif text-xl font-bold text-white mt-1">
+                  Devotional Chowki & Invites
+                </h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  Religion-friendly Mata Ka Jagrata, Kirtan, and social invites with traditional Aarti music, auspicious Diya lighting, Google Maps pin, and event timing badges.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-300">
+                <span className="font-semibold text-amber-300">Cards & Pages</span>
+                <span className="text-[11px] text-neutral-500">Venue Directions</span>
+              </div>
+            </div>
+
+            {/* Service 4: Founder Handcrafted & Priority Rush */}
+            <div className="group rounded-3xl border border-neutral-800 bg-gradient-to-b from-neutral-900/80 to-neutral-950 p-6 flex flex-col justify-between shadow-xl hover:border-amber-500/50 hover:-translate-y-1 transition duration-300">
+              <div>
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400 mb-5 group-hover:scale-110 transition">
+                  <Crown className="h-6 w-6" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                  Handcrafted & Rush
+                </span>
+                <h3 className="font-serif text-xl font-bold text-white mt-1">
+                  Bespoke Founder Service
+                </h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  Leave the design to our founder. Personal aesthetic curation, bespoke color harmonies, custom wording, and same-day priority dispatch within 12 hours.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-neutral-800/80 flex items-center justify-between text-xs text-neutral-300">
+                <span className="font-semibold text-amber-400">From {pricing.symbol}{pricing.customPrice}</span>
+                <span className="text-[11px] text-neutral-500">1-on-1 Review</span>
+              </div>
             </div>
           </div>
         </section>
@@ -276,159 +384,223 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {/* Tier 1: Digital Card */}
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/60 p-6 flex flex-col justify-between">
+            <div className="group relative rounded-3xl border border-neutral-800 bg-gradient-to-b from-neutral-900/90 via-neutral-950 to-neutral-950 p-6 sm:p-7 flex flex-col justify-between shadow-xl hover:border-emerald-500/50 hover:shadow-emerald-950/20 transition-all duration-300">
               <div>
-                <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                  Tier 1 • Automated
-                </span>
-                <h3 className="font-serif text-xl font-bold text-white mt-1">Digital Card</h3>
-                <p className="mt-2 text-xs text-neutral-400">High-res downloadable keepsake.</p>
-                <div className="mt-4 flex items-baseline space-x-1">
-                  <span className="text-3xl font-bold text-white">
-                    {pricing.symbol}{pricing.cardPrice}
-                  </span>
-                  <span className="text-[11px] text-neutral-500">one-time</span>
+                <div className="inline-flex items-center space-x-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-300 mb-4">
+                  <span>Tier 1 • Instant</span>
                 </div>
-                <ul className="mt-6 space-y-2 text-xs text-neutral-300">
+                <h3 className="font-serif text-2xl font-bold text-white">Digital Card</h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  High-res downloadable keepsake crafted for instant gifting and WhatsApp sharing.
+                </p>
+
+                <div className="mt-5 pb-5 border-b border-neutral-800/80">
+                  <div className="flex items-baseline space-x-1.5">
+                    <span className="text-4xl font-bold tracking-tight text-white">
+                      {pricing.symbol}{pricing.cardPrice}
+                    </span>
+                    <span className="text-xs text-neutral-400 font-medium">one-time</span>
+                  </div>
+                  <span className="text-[11px] text-emerald-400 font-medium mt-1 block">
+                    Zero wait time • Instant generation
+                  </span>
+                </div>
+
+                <ul className="mt-5 space-y-2.5 text-xs text-neutral-300">
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-emerald-400" />
+                    <Check className="mr-2 h-4 w-4 text-emerald-400 shrink-0" />
                     <span>Instant PNG/JPG download</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-emerald-400" />
-                    <span>5 photo frame shapes</span>
+                    <Check className="mr-2 h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>4 portrait frame shapes</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-emerald-400" />
-                    <span>Printable QR Code</span>
+                    <Check className="mr-2 h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Printable physical QR Code</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="mr-2 h-4 w-4 text-emerald-400 shrink-0" />
+                    <span>Voice memo audio integration</span>
                   </li>
                 </ul>
               </div>
+
               <a
                 href="#templates"
-                className="mt-8 block text-center rounded-xl bg-neutral-800 py-2.5 text-xs font-semibold text-white hover:bg-neutral-700"
+                className="mt-8 block w-full text-center rounded-2xl bg-neutral-800/90 py-3 text-xs font-bold text-white hover:bg-emerald-600 transition shadow-md"
               >
-                Create Card
+                Create Digital Card
               </a>
             </div>
 
-            {/* Tier 2: Template Page */}
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/60 p-6 flex flex-col justify-between">
+            {/* Tier 2: Interactive Page (Most Popular) */}
+            <div className="group relative rounded-3xl border-2 border-rose-500/60 bg-gradient-to-b from-rose-950/30 via-neutral-900/95 to-neutral-950 p-6 sm:p-7 flex flex-col justify-between shadow-2xl shadow-rose-950/50 hover:border-rose-400 lg:-translate-y-2 transition-all duration-300">
+              {/* Floating Most Popular Badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-4 py-1 text-[10px] font-bold text-white uppercase tracking-wider shadow-lg shadow-rose-500/40 flex items-center space-x-1.5 whitespace-nowrap">
+                <Sparkles className="h-3 w-3" />
+                <span>✨ Most Popular Keepsake</span>
+              </div>
+
               <div>
-                <span className="text-xs font-semibold text-rose-300 uppercase tracking-wider">
-                  Tier 2 • Automated
-                </span>
-                <h3 className="font-serif text-xl font-bold text-white mt-1">Interactive Page</h3>
-                <p className="mt-2 text-xs text-neutral-400">Full emotional web experience.</p>
-                <div className="mt-4 flex items-baseline space-x-1">
-                  <span className="text-3xl font-bold text-white">
-                    {pricing.symbol}{pricing.pagePrice}
-                  </span>
-                  <span className="text-[11px] text-neutral-500">one-time</span>
+                <div className="inline-flex items-center space-x-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-300 mb-4 mt-1">
+                  <span>Tier 2 • Interactive Web</span>
                 </div>
-                <ul className="mt-6 space-y-2 text-xs text-neutral-300">
+                <h3 className="font-serif text-2xl font-bold text-white">Interactive Page</h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  Full emotional web experience with unboxing animations and custom audio soundtrack.
+                </p>
+
+                <div className="mt-5 pb-5 border-b border-rose-900/40">
+                  <div className="flex items-baseline space-x-1.5">
+                    <span className="text-4xl font-bold tracking-tight text-white">
+                      {pricing.symbol}{pricing.pagePrice}
+                    </span>
+                    <span className="text-xs text-neutral-400 font-medium">one-time</span>
+                  </div>
+                  <span className="text-[11px] text-rose-300 font-medium mt-1 block">
+                    Bundle option: Add Card for only +{pricing.symbol}{pricing.bundleAddonPrice}
+                  </span>
+                </div>
+
+                <ul className="mt-5 space-y-2.5 text-xs text-neutral-300">
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-rose-400" />
+                    <Check className="mr-2 h-4 w-4 text-rose-400 shrink-0" />
                     <span>Unboxing opening reveals</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-rose-400" />
-                    <span>Multi-photo montage collage</span>
+                    <Check className="mr-2 h-4 w-4 text-rose-400 shrink-0" />
+                    <span>Multi-photo montage collage (1-6)</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-rose-400" />
-                    <span>Music + Voice Memo notes</span>
+                    <Check className="mr-2 h-4 w-4 text-rose-400 shrink-0" />
+                    <span>Background audio + voice memo</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-rose-400" />
-                    <span>Guestbook reply wall</span>
+                    <Check className="mr-2 h-4 w-4 text-rose-400 shrink-0" />
+                    <span>Interactive guestbook & RSVP wall</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="mr-2 h-4 w-4 text-rose-400 shrink-0" />
+                    <span>Timed reveal countdown locks</span>
                   </li>
                 </ul>
               </div>
+
               <a
                 href="#templates"
-                className="mt-8 block text-center rounded-xl bg-neutral-800 py-2.5 text-xs font-semibold text-white hover:bg-neutral-700"
+                className="mt-8 block w-full text-center rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/30 hover:scale-[1.02] active:scale-[0.98] transition"
               >
-                Create Page
+                Create Interactive Page
               </a>
             </div>
 
             {/* Tier 3: Custom Handcrafted */}
-            <div className="rounded-3xl border border-amber-500/40 bg-gradient-to-b from-amber-950/30 to-neutral-900/80 p-6 flex flex-col justify-between shadow-xl">
+            <div className="group relative rounded-3xl border border-amber-500/40 bg-gradient-to-b from-amber-950/25 via-neutral-900/90 to-neutral-950 p-6 sm:p-7 flex flex-col justify-between shadow-xl hover:border-amber-400 transition-all duration-300">
               <div>
-                <span className="text-xs font-semibold text-amber-300 uppercase tracking-wider">
-                  Tier 3 • Founder Styled
-                </span>
-                <h3 className="font-serif text-xl font-bold text-white mt-1">Custom Tier</h3>
-                <p className="mt-2 text-xs text-neutral-400">Delivered within 24-48 hours.</p>
-                <div className="mt-4 flex items-baseline space-x-1">
-                  <span className="text-3xl font-bold text-amber-300">
-                    {pricing.symbol}{pricing.customPrice}
-                  </span>
-                  <span className="text-[11px] text-neutral-500">one-time</span>
+                <div className="inline-flex items-center space-x-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 mb-4">
+                  <Crown className="h-3 w-3 text-amber-400" />
+                  <span>Tier 3 • Founder Curation</span>
                 </div>
-                <ul className="mt-6 space-y-2 text-xs text-neutral-300">
+                <h3 className="font-serif text-2xl font-bold text-white">Custom Tier</h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  Founder personal styling & layout curation delivered within 24-48 hours.
+                </p>
+
+                <div className="mt-5 pb-5 border-b border-amber-900/40">
+                  <div className="flex items-baseline space-x-1.5">
+                    <span className="text-4xl font-bold tracking-tight text-amber-300">
+                      {pricing.symbol}{pricing.customPrice}
+                    </span>
+                    <span className="text-xs text-neutral-400 font-medium">one-time</span>
+                  </div>
+                  <span className="text-[11px] text-amber-300/80 font-medium mt-1 block">
+                    Cards: {pricing.symbol}{pricing.customCardPrice} • Pages: {pricing.symbol}{pricing.customPagePrice}
+                  </span>
+                </div>
+
+                <ul className="mt-5 space-y-2.5 text-xs text-neutral-300">
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-amber-400" />
+                    <Check className="mr-2 h-4 w-4 text-amber-400 shrink-0" />
                     <span>Founder personal touch & review</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-amber-400" />
+                    <Check className="mr-2 h-4 w-4 text-amber-400 shrink-0" />
                     <span>Bespoke color & layout tweaks</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-amber-400" />
-                    <span>Special instructions included</span>
+                    <Check className="mr-2 h-4 w-4 text-amber-400 shrink-0" />
+                    <span>Custom special instructions honored</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="mr-2 h-4 w-4 text-amber-400 shrink-0" />
+                    <span>Direct proofing before live launch</span>
                   </li>
                 </ul>
               </div>
+
               <a
                 href="#templates"
-                className="mt-8 block text-center rounded-xl bg-amber-600/30 border border-amber-500/50 py-2.5 text-xs font-semibold text-amber-200 hover:bg-amber-600 hover:text-white transition"
+                className="mt-8 block w-full text-center rounded-2xl bg-amber-500/20 border border-amber-500/50 py-3 text-xs font-bold text-amber-200 hover:bg-amber-500 hover:text-neutral-950 transition shadow-md"
               >
-                Select Custom
+                Select Custom Tier
               </a>
             </div>
 
-            {/* Tier 4: Emergency Rush */}
-            <div className="relative rounded-3xl border border-red-500/50 bg-gradient-to-b from-red-950/40 to-neutral-900/90 p-6 flex flex-col justify-between shadow-2xl shadow-red-950/50">
-              <div className="absolute -top-3 right-4 rounded-full bg-red-600 px-2.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
-                Priority
+            {/* Tier 4: Emergency Priority Rush */}
+            <div className="group relative rounded-3xl border border-red-500/60 bg-gradient-to-b from-red-950/30 via-neutral-900/90 to-neutral-950 p-6 sm:p-7 flex flex-col justify-between shadow-2xl shadow-red-950/40 hover:border-red-400 transition-all duration-300">
+              <div className="absolute -top-3.5 right-6 rounded-full bg-red-600 px-3 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider shadow-md">
+                ⚡ 12h Priority
               </div>
+
               <div>
-                <span className="text-xs font-semibold text-red-300 uppercase tracking-wider">
-                  Tier 4 • Rush
-                </span>
-                <h3 className="font-serif text-xl font-bold text-white mt-1">Emergency Rush</h3>
-                <p className="mt-2 text-xs text-neutral-400">Same-Day Priority (within 12h).</p>
-                <div className="mt-4 flex items-baseline space-x-1">
-                  <span className="text-3xl font-bold text-red-400">
-                    {pricing.symbol}{pricing.rushPrice}
-                  </span>
-                  <span className="text-[11px] text-neutral-500">one-time</span>
+                <div className="inline-flex items-center space-x-1.5 rounded-full bg-red-500/15 border border-red-500/30 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-red-300 mb-4">
+                  <span>Tier 4 • Emergency Rush</span>
                 </div>
-                <ul className="mt-6 space-y-2 text-xs text-neutral-300">
+                <h3 className="font-serif text-2xl font-bold text-white">Emergency Rush</h3>
+                <p className="mt-2 text-xs text-neutral-400 leading-relaxed">
+                  Same-day priority turnaround within 12 hours for urgent occasions.
+                </p>
+
+                <div className="mt-5 pb-5 border-b border-red-900/40">
+                  <div className="flex items-baseline space-x-1.5">
+                    <span className="text-4xl font-bold tracking-tight text-red-400">
+                      {pricing.symbol}{pricing.rushPrice}
+                    </span>
+                    <span className="text-xs text-neutral-400 font-medium">one-time</span>
+                  </div>
+                  <span className="text-[11px] text-red-300/80 font-medium mt-1 block">
+                    Cards: {pricing.symbol}{pricing.rushCardPrice} • Pages: {pricing.symbol}{pricing.rushPagePrice}
+                  </span>
+                </div>
+
+                <ul className="mt-5 space-y-2.5 text-xs text-neutral-300">
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-red-400" />
+                    <Check className="mr-2 h-4 w-4 text-red-400 shrink-0" />
                     <span>Founder top-of-queue priority</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-red-400" />
-                    <span>Same-day expedited delivery</span>
+                    <Check className="mr-2 h-4 w-4 text-red-400 shrink-0" />
+                    <span>Guaranteed same-day 12h dispatch</span>
                   </li>
                   <li className="flex items-center">
-                    <Check className="mr-2 h-3.5 w-3.5 text-red-400" />
-                    <span>Emergency direct support</span>
+                    <Check className="mr-2 h-4 w-4 text-red-400 shrink-0" />
+                    <span>Emergency direct support contact</span>
+                  </li>
+                  <li className="flex items-center">
+                    <Check className="mr-2 h-4 w-4 text-red-400 shrink-0" />
+                    <span>All custom tier benefits included</span>
                   </li>
                 </ul>
               </div>
+
               <a
                 href="#templates"
-                className="mt-8 block text-center rounded-xl bg-gradient-to-r from-red-600 to-rose-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-red-600/30 hover:scale-105 transition"
+                className="mt-8 block w-full text-center rounded-2xl bg-gradient-to-r from-red-600 to-rose-600 py-3 text-xs font-bold text-white shadow-lg shadow-red-600/30 hover:scale-[1.02] active:scale-[0.98] transition"
               >
-                Select Rush
+                Select Emergency Rush
               </a>
             </div>
           </div>

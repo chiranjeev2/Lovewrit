@@ -2,7 +2,7 @@
 
 import React from "react";
 import { COLOR_THEMES, ColorThemeKey, PhotoShapeKey } from "@/lib/templates-data";
-import { Heart, MapPin, Sparkles, Navigation, Calendar } from "lucide-react";
+import { Heart, MapPin, Sparkles, Navigation, Calendar, Clock, Flame } from "lucide-react";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
 
 interface CardPreviewProps {
@@ -18,6 +18,8 @@ interface CardPreviewProps {
   venueName?: string;
   venueAddress?: string;
   venueMapUrl?: string;
+  eventDate?: string;
+  eventTime?: string;
   voiceMessageUrl?: string | null;
   cardRef?: React.RefObject<HTMLDivElement | null>;
 }
@@ -35,6 +37,8 @@ export default function CardPreview({
   venueName,
   venueAddress,
   venueMapUrl,
+  eventDate,
+  eventTime,
   voiceMessageUrl,
   cardRef,
 }: CardPreviewProps) {
@@ -61,15 +65,22 @@ export default function CardPreview({
   };
 
   const isMemorial = occasion === "memorial";
+  const isJagrata = occasion === "jagrata_kirtan";
 
   return (
     <div className="w-full flex flex-col items-center">
       <div
         ref={cardRef}
         id="memoir-card-node"
-        className={`relative mx-auto w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[32px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-2xl border transition-all duration-300 ${theme.cardBg} ${theme.borderStyle}`}
+        className={`relative mx-auto w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[32px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-2xl border transition-all duration-300 ${
+          isJagrata
+            ? "bg-gradient-to-b from-red-950/85 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
+            : `${theme.cardBg} ${theme.borderStyle}`
+        }`}
         style={{
-          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+          boxShadow: isJagrata
+            ? "0 25px 50px -12px rgba(180, 83, 9, 0.35)"
+            : "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
         }}
       >
         {/* Subtle background ambient blur */}
@@ -78,12 +89,21 @@ export default function CardPreview({
 
         {/* Top Header: Occasion badge & Location */}
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center space-x-1.5">
-            <Sparkles className="h-3.5 w-3.5" style={{ color: theme.accentColor }} />
-            <span className="text-[11px] font-semibold tracking-widest uppercase opacity-80">
-              {occasion.replace("_", " ").toUpperCase()}
-            </span>
-          </div>
+          {isJagrata ? (
+            <div className="flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 shadow-sm">
+              <Flame className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
+              <span className="text-[10px] font-bold tracking-wider uppercase text-amber-300">
+                🚩 JAI MATA DI 🚩
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1.5">
+              <Sparkles className="h-3.5 w-3.5" style={{ color: theme.accentColor }} />
+              <span className="text-[11px] font-semibold tracking-widest uppercase opacity-80">
+                {occasion.replace("_", " ").toUpperCase()}
+              </span>
+            </div>
+          )}
           {(location || venueName) && (
             <div className="flex items-center space-x-1 text-[11px] opacity-75">
               <MapPin className="h-3 w-3" />
@@ -180,39 +200,83 @@ export default function CardPreview({
 
           {/* Recipient & Sender Names */}
           <div className="mt-4 text-center">
-            <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
-              {recipientName || "Honored Guest"}
-            </h3>
-            <p className="text-[12px] opacity-80 font-medium">
-              {isMemorial ? (
-                <span>Remembered by {senderName || "Family"}</span>
-              ) : (
-                <span>
+            {isJagrata ? (
+              <>
+                <span className="text-[10px] font-bold tracking-widest uppercase text-amber-400/90 block mb-0.5">
+                  सादर आमंत्रण
+                </span>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  {recipientName || "Sadar Nimantran"}
+                </h3>
+                <p className="text-[12px] text-amber-200/90 font-medium mt-0.5">
+                  कृपाकांक्षी:{" "}
+                  <span className="font-semibold text-white underline decoration-amber-400/50">
+                    {senderName || "Goyal Parivaar"}
+                  </span>
+                </p>
+              </>
+            ) : isMemorial ? (
+              <>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  {recipientName || "Honored Memory"}
+                </h3>
+                <p className="text-[12px] opacity-80 font-medium">
+                  Remembered by {senderName || "Family"}
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+                  {recipientName || "Honored Guest"}
+                </h3>
+                <p className="text-[12px] opacity-80 font-medium">
                   with love from{" "}
                   <span className="underline decoration-rose-400/50">
                     {senderName || "Yours"}
                   </span>
-                </span>
-              )}
-            </p>
+                </p>
+              </>
+            )}
           </div>
         </div>
 
         {/* Heartfelt Message Area */}
         <div className="relative z-10 pt-2 text-center">
           <p className="font-serif italic text-xs sm:text-sm leading-relaxed line-clamp-4 px-2 opacity-90 text-neutral-100">
-            "{message || "You make every single day brighter, warmer, and filled with love."}"
+            &ldquo;{message || "You make every single day brighter, warmer, and filled with love."}&rdquo;
           </p>
+
+          {/* Pretty Event Date & Timing Ribbon */}
+          {(eventDate || eventTime) && (
+            <div className="mt-2.5 flex items-center justify-center">
+              <div className="inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-950/50 px-3.5 py-1.5 text-[11px] text-amber-200 backdrop-blur-md shadow-sm">
+                {eventDate && (
+                  <span className="flex items-center space-x-1 font-medium">
+                    <Calendar className="h-3 w-3 text-amber-400" />
+                    <span>{eventDate}</span>
+                  </span>
+                )}
+                {eventDate && eventTime && <span className="text-amber-500/50">•</span>}
+                {eventTime && (
+                  <span className="flex items-center space-x-1 font-medium">
+                    <Clock className="h-3 w-3 text-amber-400" />
+                    <span>{eventTime}</span>
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Venue address highlight for invite-cards */}
           {venueAddress && (
-            <div className="mt-2 text-[10px] text-amber-200/90 font-medium truncate">
-              📍 {venueAddress}
+            <div className="mt-2 text-[10px] text-amber-200/90 font-medium truncate flex items-center justify-center space-x-1">
+              <MapPin className="h-3 w-3 text-rose-400 shrink-0" />
+              <span>{venueAddress}</span>
             </div>
           )}
 
           {/* Card watermark/footer mark */}
-          <div className="mt-4 flex items-center justify-center space-x-1 text-[9px] tracking-widest uppercase opacity-40">
+          <div className="mt-3 flex items-center justify-center space-x-1 text-[9px] tracking-widest uppercase opacity-40">
             <span>Memoir</span>
             <Heart className="h-2 w-2 fill-current" />
             <span>Keepsake</span>

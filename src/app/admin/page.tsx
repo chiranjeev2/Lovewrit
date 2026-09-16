@@ -10,7 +10,6 @@ import {
   Copy,
   Check,
   Zap,
-  Clock,
   Package,
   LogOut,
   Loader2,

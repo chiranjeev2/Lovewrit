@@ -9,6 +9,7 @@ import {
   ProductType,
   TierType,
   calculateOrderTotal,
+  detectRegion,
 } from "@/lib/currency";
 import { nanoid } from "nanoid";
 
@@ -37,8 +38,24 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const currency: CurrencyCode = (requestedCurrency as CurrencyCode) || "USD";
-    const region: RegionKey = CURRENCY_TO_REGION[currency] || "americas";
+    // Silent server-side geo header check with client currency precedence
+    const headerCountry =
+      req.headers.get("x-vercel-ip-country") ||
+      req.headers.get("cf-ipcountry") ||
+      req.headers.get("x-country-code");
+
+    let resolvedRegion: RegionKey = "asia_africa";
+    let currency: CurrencyCode = "INR";
+
+    if (requestedCurrency && ["INR", "USD", "EUR", "GBP"].includes(requestedCurrency)) {
+      currency = requestedCurrency as CurrencyCode;
+      resolvedRegion = CURRENCY_TO_REGION[currency] || "americas";
+    } else if (headerCountry) {
+      resolvedRegion = detectRegion(headerCountry);
+      currency = PRICING_TIERS[resolvedRegion].currency;
+    }
+
+    const region: RegionKey = resolvedRegion;
     const tier: TierType = (requestedTier as TierType) || "SELF_SERVICE";
 
     // If Rush tier requested, verify if Rush is currently active
