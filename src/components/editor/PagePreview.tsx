@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
+import AdBanner from "@/components/shared/AdBanner";
 
 export type CollageLayoutStyle = "masonry" | "timeline" | "filmstrip";
 
@@ -40,6 +41,9 @@ interface PagePreviewProps {
   eventTime?: string;
   voiceMessageUrl?: string | null;
   previewOnly?: boolean;
+  showOmMotif?: boolean;
+  showBismillah?: boolean;
+  isAdSupported?: boolean;
 }
 
 export default function PagePreview({
@@ -60,6 +64,9 @@ export default function PagePreview({
   eventTime,
   voiceMessageUrl,
   previewOnly = false,
+  showOmMotif = false,
+  showBismillah = false,
+  isAdSupported = false,
 }: PagePreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
   const proposalConfig = PROPOSAL_QUESTIONS[proposalQuestion] || PROPOSAL_QUESTIONS.marry_me;
@@ -427,19 +434,52 @@ export default function PagePreview({
         </div>
       </div>
 
+      {/* Free Ad-Supported Reading Banner */}
+      {isAdSupported && (
+        <div className="relative z-10 mx-auto max-w-2xl px-4">
+          <AdBanner />
+        </div>
+      )}
+
       {/* Event Details, Date, Time & Venue Section */}
       {(venueName || venueAddress || eventDate || eventTime) && (
         <div className="relative z-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-neutral-900/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl my-8 text-center space-y-4">
           {occasion === "jagrata_kirtan" && (
             <div className="inline-flex items-center space-x-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-3.5 py-1 text-xs font-bold text-amber-300">
               <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
-              <span>🚩 JAI MATA DI • SADAR NIMANTRAN 🚩</span>
+              <span>{showOmMotif ? "ॐ 🚩 JAI MATA DI • SADAR NIMANTRAN 🚩 ॐ" : "🚩 JAI MATA DI • SADAR NIMANTRAN 🚩"}</span>
+            </div>
+          )}
+          {(occasion === "akhand_path" || occasion === "gurpurab") && (
+            <div className="inline-flex items-center space-x-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-3.5 py-1 text-xs font-bold text-amber-300">
+              <span className="text-sm font-bold">ੴ</span>
+              <span>SATNAM WAHEGURU • SADAR NIMANTRAN</span>
+            </div>
+          )}
+          {(occasion === "aqeeqah" || occasion === "nikah" || occasion === "iftar") && (
+            <div className="inline-flex items-center space-x-2 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3.5 py-1 text-xs font-bold text-emerald-300">
+              <span className="text-sm">🌙</span>
+              <span>{showBismillah ? "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ" : "SACRED BLESSING INVITE"}</span>
+            </div>
+          )}
+          {(occasion === "christening" || occasion === "wedding_blessing") && (
+            <div className="inline-flex items-center space-x-2 rounded-full border border-sky-500/40 bg-sky-500/15 px-3.5 py-1 text-xs font-bold text-sky-300">
+              <span className="text-sm">🕊️</span>
+              <span>IN GOD'S GRACE • CELEBRATION & BLESSING ✝</span>
+            </div>
+          )}
+          {occasion === "blessing_ceremony" && (
+            <div className="inline-flex items-center space-x-2 rounded-full border border-stone-500/40 bg-stone-500/15 px-3.5 py-1 text-xs font-bold text-stone-300">
+              <span className="text-sm">🌿</span>
+              <span>CELEBRATION OF BLESSINGS</span>
             </div>
           )}
 
           <div className="space-y-1">
             <span className="text-[11px] font-semibold uppercase tracking-widest text-amber-300/90 block">
-              {occasion === "jagrata_kirtan" ? "Shubh Karyakram & Sthal" : "Event Schedule & Venue"}
+              {occasion === "jagrata_kirtan" || occasion === "akhand_path" || occasion === "gurpurab"
+                ? "Shubh Karyakram & Sthal"
+                : "Event Schedule & Venue"}
             </span>
             {venueName && (
               <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">

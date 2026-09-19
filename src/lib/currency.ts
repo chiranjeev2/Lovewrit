@@ -172,7 +172,8 @@ export function calculateOrderTotal(
   productType: ProductType,
   tier: TierType = "SELF_SERVICE",
   isBundle = false,
-  isRegiftDiscount = false
+  isRegiftDiscount = false,
+  options?: { isFreeCard?: boolean; isAdSupported?: boolean }
 ): {
   totalUnit: number;
   displayPrice: number;
@@ -182,6 +183,18 @@ export function calculateOrderTotal(
   originalDisplayPrice?: number;
 } {
   const p = PRICING_TIERS[region];
+
+  // 100% Free Digital Card or Free Ad-Supported Interactive Page
+  if (options?.isFreeCard || (productType === "PAGE" && options?.isAdSupported && tier === "SELF_SERVICE" && !isBundle)) {
+    return {
+      totalUnit: 0,
+      displayPrice: 0,
+      currency: p.currency,
+      symbol: p.symbol,
+      isDiscounted: false,
+    };
+  }
+
   let unit = 0;
   let display = 0;
 

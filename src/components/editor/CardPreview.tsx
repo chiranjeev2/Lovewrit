@@ -22,6 +22,8 @@ interface CardPreviewProps {
   eventTime?: string;
   voiceMessageUrl?: string | null;
   cardRef?: React.RefObject<HTMLDivElement | null>;
+  showOmMotif?: boolean;
+  showBismillah?: boolean;
 }
 
 export default function CardPreview({
@@ -41,6 +43,8 @@ export default function CardPreview({
   eventTime,
   voiceMessageUrl,
   cardRef,
+  showOmMotif = false,
+  showBismillah = false,
 }: CardPreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
 
@@ -66,6 +70,12 @@ export default function CardPreview({
 
   const isMemorial = occasion === "memorial";
   const isJagrata = occasion === "jagrata_kirtan";
+  const isSikh = occasion === "akhand_path" || occasion === "gurpurab";
+  const isMuslim = occasion === "aqeeqah" || occasion === "nikah" || occasion === "iftar";
+  const isChristian = occasion === "christening" || occasion === "wedding_blessing";
+  const isSecular = occasion === "blessing_ceremony";
+  const isLetter = occasion === "letter_to_dear_one";
+  const isScrollTheme = colorTheme === "scroll";
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -73,13 +83,23 @@ export default function CardPreview({
         ref={cardRef}
         id="lovewrit-card-node"
         className={`relative mx-auto w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[32px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-2xl border transition-all duration-300 ${
-          isJagrata
+          isScrollTheme
+            ? "bg-[#fdfaf1] border-[#b48a3c]/70 text-[#3b2d18] shadow-amber-950/30"
+            : isJagrata
             ? "bg-gradient-to-b from-red-950/85 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
+            : isSikh
+            ? "bg-gradient-to-b from-amber-950/90 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
+            : isMuslim
+            ? "bg-gradient-to-b from-emerald-950/90 via-neutral-950 to-emerald-950/80 border-emerald-500/50 text-emerald-50 shadow-emerald-950/40"
+            : isChristian
+            ? "bg-gradient-to-b from-slate-900/95 via-sky-950/40 to-neutral-950 border-sky-400/40 text-sky-50 shadow-sky-950/30"
             : `${theme.cardBg} ${theme.borderStyle}`
         }`}
         style={{
-          boxShadow: isJagrata
+          boxShadow: isJagrata || isSikh
             ? "0 25px 50px -12px rgba(180, 83, 9, 0.35)"
+            : isMuslim
+            ? "0 25px 50px -12px rgba(5, 150, 105, 0.35)"
             : "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
         }}
       >
@@ -93,7 +113,42 @@ export default function CardPreview({
             <div className="flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 shadow-sm">
               <Flame className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
               <span className="text-[10px] font-bold tracking-wider uppercase text-amber-300">
-                🚩 JAI MATA DI 🚩
+                {showOmMotif ? "ॐ 🚩 JAI MATA DI 🚩 ॐ" : "🚩 JAI MATA DI 🚩"}
+              </span>
+            </div>
+          ) : isSikh ? (
+            <div className="flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 shadow-sm">
+              <span className="text-xs font-bold text-amber-300">ੴ</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-amber-200">
+                SATNAM WAHEGURU
+              </span>
+            </div>
+          ) : isMuslim ? (
+            <div className="flex items-center space-x-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 shadow-sm">
+              <span className="text-xs text-emerald-300">🌙</span>
+              <span className="text-[10px] font-bold tracking-wider text-emerald-200">
+                {showBismillah ? "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ" : "SACRED BLESSING"}
+              </span>
+            </div>
+          ) : isChristian ? (
+            <div className="flex items-center space-x-1.5 rounded-full bg-sky-500/20 border border-sky-500/40 px-2.5 py-0.5 shadow-sm">
+              <span className="text-xs text-sky-300">🕊️</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-sky-200">
+                IN GOD'S GRACE ✝
+              </span>
+            </div>
+          ) : isSecular ? (
+            <div className="flex items-center space-x-1.5 rounded-full bg-stone-500/20 border border-stone-500/40 px-2.5 py-0.5 shadow-sm">
+              <span className="text-xs text-stone-300">🌿</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-stone-200">
+                BLESSING CEREMONY
+              </span>
+            </div>
+          ) : isLetter ? (
+            <div className="flex items-center space-x-1.5 rounded-full bg-amber-900/20 border border-amber-700/40 px-2.5 py-0.5 shadow-sm">
+              <span className="text-xs">📜</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase text-amber-800 dark:text-amber-300">
+                LETTER TO A DEAR ONE • 100% FREE
               </span>
             </div>
           ) : (
@@ -217,21 +272,21 @@ export default function CardPreview({
               </>
             ) : isMemorial ? (
               <>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+                <h3 className={`font-serif text-xl sm:text-2xl font-bold tracking-tight ${isScrollTheme ? "text-[#2e2313]" : "text-white"}`}>
                   {recipientName || "Honored Memory"}
                 </h3>
-                <p className="text-[12px] opacity-80 font-medium">
+                <p className={`text-[12px] font-medium ${isScrollTheme ? "text-amber-900/80" : "opacity-80"}`}>
                   Remembered by {senderName || "Family"}
                 </p>
               </>
             ) : (
               <>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold tracking-tight text-white">
+                <h3 className={`font-serif text-xl sm:text-2xl font-bold tracking-tight ${isScrollTheme ? "text-[#2e2313]" : "text-white"}`}>
                   {recipientName || "Honored Guest"}
                 </h3>
-                <p className="text-[12px] opacity-80 font-medium">
+                <p className={`text-[12px] font-medium ${isScrollTheme ? "text-amber-900/80" : "opacity-80"}`}>
                   with love from{" "}
-                  <span className="underline decoration-rose-400/50">
+                  <span className={`underline ${isScrollTheme ? "decoration-amber-700/60 font-semibold" : "decoration-rose-400/50"}`}>
                     {senderName || "Yours"}
                   </span>
                 </p>
@@ -242,7 +297,9 @@ export default function CardPreview({
 
         {/* Heartfelt Message Area */}
         <div className="relative z-10 pt-2 text-center">
-          <p className="font-serif italic text-xs sm:text-sm leading-relaxed line-clamp-4 px-2 opacity-90 text-neutral-100">
+          <p className={`font-serif italic text-xs sm:text-sm leading-relaxed line-clamp-4 px-2 ${
+            isScrollTheme ? "text-[#3b2d18] font-medium" : "opacity-90 text-neutral-100"
+          }`}>
             &ldquo;{message || "You make every single day brighter, warmer, and filled with love."}&rdquo;
           </p>
 
@@ -275,8 +332,11 @@ export default function CardPreview({
             </div>
           )}
 
-          {/* Card watermark/footer mark */}
-          <div className="mt-3 flex items-center justify-center space-x-1 text-[9px] tracking-widest uppercase opacity-40">
+          {/* Card watermark/footer mark with wax seal accent for scroll */}
+          <div className={`mt-3 flex items-center justify-center space-x-1 text-[9px] tracking-widest uppercase ${
+            isScrollTheme ? "text-amber-900/70 font-semibold" : "opacity-40"
+          }`}>
+            {isScrollTheme && <span className="text-red-700 font-bold mr-1">✦ WAX SEALED ✦</span>}
             <span>Lovewrit</span>
             <Heart className="h-2 w-2 fill-current" />
             <span>Keepsake</span>

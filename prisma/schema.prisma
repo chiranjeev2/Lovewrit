@@ -25,6 +25,8 @@ model Order {
   amountTotal         Int       // in cents / paise / pence
   region              String    // "asia_africa" | "americas" | "europe" | "uk"
   stripeSessionId     String?
+  ipAddress           String?
+  isAdSupported       Boolean   @default(false)
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -49,6 +51,8 @@ model CardData {
   venueMapUrl     String?
   voiceMessageUrl String?
   revealAt        DateTime?
+  showOmMotif     Boolean   @default(false)
+  showBismillah   Boolean   @default(false)
   language        String    @default("en") // "en" | "pa" | "hi"
   createdAt       DateTime  @default(now())
 }
@@ -73,6 +77,9 @@ model PageData {
   venueMapUrl              String?
   voiceMessageUrl          String?
   revealAt                 DateTime?
+  showOmMotif              Boolean          @default(false)
+  showBismillah            Boolean          @default(false)
+  isAdSupported            Boolean          @default(false)
   requireGuestbookApproval Boolean          @default(false)
   language                 String           @default("en") // "en" | "pa" | "hi"
   createdAt                DateTime         @default(now())
@@ -87,6 +94,16 @@ model GuestbookEntry {
   authorName String
   message    String
   status     String   @default("APPROVED") // "PENDING" | "APPROVED" | "FLAGGED"
+  createdAt  DateTime @default(now())
+}
+
+model RateLimitEvent {
+  id         String   @id @default(cuid())
+  ipAddress  String
+  email      String?
+  action     String   // "FREE_ORDER_CREATION"
+  allowed    Boolean
+  reason     String?
   createdAt  DateTime @default(now())
 }
 

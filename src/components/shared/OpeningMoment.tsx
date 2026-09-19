@@ -64,6 +64,41 @@ export default function OpeningMoment({
         colors: ["#f97316", "#eab308", "#ef4444"],
         origin: { y: 0.6 },
       });
+    } else if (revealType === "scroll_unfurl") {
+      confetti({
+        particleCount: 60,
+        spread: 60,
+        colors: ["#b48a3c", "#991b1b", "#fef3c7"],
+        origin: { y: 0.6 },
+      });
+    } else if (revealType === "ik_onkar_seal") {
+      confetti({
+        particleCount: 85,
+        spread: 80,
+        colors: ["#f59e0b", "#d97706", "#ffd700"],
+        origin: { y: 0.6 },
+      });
+    } else if (revealType === "crescent_seal") {
+      confetti({
+        particleCount: 80,
+        spread: 75,
+        colors: ["#10b981", "#059669", "#ffd700"],
+        origin: { y: 0.6 },
+      });
+    } else if (revealType === "dove_cross_seal") {
+      confetti({
+        particleCount: 75,
+        spread: 70,
+        colors: ["#38bdf8", "#ffffff", "#bae6fd"],
+        origin: { y: 0.6 },
+      });
+    } else if (revealType === "botanical_seal") {
+      confetti({
+        particleCount: 65,
+        spread: 65,
+        colors: ["#84cc16", "#a8a29e", "#fef08a"],
+        origin: { y: 0.6 },
+      });
     }
 
     if (onOpen) {
@@ -155,6 +190,36 @@ export default function OpeningMoment({
             </div>
           )}
 
+          {revealType === "scroll_unfurl" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-800 to-amber-600 shadow-xl ring-4 ring-amber-400/30 border border-amber-300/40">
+              <span className="text-4xl filter drop-shadow">📜</span>
+            </div>
+          )}
+
+          {revealType === "ik_onkar_seal" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-amber-600 to-yellow-500 shadow-xl ring-4 ring-amber-400/40 animate-pulse">
+              <span className="text-4xl font-bold text-amber-50 drop-shadow">ੴ</span>
+            </div>
+          )}
+
+          {revealType === "crescent_seal" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-emerald-700 to-teal-600 shadow-xl ring-4 ring-emerald-400/40">
+              <span className="text-4xl text-emerald-100 drop-shadow">🌙</span>
+            </div>
+          )}
+
+          {revealType === "dove_cross_seal" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-tr from-sky-700 to-blue-600 shadow-xl ring-4 ring-sky-400/30">
+              <span className="text-4xl text-white drop-shadow">🕊️</span>
+            </div>
+          )}
+
+          {revealType === "botanical_seal" && (
+            <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-stone-700 to-stone-600 shadow-xl ring-4 ring-stone-400/30">
+              <span className="text-4xl text-stone-100 drop-shadow">🌿</span>
+            </div>
+          )}
+
           {/* Heading and recipient note */}
           <div className="space-y-2">
             <span className="inline-block rounded-full bg-rose-500/10 px-3 py-1 text-[11px] font-semibold tracking-wider text-rose-300 uppercase border border-rose-500/20">
@@ -174,6 +239,16 @@ export default function OpeningMoment({
                 ? "Jai Mata Di • Aarti & Chowki"
                 : revealType === "golden_invite"
                 ? "Special Celebration Invite"
+                : revealType === "scroll_unfurl"
+                ? "A Heartfelt Letter To You"
+                : revealType === "ik_onkar_seal"
+                ? "ੴ Satnam Waheguru • Sacred Invite"
+                : revealType === "crescent_seal"
+                ? "Bismillah • Sacred Blessing Invite"
+                : revealType === "dove_cross_seal"
+                ? "Holy Celebration & Blessing"
+                : revealType === "botanical_seal"
+                ? "Blessing Ceremony Invite"
                 : "A Memory Stream"}
             </span>
 
@@ -202,6 +277,16 @@ export default function OpeningMoment({
                   ? "Light Candle & Pay Tribute"
                   : revealType === "balloon_pop"
                   ? "Pop Balloons to Celebrate! 🎈"
+                  : revealType === "scroll_unfurl"
+                  ? "Break Wax Seal & Unfurl Scroll 📜"
+                  : revealType === "ik_onkar_seal"
+                  ? "Open Sacred Invitation 🙏"
+                  : revealType === "crescent_seal"
+                  ? "Open Blessing Invitation 🌙"
+                  : revealType === "dove_cross_seal"
+                  ? "Open Sacred Blessing 🕊️"
+                  : revealType === "botanical_seal"
+                  ? "Open Celebration Invitation 🌿"
                   : hasMusic
                   ? "Tap to Open & Play Music"
                   : "Tap to Open Your Lovewrit"}

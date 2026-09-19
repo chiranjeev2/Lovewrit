@@ -11,6 +11,7 @@ import {
   calculateOrderTotal,
   detectRegion,
 } from "@/lib/currency";
+import { getTemplateById } from "@/lib/templates-data";
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
@@ -29,6 +30,7 @@ export async function POST(req: NextRequest) {
       masterKey,
       cardData,
       pageData,
+      isAdSupported = false,
     } = body;
 
     if (!productType || !templateId || !customerEmail || !customerName) {
@@ -37,6 +39,13 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Client IP detection for abuse protection and rate limiting
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      req.headers.get("cf-connecting-ip") ||
+      "127.0.0.1";
 
     // Silent server-side geo header check with client currency precedence
     const headerCountry =
@@ -89,13 +98,73 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Determine template flags for free tier pricing
+    const tmpl = getTemplateById(templateId);
+    const isFreeCard = productType === "CARD" && Boolean(tmpl?.isFreeCard);
+    const isFreeAdPage =
+      productType === "PAGE" &&
+      Boolean(tmpl?.hasAdOption) &&
+      Boolean(isAdSupported || pageData?.isAdSupported) &&
+      tier === "SELF_SERVICE" &&
+      !isBundle;
+
     const { totalUnit, displayPrice, symbol } = calculateOrderTotal(
       region,
-      productType,
+      productType as ProductType,
       tier,
-      isBundle,
-      hasDiscount
+      Boolean(isBundle),
+      hasDiscount,
+      {
+        isFreeCard,
+        isAdSupported: isFreeAdPage,
+      }
     );
+
+    const isFounderPass = Boolean(
+      masterKey &&
+      (masterKey === process.env.ADMIN_MASTER_KEY ||
+       masterKey === "lovewrit_master_founder_secret_2026" ||
+       masterKey === "memoir_master_founder_secret_2026")
+    );
+
+    const isFreeOrder = totalUnit === 0 && !isFounderPass;
+
+    // Abuse Protection / Rate Limiting on Free ($0) Orders:
+    // Limit: 5 free orders per rolling 24 hours per IP address or email
+    if (isFreeOrder) {
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const freeOrderCount = await db.order.count({
+        where: {
+          amountTotal: 0,
+          createdAt: { gte: oneDayAgo },
+          OR: [
+            { ipAddress: clientIp },
+            { customerEmail: customerEmail.trim().toLowerCase() },
+          ],
+        },
+      });
+
+      if (freeOrderCount >= 5) {
+        // Log to RateLimitEvent for founder/admin review
+        await db.rateLimitEvent.create({
+          data: {
+            ipAddress: clientIp,
+            email: customerEmail.trim().toLowerCase(),
+            action: "FREE_ORDER_CREATION",
+            allowed: false,
+            reason: `Exceeded daily free order limit (attempted order #${freeOrderCount + 1})`,
+          },
+        });
+
+        return NextResponse.json(
+          {
+            error:
+              "You have reached the daily limit of 5 free keepsakes. Please try again tomorrow, or choose our handcrafted custom tier!",
+          },
+          { status: 429 }
+        );
+      }
+    }
 
     // Generate unique short slug & secret buyer admin token for moderation
     const slug = nanoid(10);
@@ -108,30 +177,27 @@ export async function POST(req: NextRequest) {
     const initialFounderStatus =
       tier === "RUSH" ? "QUEUED" : tier === "CUSTOM" ? "QUEUED" : "NOT_APPLICABLE";
 
-    const isFounderPass = Boolean(
-      masterKey &&
-      (masterKey === process.env.ADMIN_MASTER_KEY ||
-       masterKey === "lovewrit_master_founder_secret_2026" ||
-       masterKey === "memoir_master_founder_secret_2026")
-    );
+    const isZeroOrder = isFounderPass || isFreeOrder;
 
     // Save order in database
     const order = await db.order.create({
       data: {
         slug,
         adminToken,
-        customerEmail,
+        customerEmail: customerEmail.trim().toLowerCase(),
         customerName,
         productType,
         templateId,
         tier,
         isBundle: Boolean(isBundle),
         customNotes: customNotes || null,
-        status: isFounderPass ? "PAID" : "PENDING",
+        status: isZeroOrder ? "PAID" : "PENDING",
         founderStatus: isFounderPass ? "COMPLETED" : initialFounderStatus,
         currency,
-        amountTotal: isFounderPass ? 0 : totalUnit,
+        amountTotal: isZeroOrder ? 0 : totalUnit,
         region,
+        ipAddress: clientIp,
+        isAdSupported: Boolean(isAdSupported || pageData?.isAdSupported || isFreeAdPage),
         ...(productType === "CARD" && cardData
           ? {
               cardData: {
@@ -149,6 +215,8 @@ export async function POST(req: NextRequest) {
                   venueMapUrl: cardData.venueMapUrl || null,
                   voiceMessageUrl: cardData.voiceMessageUrl || null,
                   revealAt: cardData.revealAt ? new Date(cardData.revealAt) : null,
+                  showOmMotif: Boolean(cardData.showOmMotif),
+                  showBismillah: Boolean(cardData.showBismillah),
                   language: cardData.language || "en",
                 },
               },
@@ -174,6 +242,9 @@ export async function POST(req: NextRequest) {
                   venueMapUrl: pageData.venueMapUrl || null,
                   voiceMessageUrl: pageData.voiceMessageUrl || null,
                   revealAt: pageData.revealAt ? new Date(pageData.revealAt) : null,
+                  showOmMotif: Boolean(pageData.showOmMotif),
+                  showBismillah: Boolean(pageData.showBismillah),
+                  isAdSupported: Boolean(pageData.isAdSupported || isFreeAdPage),
                   requireGuestbookApproval: Boolean(
                     pageData.requireGuestbookApproval ?? isMemorial
                   ),
@@ -190,17 +261,18 @@ export async function POST(req: NextRequest) {
       req.headers.get("origin") ||
       "http://localhost:3000";
 
-    // Founder Master Key Pass: 100% Free VIP instant activation
-    if (isFounderPass) {
-      const founderSessionId = `founder_${slug}`;
+    // 0. Free Order / Founder Pass Immediate Bypass (Zero Payment Needed)
+    if (isZeroOrder) {
+      const sessionId = isFounderPass ? `founder_${slug}` : `free_${slug}`;
       await db.order.update({
         where: { id: order.id },
-        data: { stripeSessionId: founderSessionId },
+        data: { stripeSessionId: sessionId },
       });
 
       return NextResponse.json({
-        checkoutUrl: `${origin}/checkout/success?session_id=${founderSessionId}&slug=${slug}&token=${adminToken}`,
-        isFounderPass: true,
+        checkoutUrl: `${origin}/checkout/success?session_id=${sessionId}&slug=${slug}&token=${adminToken}`,
+        isFreeOrder: true,
+        isFounderPass,
         orderId: order.id,
         slug,
         adminToken,

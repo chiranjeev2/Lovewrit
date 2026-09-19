@@ -213,7 +213,11 @@ export default function CardSharePage({ params }: CardSharePageProps) {
               venueName={cardData.venueName}
               venueAddress={cardData.venueAddress}
               venueMapUrl={cardData.venueMapUrl}
+              eventDate={cardData.eventDate}
+              eventTime={cardData.eventTime}
               voiceMessageUrl={cardData.voiceMessageUrl}
+              showOmMotif={Boolean(cardData.showOmMotif)}
+              showBismillah={Boolean(cardData.showBismillah)}
             />
           );
         })()}

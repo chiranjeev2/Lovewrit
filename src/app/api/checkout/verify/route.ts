@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, order });
     }
 
-    // Dev simulation verification
-    if (sessionId?.startsWith("sim_")) {
+    // Dev simulation or Free/Founder bypass verification
+    if (sessionId?.startsWith("sim_") || sessionId?.startsWith("free_") || sessionId?.startsWith("founder_")) {
       order = await db.order.update({
         where: { id: order.id },
         data: { status: "PAID" },

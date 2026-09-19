@@ -7,9 +7,31 @@ export type OccasionType =
   | "memorial"
   | "godhbharai"
   | "jagrata_kirtan"
-  | "kitty_party";
+  | "kitty_party"
+  | "letter_to_dear_one"
+  | "akhand_path"
+  | "gurpurab"
+  | "aqeeqah"
+  | "nikah"
+  | "iftar"
+  | "christening"
+  | "wedding_blessing"
+  | "blessing_ceremony";
 
-export type ColorThemeKey = "rose" | "midnight" | "sunset" | "emerald" | "champagne" | "serene" | "festive";
+export type ColorThemeKey =
+  | "rose"
+  | "midnight"
+  | "sunset"
+  | "emerald"
+  | "champagne"
+  | "serene"
+  | "festive"
+  | "scroll"
+  | "modern"
+  | "saffron"
+  | "sacred_emerald"
+  | "celestial"
+  | "warm_neutral";
 export type PhotoShapeKey = "oval" | "square" | "rounded" | "circle";
 export type RevealType =
   | "velvet_box"
@@ -20,7 +42,12 @@ export type RevealType =
   | "memorial_candle"
   | "golden_invite"
   | "diya_aarti"
-  | "cupid_arrow";
+  | "cupid_arrow"
+  | "scroll_unfurl"
+  | "ik_onkar_seal"
+  | "crescent_seal"
+  | "dove_cross_seal"
+  | "botanical_seal";
 
 export type ProposalQuestionKey =
   | "marry_me"
@@ -164,6 +191,66 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorTheme> = {
     borderStyle: "border-pink-400/30",
     tagColor: "bg-pink-500/20 text-pink-300 border-pink-500/30",
   },
+  scroll: {
+    id: "scroll",
+    name: "Medieval Parchment Scroll",
+    bgGradient: "from-amber-950/80 via-stone-900 to-neutral-950",
+    cardBg: "bg-[#fdfaf1] border-[#b48a3c]/60 text-[#3d2f1f] shadow-amber-900/30",
+    textColor: "text-[#4a3b2c]",
+    accentColor: "#991b1b", // crimson wax seal
+    borderStyle: "border-[#b48a3c]/70 shadow-inner",
+    tagColor: "bg-amber-900/20 text-amber-800 border-amber-700/30",
+  },
+  modern: {
+    id: "modern",
+    name: "Modern Minimalist",
+    bgGradient: "from-neutral-950 via-zinc-900 to-neutral-950",
+    cardBg: "bg-neutral-900/90 border-neutral-700/50 text-neutral-100",
+    textColor: "text-neutral-200",
+    accentColor: "#e2e8f0",
+    borderStyle: "border-neutral-600/40",
+    tagColor: "bg-neutral-800 text-neutral-300 border-neutral-700",
+  },
+  saffron: {
+    id: "saffron",
+    name: "Royal Saffron & Gold",
+    bgGradient: "from-amber-950 via-yellow-950 to-neutral-950",
+    cardBg: "bg-amber-950/80 border-amber-600/50 text-amber-50 shadow-amber-950/40",
+    textColor: "text-amber-100",
+    accentColor: "#f59e0b",
+    borderStyle: "border-amber-500/40",
+    tagColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  },
+  sacred_emerald: {
+    id: "sacred_emerald",
+    name: "Sacred Emerald & Gold",
+    bgGradient: "from-emerald-950 via-teal-950 to-neutral-950",
+    cardBg: "bg-emerald-950/80 border-emerald-700/50 text-emerald-50 shadow-emerald-950/40",
+    textColor: "text-emerald-100",
+    accentColor: "#10b981",
+    borderStyle: "border-emerald-500/40",
+    tagColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+  },
+  celestial: {
+    id: "celestial",
+    name: "Celestial Ivory & Sky Blue",
+    bgGradient: "from-slate-950 via-sky-950/40 to-neutral-950",
+    cardBg: "bg-slate-900/80 border-sky-600/40 text-sky-50 shadow-sky-950/30",
+    textColor: "text-sky-100",
+    accentColor: "#38bdf8",
+    borderStyle: "border-sky-400/30",
+    tagColor: "bg-sky-500/20 text-sky-300 border-sky-500/30",
+  },
+  warm_neutral: {
+    id: "warm_neutral",
+    name: "Warm Earth & Sand",
+    bgGradient: "from-stone-950 via-neutral-900 to-stone-950",
+    cardBg: "bg-stone-900/80 border-stone-700/40 text-stone-100",
+    textColor: "text-stone-200",
+    accentColor: "#a8a29e",
+    borderStyle: "border-stone-500/30",
+    tagColor: "bg-stone-500/20 text-stone-300 border-stone-500/30",
+  },
 };
 
 export interface TemplateDefinition {
@@ -172,7 +259,7 @@ export interface TemplateDefinition {
   subtitle: string;
   icon: string;
   occasion: OccasionType;
-  category: "couples" | "birthdays" | "memorials" | "invites";
+  category: "couples" | "birthdays" | "memorials" | "invites" | "letters" | "devotional";
   supportedFormats: ("CARD" | "PAGE")[];
   defaultTheme: ColorThemeKey;
   defaultShape: PhotoShapeKey;
@@ -188,6 +275,11 @@ export interface TemplateDefinition {
   hasInteractiveDodging?: boolean;
   revealType: RevealType;
   badge?: string;
+  isFreeCard?: boolean;
+  hasAdOption?: boolean;
+  faith?: "hindu" | "sikh" | "muslim" | "christian" | "secular";
+  showOmMotifSupported?: boolean;
+  showBismillahSupported?: boolean;
 }
 
 export const TEMPLATES: TemplateDefinition[] = [
@@ -410,14 +502,41 @@ export const TEMPLATES: TemplateDefinition[] = [
     badge: "Venue & RSVP",
   },
 
-  // --- PHASE 2: DEVOTIONAL (JAGRATA & KIRTAN) ---
+  // --- STANDALONE SERVICE: LETTER TO A DEAR ONE (100% FREE CARD / AD-SUPPORTED OR AD-FREE PAGE) ---
+  {
+    id: "letter-to-dear-one",
+    name: "Letter to a Dear One",
+    subtitle: "A timeless, heartfelt letter to someone who holds a sacred place in your soul. Completely 100% Free digital card.",
+    icon: "📜",
+    occasion: "letter_to_dear_one",
+    category: "letters",
+    supportedFormats: ["CARD", "PAGE"],
+    defaultTheme: "scroll",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80",
+      "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&q=80",
+    ],
+    sampleSender: "Aditya",
+    sampleRecipient: "My Dearest Friend",
+    sampleMessage: "I wanted to write this letter to tell you something I rarely say out loud — your presence in my life has been one of my greatest blessings. Through every storm and sunny day, thank you for being you.",
+    sampleLocation: "Written with Love",
+    hasInteractiveDodging: false,
+    revealType: "scroll_unfurl",
+    badge: "100% FREE",
+    isFreeCard: true,
+    hasAdOption: true,
+  },
+
+  // --- DEVOTIONAL: HINDU ---
   {
     id: "jagrata-kirtan-invitation",
     name: "Mata Ka Jagrata & Kirtan Invite",
-    subtitle: "Auspicious devotional invitation with traditional Aarti/Bhajan soundtrack, Diya lighting & temple map",
+    subtitle: "Auspicious devotional invitation with traditional Aarti/Bhajan soundtrack, Diya lighting, optional Om (ॐ) motif & temple map",
     icon: "🙏",
     occasion: "jagrata_kirtan",
-    category: "invites",
+    category: "devotional",
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "sunset",
     defaultShape: "rounded",
@@ -435,10 +554,231 @@ export const TEMPLATES: TemplateDefinition[] = [
     venueRequired: true,
     hasInteractiveDodging: false,
     revealType: "diya_aarti",
-    badge: "Devotional",
+    badge: "Hindu Devotional",
+    faith: "hindu",
+    showOmMotifSupported: true,
   },
 
-  // --- PHASE 2: SOCIAL (KITTY PARTY & GATHERINGS) ---
+  // --- DEVOTIONAL: SIKH ---
+  {
+    id: "sikh-akhand-path",
+    name: "Akhand Path & Kirtan Samagam Invite",
+    subtitle: "Sacred Sikh invitation with ੴ Ik Onkar emblem, divine Gurbani audio, saffron palette & Langar details",
+    icon: "ੴ",
+    occasion: "akhand_path",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "saffron",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1590496793929-36417d3117de?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1590496793929-36417d3117de?w=800&q=80",
+    ],
+    sampleSender: "The Gill Parivaar",
+    sampleRecipient: "Sadar Nimantran (ਸਤਿਕਾਰ ਸਹਿਤ ਸੱਦਾ)",
+    sampleMessage: "ੴ ਸਤਿਨਾਮੁ ਵਾਹਿਗੁਰੂ ੴ\nWith the divine blessings of Sri Guru Granth Sahib Ji, we cordially invite you and your family to the Akhand Path Sahib and Kirtan Samagam. Guru Ka Langar will be served continuously.",
+    sampleLocation: "Gurdwara Sri Guru Singh Sabha, Model Town",
+    sampleEventDate: "Sunday, 15 November 2026",
+    sampleEventTime: "10:00 AM Onwards",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "ik_onkar_seal",
+    badge: "Sikh Devotional",
+    faith: "sikh",
+  },
+  {
+    id: "sikh-gurpurab",
+    name: "Gurpurab Celebration & Langar Invite",
+    subtitle: "Joyous Gurpurab celebration invitation with ੴ motif, divine shabad audio & Gurdwara details",
+    icon: "ੴ",
+    occasion: "gurpurab",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "saffron",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1582650625119-3a31f8418365?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1582650625119-3a31f8418365?w=800&q=80",
+    ],
+    sampleSender: "Khalsa Sangat",
+    sampleRecipient: "Pyari Sangat Ji (ਪਿਆਰੀ ਸੰਗਤ ਜੀ)",
+    sampleMessage: "ੴ Lakh Lakh Vadhaiyan on the auspicious occasion of Gurpurab! Join us for Akhand Kirtan, Katha Vichar, and community Langar sewa.",
+    sampleLocation: "Gurdwara Sahib Hall, Sector 18",
+    sampleEventDate: "Friday, 27 November 2026",
+    sampleEventTime: "6:00 PM Onwards",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "ik_onkar_seal",
+    badge: "Gurpurab Special",
+    faith: "sikh",
+  },
+
+  // --- DEVOTIONAL: MUSLIM ---
+  {
+    id: "muslim-aqeeqah",
+    name: "Aqeeqah Ceremony & Feast Invite",
+    subtitle: "Warm Islamic invitation celebrating the blessing of a newborn with crescent motifs, optional Bismillah & doa",
+    icon: "🌙",
+    occasion: "aqeeqah",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "sacred_emerald",
+    defaultShape: "oval",
+    coverImage: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=800&q=80",
+    ],
+    sampleSender: "Tariq & Fatima Khan",
+    sampleRecipient: "Respected Family & Friends",
+    sampleMessage: "By the grace and mercy of Allah (SWT), we have been blessed with a healthy baby boy. You are warmly invited to the Aqeeqah ceremony and lunch.",
+    sampleLocation: "Al-Noor Banquet Lounge, Jubilee Hills",
+    sampleEventDate: "Sunday, 8 November 2026",
+    sampleEventTime: "1:00 PM",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "crescent_seal",
+    badge: "Muslim Blessing",
+    faith: "muslim",
+    showBismillahSupported: true,
+  },
+  {
+    id: "muslim-nikah",
+    name: "Nikah & Wedding Blessing Invite",
+    subtitle: "Solemn and elegant marriage celebration invitation with crescent motif, optional Bismillah & sacred doa",
+    icon: "☪",
+    occasion: "nikah",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "sacred_emerald",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=800&q=80",
+    ],
+    sampleSender: "The Khan & Siddiqui Families",
+    sampleRecipient: "Honored Guests & Elders",
+    sampleMessage: "We joyfully request the honor of your presence and warm prayers to celebrate the sacred union of Nikah. Your blessings mean the world to our families.",
+    sampleLocation: "Royal Palm Palace, Banjara Hills",
+    sampleEventDate: "Saturday, 12 December 2026",
+    sampleEventTime: "7:30 PM",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "crescent_seal",
+    badge: "Sacred Nikah",
+    faith: "muslim",
+    showBismillahSupported: true,
+  },
+  {
+    id: "muslim-iftar",
+    name: "Iftar Community Gathering Invite",
+    subtitle: "Blessed Ramadan sunset feast invitation with crescent motif, optional Bismillah & prayer details",
+    icon: "🌙",
+    occasion: "iftar",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "sacred_emerald",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?w=800&q=80",
+    ],
+    sampleSender: "Zubair & Family",
+    sampleRecipient: "Brothers, Sisters & Friends",
+    sampleMessage: "Ramadan Kareem! Please join us for a blessed evening to break our fast together at Iftar, offer Maghrib prayers, and share a warm dinner.",
+    sampleLocation: "Zubair Residence, Green Valley",
+    sampleEventDate: "Friday, 19 March 2027",
+    sampleEventTime: "6:15 PM (Sunset)",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "crescent_seal",
+    badge: "Ramadan Mubarak",
+    faith: "muslim",
+    showBismillahSupported: true,
+  },
+
+  // --- DEVOTIONAL: CHRISTIAN ---
+  {
+    id: "christian-christening",
+    name: "Christening & Baptism Invite",
+    subtitle: "Graceful invitation celebrating holy baptism with sacred dove motif, choral audio & church directions",
+    icon: "🕊️",
+    occasion: "christening",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "celestial",
+    defaultShape: "oval",
+    coverImage: "https://images.unsplash.com/photo-1543157148-f815daaac015?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1543157148-f815daaac015?w=800&q=80",
+    ],
+    sampleSender: "David & Sarah Johnson",
+    sampleRecipient: "Beloved Family & Friends",
+    sampleMessage: "We invite you to witness and celebrate the Holy Baptism of our child. May God bless this sacred day with peace, love, and joy.",
+    sampleLocation: "St. Mary's Cathedral, Church Street",
+    sampleEventDate: "Sunday, 22 November 2026",
+    sampleEventTime: "11:00 AM",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "dove_cross_seal",
+    badge: "Holy Baptism",
+    faith: "christian",
+  },
+  {
+    id: "christian-wedding-blessing",
+    name: "Wedding Blessing & Matrimony Invite",
+    subtitle: "Solemn church matrimony invitation with tasteful cross emblem, sacred vows & choral soundtrack",
+    icon: "✝",
+    occasion: "wedding_blessing",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "celestial",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+    ],
+    sampleSender: "The Matthew & Thomas Families",
+    sampleRecipient: "Honored Guests",
+    sampleMessage: "'Therefore what God has joined together, let no one separate.' We invite you to share in the joy of our Holy Matrimony as we unite in Christ's love.",
+    sampleLocation: "Grace Community Chapel, Bangalore",
+    sampleEventDate: "Saturday, 5 December 2026",
+    sampleEventTime: "4:30 PM",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "dove_cross_seal",
+    badge: "Holy Matrimony",
+    faith: "christian",
+  },
+
+  // --- DEVOTIONAL: SECULAR / NON-RELIGIOUS ---
+  {
+    id: "secular-blessing-ceremony",
+    name: "Blessing Ceremony & Celebration Invite",
+    subtitle: "A warm, inclusive celebration invitation with neutral elegant aesthetics and zero religious symbols",
+    icon: "🌿",
+    occasion: "blessing_ceremony",
+    category: "devotional",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "warm_neutral",
+    defaultShape: "rounded",
+    coverImage: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80",
+    ],
+    sampleSender: "The Sharma-Kapoor Family",
+    sampleRecipient: "Dear Friends & Family",
+    sampleMessage: "Good food, dear friends, and warm blessings. We cordially invite you to celebrate this meaningful life milestone with our family. Your presence is our greatest gift.",
+    sampleLocation: "The Glass House Gardens, Pune",
+    sampleEventDate: "Sunday, 20 December 2026",
+    sampleEventTime: "12:30 PM",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "botanical_seal",
+    badge: "Non-Religious",
+    faith: "secular",
+  },
+
+  // --- SOCIAL (KITTY PARTY & GATHERINGS) ---
   {
     id: "chic-kitty-party",
     name: "Chic Kitty Party & High-Tea Invite",

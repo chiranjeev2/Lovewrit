@@ -142,6 +142,11 @@ export default function CreateLovewritPage({
     template.id.includes("girlfriend") ? "be_my_girlfriend" : "marry_me"
   );
 
+  // Faith motifs & Ad-supported settings
+  const [showOmMotif, setShowOmMotif] = useState<boolean>(false);
+  const [showBismillah, setShowBismillah] = useState<boolean>(true);
+  const [isAdSupported, setIsAdSupported] = useState<boolean>(true);
+
   // Founder Master Pass (Free All-Access)
   const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
 
@@ -459,15 +464,19 @@ export default function CreateLovewritPage({
   };
 
   // Pricing calculation
+  const isFreeLetterCard = productType === "CARD" && (template.id === "letter-to-dear-one" || Boolean(template.isFreeCard));
+  const isFreeAdPage = productType === "PAGE" && (template.id === "letter-to-dear-one" || Boolean(template.hasAdOption)) && isAdSupported && tier === "SELF_SERVICE" && !isBundle;
+
   const calculatedPricing = calculateOrderTotal(
     region,
     productType,
     tier,
     isBundle,
-    isRegiftDiscount
+    isRegiftDiscount,
+    { isFreeCard: isFreeLetterCard, isAdSupported: isFreeAdPage }
   );
 
-  const displayPrice = isFounderFree ? "0" : calculatedPricing.displayPrice;
+  const displayPrice = isFounderFree || isFreeLetterCard || isFreeAdPage ? "0" : calculatedPricing.displayPrice;
   const symbol = calculatedPricing.symbol;
   const isDiscounted = isFounderFree ? true : calculatedPricing.isDiscounted;
   const originalDisplayPrice = isFounderFree
@@ -503,6 +512,7 @@ export default function CreateLovewritPage({
         currency,
         tier,
         isBundle,
+        isAdSupported: isFreeAdPage,
         replyTo: replyToSlug || undefined,
         masterKey: isFounderFree ? "lovewrit_master_founder_secret_2026" : undefined,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
@@ -522,6 +532,8 @@ export default function CreateLovewritPage({
           eventTime: eventTime || undefined,
           voiceMessageUrl: voiceMemoUrl,
           revealAt: enableRevealCountdown && revealDateTime ? revealDateTime : null,
+          showOmMotif,
+          showBismillah,
           language: selectedLanguage,
         },
         pageData: {
@@ -543,6 +555,9 @@ export default function CreateLovewritPage({
           eventTime: eventTime || undefined,
           voiceMessageUrl: voiceMemoUrl,
           revealAt: enableRevealCountdown && revealDateTime ? revealDateTime : null,
+          showOmMotif,
+          showBismillah,
+          isAdSupported: isFreeAdPage,
           language: selectedLanguage,
         },
       };
@@ -723,6 +738,8 @@ export default function CreateLovewritPage({
                     <span className="text-xs font-bold text-rose-400">
                       {isFounderFree
                         ? `${symbol}0 Free`
+                        : isFreeLetterCard || isFreeAdPage
+                        ? "100% Free"
                         : productType === "CARD"
                         ? `${symbol}${PRICING_TIERS[region].cardPrice}`
                         : `${symbol}${PRICING_TIERS[region].pagePrice}`}
@@ -798,7 +815,7 @@ export default function CreateLovewritPage({
                       : "border-neutral-800 bg-neutral-950 text-neutral-400"
                   }`}
                 >
-                  Digital Card
+                  Digital Card {isFreeLetterCard ? "(100% Free)" : ""}
                 </button>
                 <button
                   type="button"
@@ -809,9 +826,136 @@ export default function CreateLovewritPage({
                       : "border-neutral-800 bg-neutral-950 text-neutral-400"
                   }`}
                 >
-                  Interactive Page
+                  Interactive Page {template.id === "letter-to-dear-one" ? "(Free or Ad-Free)" : ""}
                 </button>
               </div>
+
+              {/* Free Card Notice for Letter to a Dear One */}
+              {isFreeLetterCard && (
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-950/20 p-3.5 flex items-center justify-between animate-in fade-in">
+                  <div className="flex items-center space-x-2.5">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold">
+                      ✓
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-bold text-white">100% Free Digital Keepsake Card</h4>
+                      <p className="text-[10px] text-neutral-300">
+                        Completely free forever. No payment card required, no ads, instant download.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-emerald-500/20 px-2.5 py-1 text-[10px] font-bold text-emerald-300 border border-emerald-500/30 uppercase">
+                    100% Free
+                  </span>
+                </div>
+              )}
+
+              {/* Free vs Ad-Free Toggle for Interactive Page in Letter to a Dear One */}
+              {(template.id === "letter-to-dear-one" || Boolean(template.hasAdOption)) && productType === "PAGE" && (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-950/20 p-4 space-y-3 animate-in fade-in">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block">
+                      Page Viewing Experience Option
+                    </span>
+                    <span className="text-[10px] text-neutral-400">Choose for recipient</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setIsAdSupported(true)}
+                      className={`rounded-xl border p-3 text-left transition ${
+                        isAdSupported
+                          ? "border-emerald-500 bg-emerald-500/20 text-white shadow-sm"
+                          : "border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-white">Watch a short ad (Free)</span>
+                        <span className="text-xs font-bold text-emerald-400">100% Free</span>
+                      </div>
+                      <p className="text-[10px] text-neutral-300">
+                        Unobtrusive reading ad banner. Zero cost to create and view.
+                      </p>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsAdSupported(false)}
+                      className={`rounded-xl border p-3 text-left transition ${
+                        !isAdSupported
+                          ? "border-rose-500 bg-rose-500/20 text-white shadow-sm"
+                          : "border-neutral-800 bg-neutral-900/60 text-neutral-400 hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold text-white">Pay to skip ads</span>
+                        <span className="text-xs font-bold text-rose-400">
+                          {symbol}{PRICING_TIERS[region].pagePrice}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-neutral-300">
+                        Pristine, ad-free emotional experience for your loved one.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Hindu Devotional: Om Motif Toggle (PRIORITY!) */}
+              {(template.showOmMotifSupported || occasion === "jagrata_kirtan") && (
+                <div className="rounded-2xl border border-amber-500/40 bg-amber-950/20 p-4 flex items-center justify-between animate-in fade-in">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-base font-bold text-amber-300">ॐ</span>
+                      <h4 className="text-xs font-bold text-white">Display Holy Om Symbol (ॐ)</h4>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">
+                      Include the sacred Om (ॐ) motif alongside the Aarti Diya flame on your card and page.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowOmMotif(!showOmMotif)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                      showOmMotif ? "bg-amber-500" : "bg-neutral-800"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        showOmMotif ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
+
+              {/* Muslim Devotional: Optional Bismillah Invocation Toggle (Adjustment 3) */}
+              {(template.showBismillahSupported || occasion === "aqeeqah" || occasion === "nikah" || occasion === "iftar") && (
+                <div className="rounded-2xl border border-emerald-500/40 bg-emerald-950/20 p-4 flex items-center justify-between animate-in fade-in">
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-sm text-emerald-300">🌙</span>
+                      <h4 className="text-xs font-bold text-white">Display Bismillah Invocation (بِسْمِ ٱللَّٰهِ)</h4>
+                    </div>
+                    <p className="text-[11px] text-neutral-400 mt-0.5">
+                      Toggle whether to display the sacred Arabic calligraphic Bismillah heading above the invitation.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowBismillah(!showBismillah)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                      showBismillah ? "bg-emerald-500" : "bg-neutral-800"
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                        showBismillah ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </button>
+                </div>
+              )}
 
               {/* Bundle Addon Option (Card + Interactive Page) */}
               <div className="pt-2">
@@ -1899,6 +2043,8 @@ export default function CreateLovewritPage({
                 eventDate={eventDate}
                 eventTime={eventTime}
                 voiceMessageUrl={voiceMemoUrl}
+                showOmMotif={showOmMotif}
+                showBismillah={showBismillah}
               />
             ) : (
               <PagePreview
@@ -1919,6 +2065,9 @@ export default function CreateLovewritPage({
                 voiceMessageUrl={voiceMemoUrl}
                 musicTrackName={activeTrackObj?.title}
                 previewOnly={true}
+                showOmMotif={showOmMotif}
+                showBismillah={showBismillah}
+                isAdSupported={isFreeAdPage}
               />
             )}
           </div>

@@ -48,7 +48,7 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
     category: "memorial",
     url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=cinematic-atmosphere-score-2-22136.mp3",
   },
-  // Devotional (Jagrata & Kirtan)
+  // Devotional (Jagrata & Kirtan - Hindu)
   {
     id: "sacred-bhajan",
     title: "Divine Aarti & Sitar",
@@ -56,6 +56,56 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
     duration: "4:10",
     genre: "Traditional Devotional",
     category: "devotional",
+    url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-acoustic-guitar-112191.mp3",
+  },
+  // Devotional (Sikh)
+  {
+    id: "sikh-gurbani",
+    title: "Peaceful Gurbani Strings",
+    artist: "Lovewrit Sacred",
+    duration: "3:55",
+    genre: "Gurbani Sitar & Rabab",
+    category: "devotional",
+    url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-acoustic-guitar-112191.mp3",
+  },
+  // Devotional (Muslim)
+  {
+    id: "muslim-oud",
+    title: "Sacred Andalusian Oud",
+    artist: "Lovewrit Peace",
+    duration: "3:30",
+    genre: "Acoustic Oud & Wind",
+    category: "devotional",
+    url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=tender-love-10874.mp3",
+  },
+  // Devotional (Christian)
+  {
+    id: "christian-choral",
+    title: "Celestial Choral Harmony",
+    artist: "Lovewrit Grace",
+    duration: "3:20",
+    genre: "Soft Choral Strings",
+    category: "devotional",
+    url: "https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=cinematic-atmosphere-score-2-22136.mp3",
+  },
+  // Devotional (Secular)
+  {
+    id: "secular-acoustic",
+    title: "Gentle Morning Reflections",
+    artist: "Lovewrit Calm",
+    duration: "2:40",
+    genre: "Ambient Piano & Guitar",
+    category: "devotional",
+    url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=tender-love-10874.mp3",
+  },
+  // Standalone Service: Letter to a Dear One
+  {
+    id: "quill-acoustic",
+    title: "Acoustic Quill & Letters",
+    artist: "Lovewrit Keepsake",
+    duration: "3:05",
+    genre: "Warm Nostalgic Guitar",
+    category: "couples",
     url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-acoustic-guitar-112191.mp3",
   },
   // Social & Invites

@@ -214,9 +214,14 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           venueName={pageData.venueName}
           venueAddress={pageData.venueAddress}
           venueMapUrl={pageData.venueMapUrl}
+          eventDate={pageData.eventDate}
+          eventTime={pageData.eventTime}
           voiceMessageUrl={pageData.voiceMessageUrl}
           musicTrackName={hasMusic ? "Ambient Soundtrack" : undefined}
           previewOnly={false}
+          showOmMotif={Boolean(pageData.showOmMotif)}
+          showBismillah={Boolean(pageData.showBismillah)}
+          isAdSupported={Boolean(pageData.isAdSupported || order?.isAdSupported)}
         />
 
         {/* Phase 2: Recipient / Guest Wishes Wall */}

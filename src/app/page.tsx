@@ -231,10 +231,12 @@ export default function HomePage() {
               <div className="flex items-center space-x-1 overflow-x-auto rounded-xl border border-neutral-800 bg-neutral-900/80 p-1">
                 {[
                   { id: "all", label: "All Occasions" },
+                  { id: "letters", label: "Letters & Notes (100% Free)" },
+                  { id: "devotional", label: "Devotional & Sacred" },
                   { id: "couples", label: "Couples & Proposals" },
                   { id: "birthdays", label: "Birthdays" },
                   { id: "memorials", label: "Memorials" },
-                  { id: "invites", label: "Invites & Chowki" },
+                  { id: "invites", label: "Invites & Gatherings" },
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -280,7 +282,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Grid of 10 Templates */}
+          {/* Grid of Templates */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredTemplates.map((tmpl) => {
               const hasCard = tmpl.supportedFormats.includes("CARD");
@@ -307,15 +309,27 @@ export default function HomePage() {
                     )}
 
                     <div className="absolute bottom-3 left-3 flex items-center space-x-1.5">
-                      {hasCard && (
-                        <span className="rounded-lg bg-neutral-900/80 backdrop-blur-md border border-neutral-700/60 px-2 py-0.5 text-[10px] font-medium text-neutral-200">
-                          Card ({pricing.symbol}{pricing.cardPrice})
+                      {tmpl.isFreeCard ? (
+                        <span className="rounded-lg bg-emerald-500/90 backdrop-blur-md border border-emerald-400/80 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                          Card (100% FREE)
                         </span>
+                      ) : (
+                        hasCard && (
+                          <span className="rounded-lg bg-neutral-900/80 backdrop-blur-md border border-neutral-700/60 px-2 py-0.5 text-[10px] font-medium text-neutral-200">
+                            Card ({pricing.symbol}{pricing.cardPrice})
+                          </span>
+                        )
                       )}
-                      {hasPage && (
-                        <span className="rounded-lg bg-rose-950/80 backdrop-blur-md border border-rose-800/60 px-2 py-0.5 text-[10px] font-medium text-rose-300">
-                          Page ({pricing.symbol}{pricing.pagePrice})
+                      {tmpl.hasAdOption ? (
+                        <span className="rounded-lg bg-emerald-950/80 backdrop-blur-md border border-emerald-700/60 px-2 py-0.5 text-[10px] font-medium text-emerald-300">
+                          Page (FREE w/ Ads)
                         </span>
+                      ) : (
+                        hasPage && (
+                          <span className="rounded-lg bg-rose-950/80 backdrop-blur-md border border-rose-800/60 px-2 py-0.5 text-[10px] font-medium text-rose-300">
+                            Page ({pricing.symbol}{pricing.pagePrice})
+                          </span>
+                        )
                       )}
                     </div>
                   </div>
