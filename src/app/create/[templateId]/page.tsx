@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
-import CardPreview from "@/components/editor/CardPreview";
+import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
 import PagePreview, { CollageLayoutStyle } from "@/components/editor/PagePreview";
 import VoiceRecorder from "@/components/interactive/VoiceRecorder";
 import HindiPunjabiKeyboard from "@/components/editor/HindiPunjabiKeyboard";
@@ -18,6 +18,10 @@ import {
   COLOR_THEMES,
   ProposalQuestionKey,
   PROPOSAL_QUESTIONS,
+  FontFamilyKey,
+  CardBorderStyleKey,
+  AmbientEffectKey,
+  STICKER_SETS,
 } from "@/lib/templates-data";
 import {
   PRICING_TIERS,
@@ -155,6 +159,33 @@ export default function CreateLovewritPage({
   const [isRegiftDiscount, setIsRegiftDiscount] = useState<boolean>(false);
   const [replySender, setReplySender] = useState<string | null>(null);
 
+  // Shared Features: Nickname & Private Passcode PIN
+  const [nickname, setNickname] = useState<string>("");
+  const [pinCode, setPinCode] = useState<string>("");
+
+  // Shared Features: Direct Sender Tip Links (UPI / PayPal.me)
+  const [tipUpiId, setTipUpiId] = useState<string>("");
+  const [tipPaypalUsername, setTipPaypalUsername] = useState<string>("");
+
+  // Referral Discount State (Fixed cash discount: ₹49 / $2 / €2 / £2)
+  const [referralCodeInput, setReferralCodeInput] = useState<string>("");
+  const [appliedReferralCode, setAppliedReferralCode] = useState<string | null>(null);
+  const [isVerifyingReferral, setIsVerifyingReferral] = useState<boolean>(false);
+  const [referralMessage, setReferralMessage] = useState<string | null>(null);
+
+  // Digital Card Customizations
+  const [cardFontFamily, setCardFontFamily] = useState<FontFamilyKey>("serif");
+  const [cardBorderStyle, setCardBorderStyle] = useState<CardBorderStyleKey>("classic");
+  const [isFlipReveal, setIsFlipReveal] = useState<boolean>(false);
+  const [secondaryMessage, setSecondaryMessage] = useState<string>("");
+  const [showBilingual, setShowBilingual] = useState<boolean>(false);
+  const [placedStickers, setPlacedStickers] = useState<StickerItem[]>([]);
+
+  // Interactive Page Customizations
+  const [pageFontFamily, setPageFontFamily] = useState<FontFamilyKey>("serif");
+  const [ambientEffect, setAmbientEffect] = useState<AmbientEffectKey>("none");
+  const [milestoneVenue, setMilestoneVenue] = useState<string>("");
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
@@ -223,6 +254,43 @@ export default function CreateLovewritPage({
       localStorage.removeItem("lovewrit_founder_pass");
       localStorage.removeItem("memoir_founder_pass");
     } catch {}
+  };
+
+  const handleValidateReferral = async () => {
+    if (!referralCodeInput.trim()) return;
+    setIsVerifyingReferral(true);
+    setReferralMessage(null);
+    try {
+      const res = await fetch(`/api/referral?code=${encodeURIComponent(referralCodeInput.trim())}`);
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setAppliedReferralCode(data.code);
+        setReferralMessage(`✓ Code from ${data.ownerName} applied! Discount unlocked.`);
+      } else {
+        setAppliedReferralCode(null);
+        setReferralMessage(data.message || "Invalid referral code. Please check and try again.");
+      }
+    } catch {
+      setAppliedReferralCode(null);
+      setReferralMessage("Could not verify referral code right now.");
+    } finally {
+      setIsVerifyingReferral(false);
+    }
+  };
+
+  const handleAddSticker = (emoji: string) => {
+    if (placedStickers.length >= 6) return;
+    const newSticker: StickerItem = {
+      id: `stk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      emoji,
+      x: 20 + Math.floor(Math.random() * 60),
+      y: 20 + Math.floor(Math.random() * 60),
+    };
+    setPlacedStickers((prev) => [...prev, newSticker]);
+  };
+
+  const handleRemoveSticker = (id: string) => {
+    setPlacedStickers((prev) => prev.filter((s) => s.id !== id));
   };
 
   const applyDatePreset = (
@@ -473,7 +541,11 @@ export default function CreateLovewritPage({
     tier,
     isBundle,
     isRegiftDiscount,
-    { isFreeCard: isFreeLetterCard, isAdSupported: isFreeAdPage }
+    {
+      isFreeCard: isFreeLetterCard,
+      isAdSupported: isFreeAdPage,
+      referralDiscount: Boolean(appliedReferralCode && !isRegiftDiscount),
+    }
   );
 
   const displayPrice = isFounderFree || isFreeLetterCard || isFreeAdPage ? "0" : calculatedPricing.displayPrice;
@@ -516,14 +588,24 @@ export default function CreateLovewritPage({
         replyTo: replyToSlug || undefined,
         masterKey: isFounderFree ? "lovewrit_master_founder_secret_2026" : undefined,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
+        pinCode: pinCode.trim() || undefined,
+        nickname: nickname.trim() || undefined,
+        tipUpiId: tipUpiId.trim() || undefined,
+        tipPaypalUsername: tipPaypalUsername.trim() || undefined,
+        referralCode: appliedReferralCode || undefined,
         cardData: {
           senderName,
           recipientName,
           occasion,
           message,
+          secondaryMessage: showBilingual && secondaryMessage.trim() ? secondaryMessage.trim() : undefined,
           photoUrl: pagePhotos.length > 1 ? JSON.stringify(pagePhotos.slice(0, 3)) : cardPhoto,
           photoShape,
           colorTheme: selectedTheme,
+          fontFamily: cardFontFamily,
+          borderStyle: cardBorderStyle,
+          stickers: placedStickers,
+          isFlipReveal,
           location,
           venueName,
           venueAddress,
@@ -535,6 +617,7 @@ export default function CreateLovewritPage({
           showOmMotif,
           showBismillah,
           language: selectedLanguage,
+          secondaryLanguage: showBilingual ? selectedLanguage : undefined,
         },
         pageData: {
           senderName,
@@ -548,6 +631,9 @@ export default function CreateLovewritPage({
           isProposal: isProposal && occasion === "proposal",
           proposalQuestion: isProposal && occasion === "proposal" ? proposalQuestion : undefined,
           colorTheme: selectedTheme,
+          fontFamily: pageFontFamily,
+          ambientEffect,
+          milestoneVenue: milestoneVenue.trim() || undefined,
           venueName,
           venueAddress,
           venueMapUrl,
@@ -631,8 +717,8 @@ export default function CreateLovewritPage({
         </div>
       </div>
 
-      {/* Mobile Tab switcher */}
-      <div className="lg:hidden flex border-b border-neutral-900 bg-neutral-900/90 sticky top-[57px] z-30">
+      {/* Mobile/Small Phone Tab switcher */}
+      <div className="md:hidden flex border-b border-neutral-900 bg-neutral-900/90 sticky top-[57px] z-30">
         <button
           onClick={() => setMobileTab("edit")}
           className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center space-x-1.5 border-b-2 transition ${
@@ -658,12 +744,12 @@ export default function CreateLovewritPage({
       </div>
 
       {/* Studio Workspace */}
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* LEFT: FORM CUSTOMIZER (7 cols on desktop) */}
+      <main className="flex-1 mx-auto max-w-7xl w-full px-3 sm:px-6 md:px-6 lg:px-8 py-6 sm:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {/* LEFT: FORM CUSTOMIZER (7 cols on tablets & desktop) */}
           <div
-            className={`lg:col-span-7 space-y-8 ${
-              mobileTab === "preview" ? "hidden lg:block" : "block"
+            className={`md:col-span-6 lg:col-span-7 space-y-6 sm:space-y-8 ${
+              mobileTab === "preview" ? "hidden md:block" : "block"
             }`}
           >
             {/* VIP Founder Pass Badge */}
@@ -1052,6 +1138,43 @@ export default function CreateLovewritPage({
                 </div>
               </div>
 
+              {/* Optional Nickname and Passcode Protection */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                    Special Nickname / Pet Name (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    placeholder="e.g. Honey, Guddu, My Love"
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                  />
+                  <p className="text-[10px] text-neutral-500 mt-1">
+                    Appears as a sweet personal badge in the keepsake
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1 flex items-center space-x-1.5">
+                    <Lock className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Private Passcode PIN (Optional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={pinCode}
+                    onChange={(e) => setPinCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="e.g. 1234 (Numeric 4-6 digits)"
+                    className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none font-mono"
+                  />
+                  <p className="text-[10px] text-neutral-500 mt-1">
+                    Locks the gift with a private PIN that only the recipient knows
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-semibold text-neutral-300 mb-1">
@@ -1159,6 +1282,39 @@ export default function CreateLovewritPage({
                 language={selectedLanguage}
                 onInsertChar={(char) => setMessage((prev) => prev + char)}
               />
+
+              {/* Bilingual Card Option (Side-by-Side) */}
+              {productType === "CARD" && (
+                <div className="pt-3 border-t border-neutral-800/80 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-neutral-300 flex items-center space-x-2">
+                      <FileText className="h-3.5 w-3.5 text-rose-400" />
+                      <span>Bilingual Card Message (Side-by-Side Display)</span>
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={showBilingual}
+                      onChange={(e) => setShowBilingual(e.target.checked)}
+                      className="h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-600 focus:ring-rose-500"
+                    />
+                  </div>
+
+                  {showBilingual && (
+                    <div className="space-y-2 pt-1 animate-in fade-in duration-200">
+                      <p className="text-[11px] text-neutral-400">
+                        Add a secondary translation (e.g. Punjabi or Hindi). Both will be presented side by side on the card.
+                      </p>
+                      <textarea
+                        rows={4}
+                        value={secondaryMessage}
+                        onChange={(e) => setSecondaryMessage(e.target.value)}
+                        placeholder="Enter secondary language translation or heartfelt message..."
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 p-3 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none leading-relaxed font-serif"
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Step 4: Voice Memo Audio Note (Phase 2 Feature) */}
@@ -1547,7 +1703,7 @@ export default function CreateLovewritPage({
                     <label className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 hover:border-rose-500 bg-neutral-950/40 p-4 cursor-pointer transition min-h-[140px] text-center group">
                       <input
                         type="file"
-                        accept="image/png, image/jpeg, image/webp, image/heic"
+                        accept="image/*, .png, .jpg, .jpeg, .webp, .heic, .heif"
                         multiple={false}
                         onChange={(e) => handlePhotoUpload(e, "append")}
                         className="hidden"
@@ -1570,7 +1726,7 @@ export default function CreateLovewritPage({
                   <label className="flex-1 w-full flex items-center justify-center space-x-2 rounded-xl border border-dashed border-neutral-700 bg-neutral-950/50 hover:border-rose-500/60 p-3 cursor-pointer text-xs text-neutral-300 hover:text-white transition">
                     <input
                       type="file"
-                      accept="image/png, image/jpeg, image/webp, image/heic"
+                      accept="image/*, .png, .jpg, .jpeg, .webp, .heic, .heif"
                       multiple={true}
                       onChange={(e) => handlePhotoUpload(e, "append")}
                       className="hidden"
@@ -1668,6 +1824,253 @@ export default function CreateLovewritPage({
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Step 8.5: Typography, Decorative Frames & Accents */}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-5">
+              <span className="text-xs font-bold uppercase tracking-wider text-rose-400 block">
+                {productType === "CARD"
+                  ? "Step 8.5: Card Typography, Frames & Stickers"
+                  : "Step 8.5: Page Typography, Ambient & Tips"}
+              </span>
+
+              {/* Typography Font Selection */}
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-2">
+                  Message Typography Font
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: "serif", label: "Classic Serif", sub: "Elegant Playfair" },
+                    { id: "handwriting", label: "Handwritten", sub: "Intimate Caveat" },
+                    { id: "sans", label: "Modern Clean", sub: "Contemporary Sans" },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => {
+                        if (productType === "CARD") {
+                          setCardFontFamily(f.id as FontFamilyKey);
+                        } else {
+                          setPageFontFamily(f.id as FontFamilyKey);
+                        }
+                      }}
+                      className={`rounded-xl border p-2.5 text-center transition ${
+                        (productType === "CARD" ? cardFontFamily : pageFontFamily) === f.id
+                          ? "border-rose-500 bg-rose-500/20 text-rose-300 shadow-sm"
+                          : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
+                      }`}
+                    >
+                      <span className={`block text-xs font-bold ${f.id === "handwriting" ? "font-handwriting text-sm" : f.id === "serif" ? "font-serif" : ""}`}>
+                        {f.label}
+                      </span>
+                      <span className="text-[10px] text-neutral-400">{f.sub}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* CARD SPECIFIC: Decorative Border / Frame Style */}
+              {productType === "CARD" && (
+                <div className="space-y-4 pt-2 border-t border-neutral-800/80">
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-2">
+                      Decorative Border & Frame Style
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: "classic", label: "Classic Border" },
+                        { id: "floral", label: "Floral Garland 🌸" },
+                        { id: "minimal_line", label: "Minimalist Line" },
+                        { id: "festive_gold", label: "Festive Sparks ✨" },
+                      ].map((b) => (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => setCardBorderStyle(b.id as CardBorderStyleKey)}
+                          className={`rounded-xl border py-2 px-2 text-center text-xs font-medium transition ${
+                            cardBorderStyle === b.id
+                              ? "border-rose-500 bg-rose-500/20 text-rose-300"
+                              : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Flip Reveal Card Experience */}
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-3.5 flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-white">Flip Reveal Experience</h4>
+                      <p className="text-[11px] text-neutral-400 mt-0.5">
+                        Front shows your photo centerpiece; tap card to flip and unveil your letter on the back!
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsFlipReveal(!isFlipReveal)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                        isFlipReveal ? "bg-rose-500" : "bg-neutral-800"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          isFlipReveal ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Sticker & Emoji Overlays */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-semibold text-neutral-300">
+                        Occasion Stickers & Emoji Overlays
+                      </label>
+                      <span className="text-[10px] text-neutral-500">
+                        {placedStickers.length} / 6 Stickers Added
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {(["romance", "celebration", "devotional", "nature"] as const).map((cat) => {
+                        const items = STICKER_SETS.filter((s) => s.category === cat);
+                        return (
+                          <div key={cat} className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
+                            <span className="text-[10px] uppercase font-bold text-neutral-400 w-full sm:w-24 shrink-0 capitalize">
+                              {cat}:
+                            </span>
+                            <div className="flex flex-wrap gap-1">
+                              {items.map((stk) => (
+                                <button
+                                  key={stk.id}
+                                  type="button"
+                                  onClick={() => handleAddSticker(stk.emoji)}
+                                  title={stk.label}
+                                  className="h-8 w-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
+                                >
+                                  {stk.emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Placed Stickers Chips */}
+                    {placedStickers.length > 0 && (
+                      <div className="mt-3 flex flex-wrap items-center gap-1.5 pt-2">
+                        <span className="text-[10px] text-neutral-400 mr-1">Active on Card:</span>
+                        {placedStickers.map((s) => (
+                          <span
+                            key={s.id}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-neutral-800 border border-neutral-700 text-xs text-white"
+                          >
+                            <span>{s.emoji}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSticker(s.id)}
+                              className="text-neutral-400 hover:text-red-400 ml-1 text-xs font-bold"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* PAGE SPECIFIC: Ambient Effects & Milestone Pin & Tip */}
+              {productType === "PAGE" && (
+                <div className="space-y-4 pt-2 border-t border-neutral-800/80">
+                  {/* Ambient Background Effect */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-2">
+                      Ambient Animated Background
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {[
+                        { id: "none", label: "Minimalist" },
+                        { id: "petals", label: "🌸 Falling Petals" },
+                        { id: "stars", label: "✦ Night Stars" },
+                        { id: "rain", label: "🌧️ Gentle Rain" },
+                      ].map((eff) => (
+                        <button
+                          key={eff.id}
+                          type="button"
+                          onClick={() => setAmbientEffect(eff.id as AmbientEffectKey)}
+                          className={`rounded-xl border py-2 px-2 text-center text-xs font-medium transition ${
+                            ambientEffect === eff.id
+                              ? "border-rose-500 bg-rose-500/20 text-rose-300"
+                              : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
+                          }`}
+                        >
+                          {eff.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Milestone Landmark Venue Pin */}
+                  <div>
+                    <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                      Milestone Landmark (e.g. &ldquo;Where We First Met&rdquo;)
+                    </label>
+                    <input
+                      type="text"
+                      value={milestoneVenue}
+                      onChange={(e) => setMilestoneVenue(e.target.value)}
+                      placeholder="e.g. Marine Drive Promenade, Mumbai"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Direct Sender Tip (100% Direct Option 1) */}
+                  <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-4 space-y-3">
+                    <div>
+                      <h4 className="text-xs font-bold text-white flex items-center space-x-1.5">
+                        <Gift className="h-3.5 w-3.5 text-rose-400" />
+                        <span>Support / Tip to Sender (Optional & 100% Direct)</span>
+                      </h4>
+                      <p className="text-[11px] text-neutral-400 mt-0.5">
+                        Lovewrit never touches or handles this payment. Your recipient gets a direct UPI or PayPal.me button to tip you directly.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[11px] font-semibold text-neutral-300 mb-1">
+                          Your UPI ID (India / Asia)
+                        </label>
+                        <input
+                          type="text"
+                          value={tipUpiId}
+                          onChange={(e) => setTipUpiId(e.target.value)}
+                          placeholder="e.g. yourname@okaxis"
+                          className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-500 font-mono focus:border-rose-500 focus:outline-none"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-semibold text-neutral-300 mb-1">
+                          PayPal.me Username (Global)
+                        </label>
+                        <input
+                          type="text"
+                          value={tipPaypalUsername}
+                          onChange={(e) => setTipPaypalUsername(e.target.value)}
+                          placeholder="e.g. johnsmith"
+                          className="w-full rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-500 font-mono focus:border-rose-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Step 9: Background Audio Soundtrack */}
@@ -1909,6 +2312,12 @@ export default function CreateLovewritPage({
                     <span className="font-semibold">-50%</span>
                   </div>
                 )}
+                {appliedReferralCode && !isRegiftDiscount && (
+                  <div className="flex items-center justify-between text-amber-400 pt-1.5 border-t border-neutral-800/80">
+                    <span>Friend Referral Discount ({appliedReferralCode})</span>
+                    <span className="font-semibold">-{symbol}{PRICING_TIERS[region].cardPrice}</span>
+                  </div>
+                )}
               </div>
 
               {formError && (
@@ -1940,6 +2349,43 @@ export default function CreateLovewritPage({
                       <Tag className="h-4 w-4 text-neutral-500 shrink-0" />
                       <span>50% regift discount automatically unlocks when replying to any Lovewrit gift you received.</span>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {/* Referral Code Entry */}
+              {!isFounderFree && !isRegiftDiscount && (
+                <div className="rounded-2xl border border-neutral-800 bg-neutral-950/60 p-3.5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-neutral-300 flex items-center space-x-1.5">
+                      <Gift className="h-3.5 w-3.5 text-amber-400" />
+                      <span>Have a Friend&apos;s Referral Code?</span>
+                    </label>
+                    <span className="text-[10px] text-amber-400 font-bold uppercase">
+                      Save {symbol}{PRICING_TIERS[region].cardPrice}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={referralCodeInput}
+                      onChange={(e) => setReferralCodeInput(e.target.value.toUpperCase())}
+                      placeholder="e.g. LW-ABC123"
+                      className="flex-1 rounded-xl border border-neutral-700 bg-neutral-900 px-3 py-2 text-xs text-white placeholder-neutral-500 font-mono focus:border-amber-500 focus:outline-none uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleValidateReferral}
+                      disabled={isVerifyingReferral || !referralCodeInput.trim()}
+                      className="rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3.5 py-2 text-xs font-semibold text-white transition disabled:opacity-50"
+                    >
+                      {isVerifyingReferral ? "Checking..." : "Apply"}
+                    </button>
+                  </div>
+                  {referralMessage && (
+                    <p className={`text-[11px] font-medium ${appliedReferralCode ? "text-emerald-400" : "text-red-400"}`}>
+                      {referralMessage}
+                    </p>
                   )}
                 </div>
               )}
@@ -2011,10 +2457,10 @@ export default function CreateLovewritPage({
             </form>
           </div>
 
-          {/* RIGHT: LIVE PREVIEW (5 cols on desktop, isolated sticky scroll container) */}
+          {/* RIGHT: LIVE PREVIEW (6 cols on tablet, 5 cols on desktop, isolated sticky scroll container) */}
           <div
-            className={`lg:col-span-5 lg:sticky lg:top-20 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto overscroll-contain pr-1 space-y-4 ${
-              mobileTab === "edit" ? "hidden lg:block" : "block"
+            className={`md:col-span-6 lg:col-span-5 md:sticky md:top-20 md:max-h-[calc(100vh-5rem)] md:overflow-y-auto overscroll-contain pr-1 space-y-4 ${
+              mobileTab === "edit" ? "hidden md:block" : "block"
             }`}
           >
             <div className="flex items-center justify-between px-2">
@@ -2030,8 +2476,14 @@ export default function CreateLovewritPage({
               <CardPreview
                 senderName={senderName}
                 recipientName={recipientName}
+                nickname={nickname}
                 occasion={occasion}
                 message={message}
+                secondaryMessage={showBilingual ? secondaryMessage : undefined}
+                fontFamily={cardFontFamily}
+                borderStyle={cardBorderStyle}
+                stickers={placedStickers}
+                isFlipReveal={isFlipReveal}
                 photoUrl={cardPhoto}
                 photoUrls={pagePhotos}
                 photoShape={photoShape}
@@ -2050,11 +2502,17 @@ export default function CreateLovewritPage({
               <PagePreview
                 senderName={senderName}
                 recipientName={recipientName}
+                nickname={nickname}
                 occasion={occasion}
                 letter={message}
                 photoUrls={pagePhotos}
                 colorTheme={selectedTheme}
                 collageLayout={collageLayout}
+                fontFamily={pageFontFamily}
+                ambientEffect={ambientEffect}
+                milestoneVenue={milestoneVenue}
+                tipUpiId={tipUpiId}
+                tipPaypalUsername={tipPaypalUsername}
                 isProposal={isProposal && occasion === "proposal"}
                 proposalQuestion={proposalQuestion}
                 venueName={venueName}

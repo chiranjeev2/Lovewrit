@@ -5,9 +5,13 @@ export const MAX_VOICE_MEMO_SIZE_BYTES = 2 * 1024 * 1024; // 2MB for voice memos
 export const ALLOWED_IMAGE_MIME_TYPES = [
   "image/jpeg",
   "image/png",
+  "image/x-png",
   "image/webp",
   "image/heic",
+  "image/heif",
   "image/jpg",
+  "image/pjpeg",
+  "image/x-citrix-pjpeg",
 ];
 
 export const ALLOWED_AUDIO_MIME_TYPES = [
@@ -36,11 +40,16 @@ export function validateImageFile(file: { size: number; type: string; name: stri
     return { valid: false, error: "Image file exceeds 10MB limit. Please upload a smaller photo." };
   }
 
-  const normalizedType = file.type.toLowerCase();
+  const normalizedType = file.type.toLowerCase().trim();
   const ext = file.name.split(".").pop()?.toLowerCase() || "";
-  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic"];
+  const allowedExtensions = ["jpg", "jpeg", "png", "webp", "heic", "heif"];
 
-  if (!ALLOWED_IMAGE_MIME_TYPES.includes(normalizedType) && !allowedExtensions.includes(ext)) {
+  const matchesMime =
+    ALLOWED_IMAGE_MIME_TYPES.includes(normalizedType) ||
+    normalizedType.startsWith("image/");
+  const matchesExt = allowedExtensions.includes(ext);
+
+  if (!matchesMime && !matchesExt) {
     return { valid: false, error: "Invalid image format. Allowed: JPG, PNG, WEBP, HEIC." };
   }
 

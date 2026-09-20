@@ -31,6 +31,11 @@ export async function POST(req: NextRequest) {
       cardData,
       pageData,
       isAdSupported = false,
+      pinCode,
+      nickname,
+      tipUpiId,
+      tipPaypalUsername,
+      referralCode,
     } = body;
 
     if (!productType || !templateId || !customerEmail || !customerName) {
@@ -98,6 +103,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Referral Code Validation (Fixed cash discount: ₹49 / $2 / €2 / £2 matching Digital Card price)
+    let hasReferralDiscount = false;
+    let validReferralCode: string | null = null;
+    if (referralCode) {
+      const trimmedCode = String(referralCode).trim().toUpperCase();
+      const refRecord = await db.referralRecord.findUnique({
+        where: { code: trimmedCode },
+      });
+      if (
+        refRecord &&
+        refRecord.ownerEmail.toLowerCase() !== customerEmail.trim().toLowerCase()
+      ) {
+        hasReferralDiscount = true;
+        validReferralCode = refRecord.code;
+      }
+    }
+
     // Determine template flags for free tier pricing
     const tmpl = getTemplateById(templateId);
     const isFreeCard = productType === "CARD" && Boolean(tmpl?.isFreeCard);
@@ -117,6 +139,7 @@ export async function POST(req: NextRequest) {
       {
         isFreeCard,
         isAdSupported: isFreeAdPage,
+        referralDiscount: hasReferralDiscount && !hasDiscount,
       }
     );
 
@@ -170,6 +193,20 @@ export async function POST(req: NextRequest) {
     const slug = nanoid(10);
     const adminToken = nanoid(16);
 
+    // Generate unique referral code for this buyer so they can share & earn
+    const myReferralCode = `LW-${nanoid(6).toUpperCase()}`;
+    try {
+      await db.referralRecord.create({
+        data: {
+          code: myReferralCode,
+          ownerEmail: customerEmail.trim().toLowerCase(),
+          ownerName: customerName.trim(),
+        },
+      });
+    } catch {
+      // Ignore if code collided
+    }
+
     const isMemorial =
       cardData?.occasion === "memorial" || pageData?.occasion === "memorial";
 
@@ -178,6 +215,12 @@ export async function POST(req: NextRequest) {
       tier === "RUSH" ? "QUEUED" : tier === "CUSTOM" ? "QUEUED" : "NOT_APPLICABLE";
 
     const isZeroOrder = isFounderPass || isFreeOrder;
+
+    // Cleaned fields
+    const cleanPin = pinCode ? String(pinCode).trim() : null;
+    const cleanNickname = nickname ? String(nickname).trim() : null;
+    const cleanUpi = tipUpiId ? String(tipUpiId).trim() : null;
+    const cleanPaypal = tipPaypalUsername ? String(tipPaypalUsername).trim().replace(/^@/, "") : null;
 
     // Save order in database
     const order = await db.order.create({
@@ -198,6 +241,12 @@ export async function POST(req: NextRequest) {
         region,
         ipAddress: clientIp,
         isAdSupported: Boolean(isAdSupported || pageData?.isAdSupported || isFreeAdPage),
+        pinCode: cleanPin,
+        nickname: cleanNickname,
+        tipUpiId: cleanUpi,
+        tipPaypalUsername: cleanPaypal,
+        referralCodeUsed: validReferralCode,
+        myReferralCode,
         ...(productType === "CARD" && cardData
           ? {
               cardData: {
@@ -206,9 +255,14 @@ export async function POST(req: NextRequest) {
                   recipientName: cardData.recipientName || "My Love",
                   occasion: cardData.occasion || "anniversary",
                   message: cardData.message || "",
+                  secondaryMessage: cardData.secondaryMessage || null,
                   photoUrl: cardData.photoUrl || "",
                   photoShape: cardData.photoShape || "oval",
                   colorTheme: cardData.colorTheme || "rose",
+                  fontFamily: cardData.fontFamily || "serif",
+                  borderStyle: cardData.borderStyle || "classic",
+                  stickersJson: cardData.stickersJson || (cardData.stickers ? JSON.stringify(cardData.stickers) : null),
+                  isFlipReveal: Boolean(cardData.isFlipReveal),
                   location: cardData.location || null,
                   venueName: cardData.venueName || null,
                   venueAddress: cardData.venueAddress || null,
@@ -218,6 +272,7 @@ export async function POST(req: NextRequest) {
                   showOmMotif: Boolean(cardData.showOmMotif),
                   showBismillah: Boolean(cardData.showBismillah),
                   language: cardData.language || "en",
+                  secondaryLanguage: cardData.secondaryLanguage || null,
                 },
               },
             }
@@ -237,6 +292,11 @@ export async function POST(req: NextRequest) {
                   isProposal: Boolean(pageData.isProposal),
                   proposalQuestion: pageData.proposalQuestion || "marry_me",
                   colorTheme: pageData.colorTheme || "rose",
+                  fontFamily: pageData.fontFamily || "serif",
+                  ambientEffect: pageData.ambientEffect || "none",
+                  timelineJson: pageData.timelineJson || (pageData.timeline ? JSON.stringify(pageData.timeline) : null),
+                  secretNotesJson: pageData.secretNotesJson || (pageData.secretNotes ? JSON.stringify(pageData.secretNotes) : null),
+                  milestoneVenue: pageData.milestoneVenue || null,
                   venueName: pageData.venueName || null,
                   venueAddress: pageData.venueAddress || null,
                   venueMapUrl: pageData.venueMapUrl || null,

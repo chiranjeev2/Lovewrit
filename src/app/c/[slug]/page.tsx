@@ -15,8 +15,13 @@ import {
   Loader2,
   Sparkles,
   QrCode,
+  Lock,
+  Printer,
+  Copy,
+  Gift,
 } from "lucide-react";
 import { toPng, toJpeg } from "html-to-image";
+import { FontFamilyKey, CardBorderStyleKey } from "@/lib/templates-data";
 
 interface CardSharePageProps {
   params: Promise<{ slug: string }>;
@@ -29,10 +34,16 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedReferral, setCopiedReferral] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showOpeningMoment, setShowOpeningMoment] = useState(true);
   const [isLockedCountdown, setIsLockedCountdown] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+
+  // PIN Protection state
+  const [enteredPin, setEnteredPin] = useState("");
+  const [pinError, setPinError] = useState(false);
+  const [isPinUnlocked, setIsPinUnlocked] = useState(false);
 
   const cardRef = useRef<HTMLDivElement | null>(null);
 
@@ -43,6 +54,10 @@ export default function CardSharePage({ params }: CardSharePageProps) {
         const data = await res.json();
         if (res.ok && data.order) {
           setOrder(data.order);
+          // If no PIN set, automatically unlocked
+          if (!data.order.pinCode) {
+            setIsPinUnlocked(true);
+          }
           // Check countdown lock
           if (data.order.cardData?.revealAt) {
             const targetTime = new Date(data.order.cardData.revealAt).getTime();
@@ -60,6 +75,16 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     loadCard();
   }, [slug]);
 
+  const handleUnlockPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (order?.pinCode && enteredPin.trim() === order.pinCode.trim()) {
+      setIsPinUnlocked(true);
+      setPinError(false);
+    } else {
+      setPinError(true);
+    }
+  };
+
   const copyLink = () => {
     if (typeof window !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
@@ -68,19 +93,37 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     }
   };
 
-  const handleDownloadImage = async (format: "png" | "jpeg" = "png") => {
+  const copyReferralCode = () => {
+    if (order?.myReferralCode && typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(order.myReferralCode);
+      setCopiedReferral(true);
+      setTimeout(() => setCopiedReferral(false), 2000);
+    }
+  };
+
+  const handleDownloadImage = async (format: "png" | "jpeg" | "print" = "png") => {
     const node = document.getElementById("lovewrit-card-node");
     if (!node) return;
 
     setIsDownloading(true);
     try {
+      // For print-ready high-DPI export, use pixelRatio 4 (equivalent to 300 DPI for standard card sizes)
+      const isPrint = format === "print";
+      const options = {
+        quality: 1,
+        pixelRatio: isPrint ? 4 : 2,
+        cacheBust: true,
+      };
+
       const dataUrl =
-        format === "png"
-          ? await toPng(node, { quality: 0.95, pixelRatio: 2 })
-          : await toJpeg(node, { quality: 0.95, pixelRatio: 2 });
+        format === "jpeg"
+          ? await toJpeg(node, options)
+          : await toPng(node, options);
 
       const link = document.createElement("a");
-      link.download = `lovewrit-card-${order?.cardData?.recipientName || "love"}.${format}`;
+      const suffix = isPrint ? "-print-300dpi" : "";
+      const ext = format === "jpeg" ? "jpg" : "png";
+      link.download = `lovewrit-card-${order?.cardData?.recipientName || "love"}${suffix}.${ext}`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -98,6 +141,50 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     );
   }
 
+  // PIN Protection Gate
+  if (!isPinUnlocked && order?.pinCode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 text-white">
+        <div className="w-full max-w-sm rounded-3xl border border-neutral-800 bg-neutral-900/90 p-8 text-center backdrop-blur-xl shadow-2xl space-y-5">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30">
+            <Lock className="h-7 w-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="font-serif text-xl font-bold">Passcode Protected</h2>
+            <p className="text-xs text-neutral-400">
+              {order.customerName || "The sender"} has locked this keepsake with a private PIN.
+            </p>
+          </div>
+          <form onSubmit={handleUnlockPin} className="space-y-4">
+            <input
+              type="password"
+              maxLength={6}
+              value={enteredPin}
+              onChange={(e) => {
+                setEnteredPin(e.target.value);
+                setPinError(false);
+              }}
+              placeholder="Enter numeric PIN"
+              className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3 rounded-xl bg-neutral-950 border border-neutral-700 text-white focus:outline-none focus:border-rose-500"
+              autoFocus
+            />
+            {pinError && (
+              <p className="text-xs text-rose-400 font-medium">
+                Incorrect PIN. Please check with the sender.
+              </p>
+            )}
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 transition"
+            >
+              Unlock Keepsake
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   const cardData = order?.cardData || {
     senderName: "Dev",
     recipientName: "Ananya",
@@ -110,7 +197,6 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   };
 
   const template = TEMPLATES.find((t) => t.id === order?.templateId) || TEMPLATES[1];
-
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
   return (
@@ -198,13 +284,27 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           } catch {
             parsedCardPhotos = cardData.photoUrl ? [cardData.photoUrl] : [];
           }
+
+          let parsedStickers: any[] | undefined;
+          try {
+            if (cardData.stickersJson) {
+              parsedStickers = JSON.parse(cardData.stickersJson);
+            }
+          } catch {}
+
           return (
             <CardPreview
               cardRef={cardRef}
               senderName={cardData.senderName}
               recipientName={cardData.recipientName}
+              nickname={order?.nickname}
               occasion={cardData.occasion}
               message={cardData.message}
+              secondaryMessage={cardData.secondaryMessage}
+              fontFamily={(cardData.fontFamily as FontFamilyKey) || "serif"}
+              borderStyle={(cardData.borderStyle as CardBorderStyleKey) || "classic"}
+              stickers={parsedStickers}
+              isFlipReveal={Boolean(cardData.isFlipReveal)}
               photoUrl={cardData.photoUrl}
               photoUrls={parsedCardPhotos}
               photoShape={cardData.photoShape as PhotoShapeKey}
@@ -222,19 +322,29 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           );
         })()}
 
-        {/* Action Controls */}
-        <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
+        {/* Action Controls & High-DPI Print Export */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => handleDownloadImage("png")}
             disabled={isDownloading}
-            className="inline-flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition disabled:opacity-50"
+            className="inline-flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition disabled:opacity-50"
           >
             {isDownloading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Download className="h-4 w-4" />
             )}
-            <span>Download High-Res Card (PNG)</span>
+            <span>Download PNG</span>
+          </button>
+
+          <button
+            onClick={() => handleDownloadImage("print")}
+            disabled={isDownloading}
+            className="inline-flex items-center space-x-2 rounded-2xl border border-rose-500/40 bg-neutral-900/90 px-5 py-3 text-xs font-bold text-rose-300 hover:bg-neutral-800 hover:text-white shadow-lg shadow-rose-500/10 hover:scale-105 active:scale-95 transition disabled:opacity-50"
+            title="Export high-resolution 300 DPI image suited for physical 4x6 / 5x7 prints"
+          >
+            <Printer className="h-4 w-4 text-rose-400" />
+            <span>Print-Ready (300 DPI)</span>
           </button>
 
           <button
@@ -246,8 +356,41 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           </button>
         </div>
 
+        {/* Referral Perk Card */}
+        {order?.myReferralCode && (
+          <div className="mt-6 w-full max-w-lg rounded-2xl border border-neutral-800 bg-neutral-900/60 p-4 text-center backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 text-left">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <Gift className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-white">Give friends ₹49 / $2 OFF</p>
+                <p className="text-[11px] text-neutral-400">
+                  Share your referral code: <span className="font-mono text-amber-300 font-bold">{order.myReferralCode}</span>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={copyReferralCode}
+              className="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-200 flex items-center space-x-1.5 transition"
+            >
+              {copiedReferral ? (
+                <>
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Copied</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-3.5 w-3.5" />
+                  <span>Copy Code</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* 50% OFF Reply / Regift Call To Action */}
-        <div className="mt-10 w-full max-w-lg rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        <div className="mt-8 w-full max-w-lg rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 mb-3">
             <Sparkles className="h-6 w-6" />
           </div>

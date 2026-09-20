@@ -18,7 +18,11 @@ import {
   Loader2,
   Sparkles,
   QrCode,
+  Lock,
+  Gift,
+  Copy,
 } from "lucide-react";
+import { FontFamilyKey, AmbientEffectKey } from "@/lib/templates-data";
 
 interface TemplatePageProps {
   params: Promise<{ slug: string }>;
@@ -33,10 +37,16 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<any>(null);
   const [copied, setCopied] = useState(false);
+  const [copiedReferral, setCopiedReferral] = useState(false);
   const [showOpeningMoment, setShowOpeningMoment] = useState(true);
   const [canPlayAudio, setCanPlayAudio] = useState(false);
   const [isLockedCountdown, setIsLockedCountdown] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
+
+  // PIN Protection state
+  const [enteredPin, setEnteredPin] = useState("");
+  const [pinError, setPinError] = useState(false);
+  const [isPinUnlocked, setIsPinUnlocked] = useState(false);
 
   useEffect(() => {
     async function loadPage() {
@@ -45,6 +55,10 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         const data = await res.json();
         if (res.ok && data.order) {
           setOrder(data.order);
+          // If no PIN set, automatically unlocked
+          if (!data.order.pinCode) {
+            setIsPinUnlocked(true);
+          }
           // Check countdown lock
           if (data.order.pageData?.revealAt) {
             const targetTime = new Date(data.order.pageData.revealAt).getTime();
@@ -62,6 +76,16 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     loadPage();
   }, [slug]);
 
+  const handleUnlockPin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (order?.pinCode && enteredPin.trim() === order.pinCode.trim()) {
+      setIsPinUnlocked(true);
+      setPinError(false);
+    } else {
+      setPinError(true);
+    }
+  };
+
   const copyLink = () => {
     if (typeof window !== "undefined" && navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
@@ -70,10 +94,80 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     }
   };
 
+  const copyReferralCode = () => {
+    if (order?.myReferralCode && typeof window !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(order.myReferralCode);
+      setCopiedReferral(true);
+      setTimeout(() => setCopiedReferral(false), 2000);
+    }
+  };
+
+  const handleSendReaction = async (text: string) => {
+    try {
+      await fetch("/api/reactions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          pageDataId: order?.pageData?.id,
+          senderName: order?.pageData?.recipientName || "Recipient",
+          reactionType: "text",
+          message: text,
+        }),
+      });
+    } catch (err) {
+      console.error("Failed to submit reaction:", err);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-950 text-white">
         <Loader2 className="h-8 w-8 animate-spin text-rose-500" />
+      </div>
+    );
+  }
+
+  // PIN Protection Gate
+  if (!isPinUnlocked && order?.pinCode) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-950 px-4 text-white">
+        <div className="w-full max-w-sm rounded-3xl border border-neutral-800 bg-neutral-900/90 p-8 text-center backdrop-blur-xl shadow-2xl space-y-5">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30">
+            <Lock className="h-7 w-7" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="font-serif text-xl font-bold">Passcode Protected</h2>
+            <p className="text-xs text-neutral-400">
+              {order.customerName || "The sender"} has protected this interactive keepsake with a private PIN.
+            </p>
+          </div>
+          <form onSubmit={handleUnlockPin} className="space-y-4">
+            <input
+              type="password"
+              maxLength={6}
+              value={enteredPin}
+              onChange={(e) => {
+                setEnteredPin(e.target.value);
+                setPinError(false);
+              }}
+              placeholder="Enter numeric PIN"
+              className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3 rounded-xl bg-neutral-950 border border-neutral-700 text-white focus:outline-none focus:border-rose-500"
+              autoFocus
+            />
+            {pinError && (
+              <p className="text-xs text-rose-400 font-medium">
+                Incorrect PIN. Please check with the sender.
+              </p>
+            )}
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 transition"
+            >
+              Unlock Keepsake
+            </button>
+          </form>
+        </div>
       </div>
     );
   }
@@ -105,6 +199,20 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   } catch {
     parsedPhotos = [];
   }
+
+  let parsedTimeline: any[] | undefined;
+  try {
+    if (pageData.timelineJson) {
+      parsedTimeline = JSON.parse(pageData.timelineJson);
+    }
+  } catch {}
+
+  let parsedSecretNotes: any[] | undefined;
+  try {
+    if (pageData.secretNotesJson) {
+      parsedSecretNotes = JSON.parse(pageData.secretNotesJson);
+    }
+  } catch {}
 
   const musicUrl = pageData.musicTrack || null;
   const hasMusic = Boolean(musicUrl && musicUrl !== "none");
@@ -204,11 +312,20 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         <PagePreview
           senderName={pageData.senderName}
           recipientName={pageData.recipientName}
+          nickname={order?.nickname}
           occasion={pageData.occasion}
           letter={pageData.letter}
           photoUrls={parsedPhotos}
           colorTheme={pageData.colorTheme as ColorThemeKey}
           collageLayout={(pageData.collageLayout as any) || "masonry"}
+          fontFamily={(pageData.fontFamily as FontFamilyKey) || "serif"}
+          ambientEffect={(pageData.ambientEffect as AmbientEffectKey) || "none"}
+          timeline={parsedTimeline}
+          secretNotes={parsedSecretNotes}
+          milestoneVenue={pageData.milestoneVenue}
+          tipUpiId={order?.tipUpiId}
+          tipPaypalUsername={order?.tipPaypalUsername}
+          onSendReaction={handleSendReaction}
           isProposal={pageData.isProposal}
           proposalQuestion={pageData.proposalQuestion}
           venueName={pageData.venueName}
@@ -232,8 +349,41 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           requireApproval={pageData.requireGuestbookApproval}
         />
 
+        {/* Referral Perk Card */}
+        {order?.myReferralCode && (
+          <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 text-center backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center space-x-3 text-left">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                <Gift className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Give friends ₹49 / $2 OFF</p>
+                <p className="text-xs text-neutral-400">
+                  Share your referral code: <span className="font-mono text-amber-300 font-bold">{order.myReferralCode}</span>
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={copyReferralCode}
+              className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs font-semibold text-neutral-200 flex items-center space-x-2 transition"
+            >
+              {copiedReferral ? (
+                <>
+                  <Check className="h-4 w-4 text-emerald-400" />
+                  <span>Copied Code</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  <span>Copy Referral Code</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* 50% OFF Reply / Regift Call To Action */}
-        <div className="mt-10 rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
+        <div className="mt-8 rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 mb-4">
             <Sparkles className="h-7 w-7" />
           </div>

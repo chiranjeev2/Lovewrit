@@ -29,6 +29,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, order });
     }
 
+    // Helper to credit referrer if a referral code was used
+    const creditReferrerIfNeeded = async (usedCode?: string | null) => {
+      if (!usedCode) return;
+      try {
+        await db.referralRecord.update({
+          where: { code: usedCode },
+          data: {
+            timesUsed: { increment: 1 },
+            creditBalance: { increment: 49 }, // Fixed cash reward ₹49 / $2 / €2 / £2
+          },
+        });
+      } catch (err) {
+        console.error("Failed to credit referrer:", err);
+      }
+    };
+
     // Dev simulation or Free/Founder bypass verification
     if (sessionId?.startsWith("sim_") || sessionId?.startsWith("free_") || sessionId?.startsWith("founder_")) {
       order = await db.order.update({
@@ -39,6 +55,7 @@ export async function GET(req: NextRequest) {
           pageData: true,
         },
       });
+      await creditReferrerIfNeeded(order.referralCodeUsed);
       return NextResponse.json({ success: true, order });
     }
 
@@ -54,6 +71,7 @@ export async function GET(req: NextRequest) {
             pageData: true,
           },
         });
+        await creditReferrerIfNeeded(order.referralCodeUsed);
         return NextResponse.json({ success: true, order });
       }
     }

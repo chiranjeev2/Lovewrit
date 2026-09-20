@@ -30,31 +30,44 @@ model Order {
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
+  pinCode             String?   // Optional numeric PIN protection
+  nickname            String?   // Optional pet name / nickname
+  tipUpiId            String?   // Optional sender UPI ID for direct tips
+  tipPaypalUsername   String?   // Optional sender PayPal username for direct tips
+  referralCodeUsed    String?   // Referral code applied at checkout
+  myReferralCode      String?   // Unique referral code for this buyer
+
   cardData            CardData?
   pageData            PageData?
 }
 
 model CardData {
-  id              String    @id @default(cuid())
-  orderId         String    @unique
-  order           Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  senderName      String
-  recipientName   String
-  occasion        String    // "proposal" | "anniversary" | "sorry" | "reminiscing" | "birthday" | "memorial" | "godhbharai" | "jagrata_kirtan" | "kitty_party"
-  message         String
-  photoUrl        String
-  photoShape      String    @default("oval") // "oval" | "square" | "rounded" | "heart" | "circle"
-  colorTheme      String    @default("rose")
-  location        String?
-  venueName       String?
-  venueAddress    String?
-  venueMapUrl     String?
-  voiceMessageUrl String?
-  revealAt        DateTime?
-  showOmMotif     Boolean   @default(false)
-  showBismillah   Boolean   @default(false)
-  language        String    @default("en") // "en" | "pa" | "hi"
-  createdAt       DateTime  @default(now())
+  id                String    @id @default(cuid())
+  orderId           String    @unique
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName        String
+  recipientName     String
+  occasion          String
+  message           String
+  secondaryMessage  String?   // Bilingual secondary message
+  photoUrl          String
+  photoShape        String    @default("oval")
+  colorTheme        String    @default("rose")
+  fontFamily        String    @default("serif") // "serif" | "handwriting" | "sans"
+  borderStyle       String    @default("classic") // "classic" | "floral" | "minimal_line" | "festive_gold"
+  stickersJson      String?   // JSON array of placed stickers
+  isFlipReveal      Boolean   @default(false)
+  location          String?
+  venueName         String?
+  venueAddress      String?
+  venueMapUrl       String?
+  voiceMessageUrl   String?
+  revealAt          DateTime?
+  showOmMotif       Boolean   @default(false)
+  showBismillah     Boolean   @default(false)
+  language          String    @default("en")
+  secondaryLanguage String?
+  createdAt         DateTime  @default(now())
 }
 
 model PageData {
@@ -66,12 +79,17 @@ model PageData {
   occasion                 String
   letter                   String
   photoUrls                String           // JSON stringified array of URLs
-  collageLayout            String?          @default("masonry") // "masonry" | "timeline" | "filmstrip"
-  musicTrack               String?          // Built-in track ID or custom uploaded audio URL
-  musicType                String?          @default("builtin") // "builtin" | "custom"
+  collageLayout            String?          @default("masonry")
+  musicTrack               String?
+  musicType                String?          @default("builtin")
   isProposal               Boolean          @default(false)
-  proposalQuestion         String?          @default("marry_me") // "marry_me" | "be_my_girlfriend" | "be_my_boyfriend" | "go_on_date"
+  proposalQuestion         String?          @default("marry_me")
   colorTheme               String           @default("rose")
+  fontFamily               String           @default("serif")
+  ambientEffect            String?          @default("none") // "none" | "petals" | "stars" | "rain"
+  timelineJson             String?          // JSON array of milestone dates/photos
+  secretNotesJson          String?          // JSON array of tap-to-reveal secret messages
+  milestoneVenue           String?          // "Where we first met" / landmark
   venueName                String?
   venueAddress             String?
   venueMapUrl              String?
@@ -81,10 +99,32 @@ model PageData {
   showBismillah            Boolean          @default(false)
   isAdSupported            Boolean          @default(false)
   requireGuestbookApproval Boolean          @default(false)
-  language                 String           @default("en") // "en" | "pa" | "hi"
+  language                 String           @default("en")
   createdAt                DateTime         @default(now())
 
   guestbookEntries         GuestbookEntry[]
+  reactions                RecipientReaction[]
+}
+
+model RecipientReaction {
+  id         String   @id @default(cuid())
+  pageDataId String
+  pageData   PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
+  senderName String
+  reactionType String @default("text") // "text" | "voice" | "emoji"
+  message    String?
+  voiceUrl   String?
+  createdAt  DateTime @default(now())
+}
+
+model ReferralRecord {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  ownerEmail      String
+  ownerName       String
+  creditBalance   Int      @default(0) // in cents / paise
+  timesUsed       Int      @default(0)
+  createdAt       DateTime @default(now())
 }
 
 model GuestbookEntry {

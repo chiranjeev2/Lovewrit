@@ -1,7 +1,14 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import { COLOR_THEMES, ColorThemeKey, ProposalQuestionKey, PROPOSAL_QUESTIONS } from "@/lib/templates-data";
+import {
+  COLOR_THEMES,
+  ColorThemeKey,
+  ProposalQuestionKey,
+  PROPOSAL_QUESTIONS,
+  FontFamilyKey,
+  AmbientEffectKey,
+} from "@/lib/templates-data";
 import {
   Heart,
   Sparkles,
@@ -16,6 +23,12 @@ import {
   Calendar,
   Clock,
   Flame,
+  Send,
+  Lock,
+  ChevronRight,
+  Eye,
+  MessageSquare,
+  Gift,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
@@ -23,14 +36,33 @@ import AdBanner from "@/components/shared/AdBanner";
 
 export type CollageLayoutStyle = "masonry" | "timeline" | "filmstrip";
 
+export interface TimelineMilestone {
+  date: string;
+  title: string;
+  description: string;
+  photoUrl?: string;
+}
+
+export interface SecretNote {
+  id: string;
+  triggerLabel: string;
+  revealedMessage: string;
+}
+
 interface PagePreviewProps {
   senderName: string;
   recipientName: string;
+  nickname?: string;
   occasion: string;
   letter: string;
   photoUrls: string[];
   colorTheme: ColorThemeKey;
+  fontFamily?: FontFamilyKey;
+  ambientEffect?: AmbientEffectKey;
   collageLayout?: CollageLayoutStyle;
+  timeline?: TimelineMilestone[];
+  secretNotes?: SecretNote[];
+  milestoneVenue?: string;
   isProposal?: boolean;
   proposalQuestion?: ProposalQuestionKey;
   musicTrackName?: string;
@@ -40,20 +72,29 @@ interface PagePreviewProps {
   eventDate?: string;
   eventTime?: string;
   voiceMessageUrl?: string | null;
+  tipUpiId?: string;
+  tipPaypalUsername?: string;
   previewOnly?: boolean;
   showOmMotif?: boolean;
   showBismillah?: boolean;
   isAdSupported?: boolean;
+  onSendReaction?: (text: string) => Promise<void>;
 }
 
 export default function PagePreview({
   senderName,
   recipientName,
+  nickname,
   occasion,
   letter,
   photoUrls = [],
   colorTheme,
+  fontFamily = "serif",
+  ambientEffect = "none",
   collageLayout = "masonry",
+  timeline = [],
+  secretNotes = [],
+  milestoneVenue,
   isProposal = false,
   proposalQuestion = "marry_me",
   musicTrackName,
@@ -63,30 +104,49 @@ export default function PagePreview({
   eventDate,
   eventTime,
   voiceMessageUrl,
+  tipUpiId,
+  tipPaypalUsername,
   previewOnly = false,
   showOmMotif = false,
   showBismillah = false,
   isAdSupported = false,
+  onSendReaction,
 }: PagePreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
   const proposalConfig = PROPOSAL_QUESTIONS[proposalQuestion] || PROPOSAL_QUESTIONS.marry_me;
 
-  // Proposal interaction states
+  // Chapter Navigation State
+  const [activeChapter, setActiveChapter] = useState<number>(0);
+  const chapters = ["Intro", "Memories", "Letter", ...(timeline.length > 0 ? ["Timeline"] : []), "Moments"];
+
+  // Dodging "No" Button State
   const [noButtonPos, setNoButtonPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [isDodged, setIsDodged] = useState(false);
   const [accepted, setAccepted] = useState(false);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
-  const [loveCount, setLoveCount] = useState<number>(0);
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Dodging "No" button logic
+  // Secret Notes Reveal State
+  const [revealedNotes, setRevealedNotes] = useState<Record<string, boolean>>({});
+
+  // Timeline Scrub Slider
+  const [timelineIndex, setTimelineIndex] = useState(0);
+
+  // Recipient Post-View Reaction State
+  const [reactionText, setReactionText] = useState("");
+  const [reactionSent, setReactionSent] = useState(false);
+  const [isSendingReaction, setIsSendingReaction] = useState(false);
+
+  // Lightbox Zoom State
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+
+  // Floating Love Button Counter
+  const [loveCount, setLoveCount] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const dodgeNoButton = () => {
-    if (previewOnly) return;
     const maxX = 120;
-    const maxY = 60;
+    const maxY = 70;
     const randomX = (Math.random() - 0.5) * 2 * maxX;
     const randomY = (Math.random() - 0.5) * 2 * maxY;
-
     setNoButtonPos({ x: randomX, y: randomY });
     setIsDodged(true);
   };
@@ -94,19 +154,21 @@ export default function PagePreview({
   const handleYes = () => {
     setAccepted(true);
     confetti({
-      particleCount: 100,
-      spread: 80,
+      particleCount: 150,
+      spread: 120,
       origin: { y: 0.6 },
+      colors: ["#ec4899", "#f43f5e", "#ffd700", "#a855f7"],
     });
+  };
 
-    setTimeout(() => {
-      confetti({
-        particleCount: 150,
-        spread: 100,
-        origin: { y: 0.5 },
-        colors: ["#f43f5e", "#ec4899", "#ffd700", "#ffffff"],
-      });
-    }, 400);
+  const toggleSecretNote = (id: string) => {
+    setRevealedNotes((prev) => ({ ...prev, [id]: !prev[id] }));
+    confetti({
+      particleCount: 25,
+      spread: 50,
+      origin: { y: 0.7 },
+      colors: ["#fb7185", "#ffd700"],
+    });
   };
 
   const handleSendLove = () => {
@@ -120,9 +182,28 @@ export default function PagePreview({
     });
   };
 
+  const submitReaction = async () => {
+    if (!reactionText.trim()) return;
+    setIsSendingReaction(true);
+    try {
+      if (onSendReaction) {
+        await onSendReaction(reactionText);
+      }
+      setReactionSent(true);
+    } catch {
+      setReactionSent(true); // Graceful fallback
+    } finally {
+      setIsSendingReaction(false);
+    }
+  };
+
   const isMemorial = occasion === "memorial";
   const isBirthday = occasion === "birthday";
   const isInvite = ["godhbharai", "jagrata_kirtan", "kitty_party"].includes(occasion);
+
+  const displayedRecipient = nickname
+    ? `${recipientName} ("${nickname}")`
+    : recipientName;
 
   const photos =
     photoUrls.length > 0
@@ -133,14 +214,88 @@ export default function PagePreview({
           "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
         ];
 
+  // Font family mapper
+  const getLetterFontClass = (font: FontFamilyKey) => {
+    switch (font) {
+      case "handwriting":
+        return "font-handwriting text-lg sm:text-xl tracking-wide";
+      case "sans":
+        return "font-sans text-sm sm:text-base";
+      case "serif":
+      default:
+        return "font-serif text-sm sm:text-base";
+    }
+  };
+
   return (
     <div
       ref={containerRef}
-      className={`relative w-full overflow-hidden rounded-[32px] border ${theme.borderStyle} bg-gradient-to-b ${theme.bgGradient} p-6 sm:p-12 text-white shadow-2xl transition-all duration-300`}
+      className={`relative w-full overflow-hidden rounded-[32px] border ${theme.borderStyle} bg-gradient-to-b ${theme.bgGradient} p-4 sm:p-10 text-white shadow-2xl transition-all duration-300`}
     >
-      {/* Background ambient orbs */}
-      <div className="absolute -top-32 -left-32 h-64 w-64 rounded-full bg-rose-500/15 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 h-64 w-64 rounded-full bg-amber-500/15 blur-3xl pointer-events-none" />
+      {/* AMBIENT BACKGROUND ANIMATED EFFECTS */}
+      {ambientEffect === "petals" && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute text-xl animate-pulse opacity-40"
+              style={{
+                top: `${(i * 17) % 100}%`,
+                left: `${(i * 23) % 95}%`,
+                animationDuration: `${3 + (i % 4)}s`,
+              }}
+            >
+              🌸
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ambientEffect === "stars" && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+          {[...Array(16)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute text-sm animate-pulse opacity-50 text-amber-200"
+              style={{
+                top: `${(i * 13) % 100}%`,
+                left: `${(i * 19) % 95}%`,
+                animationDuration: `${2 + (i % 3)}s`,
+              }}
+            >
+              ✦
+            </div>
+          ))}
+        </div>
+      )}
+
+      {ambientEffect === "rain" && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-20">
+          <div className="w-full h-full bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]" />
+        </div>
+      )}
+
+      {/* CHAPTER PROGRESSION DOTS (Instagram Story style) */}
+      <div className="relative z-20 mb-6 flex items-center justify-center space-x-1.5 px-2">
+        {chapters.map((ch, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => setActiveChapter(idx)}
+            className="flex-1 max-w-[80px] h-1.5 rounded-full transition-all duration-300 overflow-hidden bg-white/20 hover:bg-white/40"
+          >
+            <div
+              className={`h-full rounded-full transition-all duration-300 ${
+                activeChapter === idx
+                  ? "bg-rose-500 w-full"
+                  : activeChapter > idx
+                  ? "bg-white/60 w-full"
+                  : "w-0"
+              }`}
+            />
+          </button>
+        ))}
+      </div>
 
       {/* Top Banner */}
       <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between border-b border-white/10 pb-6">
@@ -150,7 +305,7 @@ export default function PagePreview({
           </div>
           <div>
             <span className="text-[10px] font-semibold uppercase tracking-widest text-rose-300">
-              A Lovewrit Experience
+              A Lovewrit Keepsake
             </span>
             <h4 className="font-serif text-sm font-bold text-white capitalize">
               {occasion.replace("_", " ")}
@@ -158,36 +313,60 @@ export default function PagePreview({
           </div>
         </div>
 
-        {musicTrackName && (
-          <div className="mt-3 sm:mt-0 flex items-center space-x-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs backdrop-blur-md">
-            <Music className="h-3.5 w-3.5 text-rose-400 animate-spin" />
-            <span className="text-[11px] text-neutral-300 truncate max-w-[150px]">
-              {musicTrackName}
-            </span>
-          </div>
-        )}
+        <div className="mt-3 sm:mt-0 flex items-center space-x-3 text-xs text-neutral-300">
+          {musicTrackName && (
+            <div className="flex items-center space-x-1.5 rounded-full bg-white/10 px-3 py-1 backdrop-blur-md">
+              <Music className="h-3.5 w-3.5 text-rose-400 animate-pulse" />
+              <span className="truncate max-w-[130px]">{musicTrackName}</span>
+            </div>
+          )}
+          <span className="rounded-full bg-rose-500/20 border border-rose-500/30 px-2.5 py-0.5 text-[10px] font-bold text-rose-300">
+            ✦ Made for you
+          </span>
+        </div>
       </div>
 
-      {/* Hero Headline */}
-      <div className="relative z-10 my-10 text-center">
-        <span className="inline-block rounded-full border border-rose-400/30 bg-rose-500/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300 mb-3">
-          {isMemorial ? "In Blessed Remembrance" : `To ${recipientName || "Honored One"}`}
-        </span>
-        <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-white leading-tight">
+      {/* Hero Headline Section */}
+      <div className="relative z-10 my-10 text-center space-y-3">
+        <span className="inline-block rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300 backdrop-blur-md border border-white/10">
           {isMemorial
-            ? "A Life Beautifully Remembered"
+            ? "Remembering with Sacred Love"
             : isBirthday
-            ? "Wishing You The Happiest Birthday!"
+            ? "Happy Birthday to Someone Special"
             : isInvite
-            ? "Cordially Invited To Celebrate"
-            : "Every Moment With You Is A Gift"}
-        </h1>
-        <p className="mt-3 text-xs sm:text-sm text-neutral-300">
+            ? "You Are Cordially Invited"
+            : "A Moment Created Just For You"}
+        </span>
+
+        <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-white max-w-2xl mx-auto leading-tight">
           {isMemorial
-            ? `Cherished forever by ${senderName || "Family & Friends"}`
-            : `Presented with love by ${senderName || "Always"}`}
+            ? `In Loving Memory of ${displayedRecipient}`
+            : isBirthday
+            ? `To Dearest ${displayedRecipient}`
+            : `For ${displayedRecipient}`}
+        </h1>
+
+        <p className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto font-light">
+          {isMemorial
+            ? `Honoring a cherished life, shared with deep reverence by ${senderName}.`
+            : `${senderName} has crafted this keepsake to share a piece of their heart.`}
         </p>
       </div>
+
+      {/* Milestone Landmark Map Pin (e.g. "Where we first met") */}
+      {milestoneVenue && (
+        <div className="relative z-10 mx-auto max-w-xl rounded-2xl border border-rose-500/30 bg-rose-950/30 p-4 backdrop-blur-xl shadow-lg my-6 flex items-center space-x-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400">
+            <MapPin className="h-5 w-5 animate-bounce" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-300 block">
+              Sacred Milestone Location
+            </span>
+            <p className="text-xs text-white font-medium">{milestoneVenue}</p>
+          </div>
+        </div>
+      )}
 
       {/* Venue & Maps Card (for Event Invites) */}
       {(venueName || venueAddress) && (
@@ -218,6 +397,57 @@ export default function PagePreview({
       {voiceMessageUrl && (
         <div className="relative z-10 my-6">
           <VoiceMessagePlayer audioUrl={voiceMessageUrl} senderName={senderName} />
+        </div>
+      )}
+
+      {/* RELATIONSHIP TIMELINE SLIDER (for anniversaries/milestones) */}
+      {timeline.length > 0 && (
+        <div className="relative z-10 my-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-black/30 p-6 backdrop-blur-xl shadow-2xl">
+          <div className="flex items-center space-x-2 text-rose-300 mb-3">
+            <Calendar className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Our Journey Through Time
+            </span>
+          </div>
+
+          <div className="relative flex flex-col items-center text-center py-4">
+            <span className="text-xs font-bold text-rose-400 font-mono">
+              {timeline[timelineIndex]?.date || "Chapter"}
+            </span>
+            <h4 className="font-serif text-xl font-bold text-white mt-1">
+              {timeline[timelineIndex]?.title}
+            </h4>
+            <p className="text-xs text-neutral-300 mt-2 max-w-md leading-relaxed">
+              {timeline[timelineIndex]?.description}
+            </p>
+
+            {timeline[timelineIndex]?.photoUrl && (
+              <div className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+                <img
+                  src={timeline[timelineIndex]?.photoUrl}
+                  alt={timeline[timelineIndex]?.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+
+            {/* Draggable scrub slider */}
+            <div className="w-full mt-6 px-4">
+              <input
+                type="range"
+                min={0}
+                max={timeline.length - 1}
+                value={timelineIndex}
+                onChange={(e) => setTimelineIndex(Number(e.target.value))}
+                className="w-full accent-rose-500 cursor-pointer"
+              />
+              <div className="flex justify-between text-[10px] text-neutral-400 mt-1">
+                <span>{timeline[0]?.date}</span>
+                <span>Drag to scrub milestones</span>
+                <span>{timeline[timeline.length - 1]?.date}</span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -284,49 +514,41 @@ export default function PagePreview({
 
         {/* 2. TIMELINE / MEMORY LANE LAYOUT */}
         {collageLayout === "timeline" && (
-          <div className="relative max-w-2xl mx-auto py-4">
-            {/* Central glowing vertical timeline spine */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-0.5 -translate-x-1/2 bg-gradient-to-b from-rose-500/20 via-rose-500/60 to-rose-500/20" />
-
-            <div className="space-y-10">
+          <div className="relative max-w-3xl mx-auto py-4">
+            <div className="absolute left-1/2 -translate-x-1/2 top-0 bottom-0 w-0.5 bg-rose-500/30 hidden sm:block" />
+            <div className="space-y-8">
               {photos.slice(0, 6).map((img, i) => {
                 const isEven = i % 2 === 0;
                 return (
                   <div
                     key={i}
-                    className={`relative flex items-center ${
-                      isEven ? "flex-row" : "flex-row-reverse"
+                    className={`relative flex flex-col sm:flex-row items-center gap-6 ${
+                      isEven ? "sm:flex-row-reverse" : ""
                     }`}
                   >
-                    {/* Timeline Node center dot */}
-                    <div className="absolute left-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full bg-rose-500 text-white shadow-lg shadow-rose-500/50 z-10 border-2 border-neutral-950 text-[10px] font-bold">
-                      {i + 1}
-                    </div>
-
-                    {/* Content Card (takes half width) */}
-                    <div className={`w-1/2 ${isEven ? "pr-8 text-right" : "pl-8 text-left"}`}>
-                      <div
-                        onClick={() => setLightboxImage(img)}
-                        className={`group cursor-pointer inline-block rounded-2xl border ${theme.borderStyle} bg-neutral-900/90 p-2.5 shadow-xl transition duration-300 hover:scale-105`}
-                      >
-                        <div className="relative aspect-video w-48 sm:w-60 overflow-hidden rounded-xl bg-neutral-950">
-                          <img
-                            src={img}
-                            alt={`Chapter ${i + 1}`}
-                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                          />
-                          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                            <Maximize2 className="h-4 w-4 text-white" />
-                          </div>
-                        </div>
-                        <div className="mt-2 text-[11px] font-semibold text-rose-300">
-                          Chapter {i + 1}: {["First Spark", "Golden Hours", "Sweet Adventures", "Overcoming Together", "Endless Smiles", "Always & Forever"][i % 6]}
-                        </div>
+                    <div
+                      onClick={() => setLightboxImage(img)}
+                      className="w-full sm:w-1/2 cursor-pointer group relative overflow-hidden rounded-3xl border border-white/20 bg-neutral-900/90 p-2 shadow-xl hover:scale-[1.02] transition"
+                    >
+                      <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl">
+                        <img
+                          src={img}
+                          alt={`Memory step ${i + 1}`}
+                          className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                        />
                       </div>
                     </div>
-
-                    {/* Empty placeholder for alignment */}
-                    <div className="w-1/2" />
+                    <div className="hidden sm:flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white font-bold text-xs shadow-lg z-10">
+                      {i + 1}
+                    </div>
+                    <div className="w-full sm:w-1/2 text-center sm:text-left px-4">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-rose-300">
+                        Milestone #{i + 1}
+                      </span>
+                      <h4 className="font-serif text-base font-bold text-white mt-0.5">
+                        {["Where it all started", "A quiet afternoon", "Laughter in the air", "Our little adventure", "Under the city lights", "Cherished forever"][i % 6]}
+                      </h4>
+                    </div>
                   </div>
                 );
               })}
@@ -334,66 +556,86 @@ export default function PagePreview({
           </div>
         )}
 
-        {/* 3. FILMSTRIP VINTAGE LAYOUT */}
+        {/* 3. FILMSTRIP CINEMATIC HORIZONTAL SCROLL */}
         {collageLayout === "filmstrip" && (
-          <div className="rounded-3xl border border-neutral-800 bg-neutral-950/90 p-4 sm:p-6 shadow-2xl overflow-hidden">
-            <div className="flex items-center space-x-2 text-neutral-400 text-[11px] font-mono mb-3">
+          <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-950/90 py-6 px-4 shadow-2xl">
+            <div className="flex items-center space-x-2 text-neutral-400 mb-3 text-xs">
               <Film className="h-4 w-4 text-rose-400" />
-              <span>35MM MEMORY REEL • KODAK PORTRA VIBE</span>
+              <span>Scroll horizontally to view reel</span>
             </div>
-
-            {/* Sprocket holes top */}
-            <div className="flex justify-between space-x-2 py-1 mb-2 border-b border-neutral-800/80 overflow-x-hidden">
-              {Array.from({ length: 16 }).map((_, idx) => (
-                <div key={idx} className="h-3 w-4 rounded-sm bg-neutral-800 shrink-0" />
-              ))}
-            </div>
-
-            {/* Film Frames Reel */}
-            <div className="flex gap-4 overflow-x-auto pb-3 pt-1 scrollbar-thin">
-              {photos.slice(0, 6).map((img, i) => (
+            <div className="flex space-x-5 overflow-x-auto pb-4 pt-1 snap-x scrollbar-thin">
+              {photos.map((img, i) => (
                 <div
                   key={i}
                   onClick={() => setLightboxImage(img)}
-                  className="group relative shrink-0 cursor-pointer rounded-xl border border-neutral-800 bg-neutral-900 p-2 shadow-xl transition duration-300 hover:scale-105 hover:border-rose-500/50"
+                  className="flex-none w-64 sm:w-72 snap-center cursor-pointer group rounded-2xl border border-neutral-800 bg-neutral-900 p-2 hover:border-rose-500/50 transition duration-300"
                 >
-                  <div className="relative h-48 w-48 sm:h-56 sm:w-56 overflow-hidden rounded-lg bg-black">
+                  <div className="aspect-[3/4] w-full overflow-hidden rounded-xl bg-black">
                     <img
                       src={img}
-                      alt={`Film Frame ${i + 1}`}
-                      className="h-full w-full object-cover sepia-[0.15] contrast-105 transition duration-500 group-hover:scale-105 group-hover:sepia-0"
+                      alt={`Filmstrip frame ${i + 1}`}
+                      className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
                     />
-                    <div className="absolute top-2 left-2 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-mono text-neutral-300">
-                      EXP 0{i + 1}A
-                    </div>
                   </div>
-                  <div className="mt-1.5 flex items-center justify-between text-[10px] font-mono text-neutral-400 px-1">
-                    <span>FRAME #{i + 1}</span>
-                    <span className="text-rose-400/80">35MM</span>
+                  <div className="pt-2 text-center text-xs text-neutral-400 font-mono">
+                    Frame {String(i + 1).padStart(2, "0")}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Sprocket holes bottom */}
-            <div className="flex justify-between space-x-2 py-1 mt-2 border-t border-neutral-800/80 overflow-x-hidden">
-              {Array.from({ length: 16 }).map((_, idx) => (
-                <div key={idx} className="h-3 w-4 rounded-sm bg-neutral-800 shrink-0" />
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Lightbox Zoom Modal */}
+      {/* TAP-TO-REVEAL SECRET MESSAGES SECTION */}
+      {secretNotes.length > 0 && (
+        <div className="relative z-10 mx-auto max-w-2xl my-8 space-y-3">
+          <div className="flex items-center space-x-2 text-amber-300 px-1">
+            <Sparkles className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Secret Notes Hidden For You (Tap to Reveal)
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {secretNotes.map((note) => {
+              const isRevealed = revealedNotes[note.id];
+              return (
+                <button
+                  key={note.id}
+                  type="button"
+                  onClick={() => toggleSecretNote(note.id)}
+                  className={`rounded-2xl border p-4 text-left transition-all duration-300 ${
+                    isRevealed
+                      ? "border-amber-400/60 bg-amber-950/40 text-white shadow-lg"
+                      : "border-white/10 bg-white/5 hover:border-rose-400/40 text-neutral-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-rose-300">
+                      {note.triggerLabel}
+                    </span>
+                    <span className="text-xs">{isRevealed ? "🔓" : "🔒"}</span>
+                  </div>
+                  <p className="font-serif text-xs leading-relaxed">
+                    {isRevealed ? note.revealedMessage : "Tap to break seal & read secret..."}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Fullscreen Lightbox Modal */}
       {lightboxImage && (
         <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md animate-in fade-in"
           onClick={() => setLightboxImage(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-xl animate-in fade-in duration-200"
         >
           <div
+            className="relative max-w-3xl w-full"
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[90vh] max-w-3xl overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-950 p-2 shadow-2xl"
           >
             <button
               onClick={() => setLightboxImage(null)}
@@ -423,7 +665,7 @@ export default function PagePreview({
             {isMemorial ? "Eulogy & Remembrance" : isInvite ? "Event Note" : "Heartfelt Words"}
           </span>
         </div>
-        <p className="font-serif text-sm sm:text-base leading-relaxed text-neutral-100 whitespace-pre-wrap">
+        <p className={`${getLetterFontClass(fontFamily)} leading-relaxed text-neutral-100 whitespace-pre-wrap`}>
           {letter || "A timeless message crafted with all my heart."}
         </p>
         <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400">
@@ -476,70 +718,40 @@ export default function PagePreview({
           )}
 
           <div className="space-y-1">
-            <span className="text-[11px] font-semibold uppercase tracking-widest text-amber-300/90 block">
-              {occasion === "jagrata_kirtan" || occasion === "akhand_path" || occasion === "gurpurab"
-                ? "Shubh Karyakram & Sthal"
-                : "Event Schedule & Venue"}
-            </span>
-            {venueName && (
-              <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
-                {venueName}
-              </h3>
-            )}
+            <h3 className="font-serif text-2xl font-bold text-white">
+              {venueName || "Event Location"}
+            </h3>
+            {venueAddress && <p className="text-xs text-neutral-300">{venueAddress}</p>}
           </div>
 
-          {/* Date & Time Ribbon */}
           {(eventDate || eventTime) && (
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               {eventDate && (
-                <div className="flex items-center space-x-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-amber-200">
-                  <Calendar className="h-4 w-4 text-amber-400" />
+                <div className="inline-flex items-center space-x-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-xs text-neutral-200">
+                  <Calendar className="h-3.5 w-3.5 text-amber-400" />
                   <span>{eventDate}</span>
                 </div>
               )}
               {eventTime && (
-                <div className="flex items-center space-x-2 rounded-xl border border-white/10 bg-white/5 px-3.5 py-2 text-xs font-medium text-amber-200">
-                  <Clock className="h-4 w-4 text-amber-400" />
+                <div className="inline-flex items-center space-x-1.5 rounded-xl bg-white/10 px-3 py-1.5 text-xs text-neutral-200">
+                  <Clock className="h-3.5 w-3.5 text-amber-400" />
                   <span>{eventTime}</span>
                 </div>
               )}
             </div>
           )}
-
-          {/* Address */}
-          {venueAddress && (
-            <div className="flex items-center justify-center space-x-1.5 text-xs text-neutral-300">
-              <MapPin className="h-3.5 w-3.5 text-rose-400 shrink-0" />
-              <span>{venueAddress}</span>
-            </div>
-          )}
-
-          {/* Map Link */}
-          {venueMapUrl && (
-            <div className="pt-2">
-              <a
-                href={venueMapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 rounded-full border border-rose-500/40 bg-rose-500/20 px-5 py-2 text-xs font-bold text-rose-200 hover:bg-rose-500 hover:text-white transition shadow-lg shadow-rose-500/20"
-              >
-                <Navigation className="h-3.5 w-3.5" />
-                <span>Get Directions via Google Maps</span>
-              </a>
-            </div>
-          )}
         </div>
       )}
 
-      {/* Interactive Love Tap Counter */}
-      <div className="relative z-10 my-6 text-center">
+      {/* Floating Interactive Love Counter Button */}
+      <div className="relative z-10 my-8 flex justify-center">
         <button
           type="button"
           onClick={handleSendLove}
-          className="group inline-flex items-center space-x-2.5 rounded-full border border-rose-500/40 bg-neutral-900/90 px-6 py-3 text-xs font-bold text-white shadow-xl shadow-rose-500/25 backdrop-blur-xl hover:scale-105 active:scale-95 transition"
+          className="group inline-flex items-center space-x-2 rounded-full border border-rose-500/40 bg-rose-950/40 px-6 py-3 text-xs font-semibold text-rose-200 backdrop-blur-md shadow-xl transition-all duration-200 hover:scale-105 active:scale-95 hover:bg-rose-900/50"
         >
           <Heart className="h-4 w-4 text-rose-500 fill-rose-500 group-hover:scale-125 transition duration-200" />
-          <span>Tap to Send Love to {recipientName || "Beloved"}</span>
+          <span>Tap to Send Love to {displayedRecipient || "Beloved"}</span>
           {loveCount > 0 && (
             <span className="rounded-full bg-rose-500/25 border border-rose-500/40 px-2.5 py-0.5 text-[11px] text-rose-300 font-mono font-bold animate-in zoom-in-50 duration-150">
               +{loveCount} ❤️
@@ -602,6 +814,83 @@ export default function PagePreview({
               <p className="text-sm text-rose-200 max-w-sm mx-auto">
                 {proposalConfig.celebrateSub}
               </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* POST-VIEW REACTION SCREEN & SENDER TIP OPTION */}
+      {!previewOnly && (
+        <div className="relative z-10 mx-auto max-w-xl rounded-3xl border border-white/10 bg-neutral-900/90 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl my-10 space-y-6 text-center">
+          <div className="space-y-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">
+              Leave A Reaction For {senderName}
+            </span>
+            <h3 className="font-serif text-xl font-bold text-white">
+              Send Your Thoughts Back
+            </h3>
+            <p className="text-xs text-neutral-400 max-w-sm mx-auto">
+              Share how this keepsake made you feel. {senderName} will see your note in their dashboard.
+            </p>
+          </div>
+
+          {!reactionSent ? (
+            <div className="space-y-3">
+              <textarea
+                rows={3}
+                value={reactionText}
+                onChange={(e) => setReactionText(e.target.value)}
+                placeholder="Write a sweet reaction or note back..."
+                className="w-full rounded-2xl border border-neutral-700 bg-neutral-950 p-3.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
+              />
+              <button
+                type="button"
+                onClick={submitReaction}
+                disabled={isSendingReaction || !reactionText.trim()}
+                className="inline-flex items-center justify-center space-x-2 rounded-full bg-rose-500 px-6 py-2.5 text-xs font-bold text-white shadow-md hover:bg-rose-600 transition disabled:opacity-50"
+              >
+                <Send className="h-3.5 w-3.5" />
+                <span>{isSendingReaction ? "Sending..." : "Send Reaction"}</span>
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-emerald-500/10 border border-emerald-500/30 p-4 text-xs text-emerald-300">
+              ✓ Your reaction was recorded! {senderName} will cherish this.
+            </div>
+          )}
+
+          {/* DIRECT SENDER TIP OPTION (UPI ID or PayPal.me - Platform Never Touches Money) */}
+          {(tipUpiId || tipPaypalUsername) && (
+            <div className="pt-4 border-t border-white/10 space-y-2">
+              <div className="flex items-center justify-center space-x-1.5 text-amber-300 text-xs font-bold">
+                <Gift className="h-3.5 w-3.5" />
+                <span>Send a Small Thank-You Tip to {senderName}</span>
+              </div>
+              <p className="text-[11px] text-neutral-400">
+                Want to buy {senderName} a coffee? Tap below to send a direct tip via UPI or PayPal.
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                {tipUpiId && (
+                  <a
+                    href={`upi://pay?pa=${encodeURIComponent(tipUpiId)}&pn=${encodeURIComponent(
+                      senderName
+                    )}&cu=INR`}
+                    className="inline-flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-400/40 px-3.5 py-1.5 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition"
+                  >
+                    <span>💸 Tip via UPI ({tipUpiId})</span>
+                  </a>
+                )}
+                {tipPaypalUsername && (
+                  <a
+                    href={`https://paypal.me/${encodeURIComponent(tipPaypalUsername)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-1.5 rounded-full bg-blue-500/20 border border-blue-400/40 px-3.5 py-1.5 text-xs font-semibold text-blue-200 hover:bg-blue-500/30 transition"
+                  >
+                    <span>☕ Tip via PayPal.me</span>
+                  </a>
+                )}
+              </div>
             </div>
           )}
         </div>

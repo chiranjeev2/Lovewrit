@@ -51,11 +51,21 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Sanitize extension
-    const ext =
-      path.extname(file.name) ||
-      (kind === "image" ? ".jpg" : kind === "voice" ? ".webm" : ".mp3");
-    const sanitizedExt = ext.toLowerCase().replace(/[^a-z0-9.]/g, "");
+    // Sanitize extension with proper dot guarantee
+    let rawExt = path.extname(file.name)?.toLowerCase() || "";
+    if (!rawExt && kind === "image") {
+      if (file.type.includes("png")) rawExt = ".png";
+      else if (file.type.includes("webp")) rawExt = ".webp";
+      else if (file.type.includes("heic") || file.type.includes("heif")) rawExt = ".heic";
+      else rawExt = ".jpg";
+    } else if (!rawExt && kind === "voice") {
+      rawExt = ".webm";
+    } else if (!rawExt) {
+      rawExt = ".mp3";
+    }
+
+    const cleanExt = rawExt.replace(/[^a-z0-9.]/g, "");
+    const sanitizedExt = cleanExt.startsWith(".") ? cleanExt : `.${cleanExt}`;
     const filename = `${Date.now()}-${kind}-${nanoid(8)}${sanitizedExt}`;
 
     const uploadDir = path.join(process.cwd(), "public", "uploads");

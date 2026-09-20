@@ -173,7 +173,7 @@ export function calculateOrderTotal(
   tier: TierType = "SELF_SERVICE",
   isBundle = false,
   isRegiftDiscount = false,
-  options?: { isFreeCard?: boolean; isAdSupported?: boolean }
+  options?: { isFreeCard?: boolean; isAdSupported?: boolean; referralDiscount?: boolean }
 ): {
   totalUnit: number;
   displayPrice: number;
@@ -238,6 +238,12 @@ export function calculateOrderTotal(
     originalDisplayPrice = display;
     unit = Math.round(unit * 0.5);
     display = Math.round(display * 0.5);
+    isDiscounted = true;
+  } else if (options?.referralDiscount) {
+    // Fixed cash discount matching the Digital Card tier price: ₹49 / $2 / €2 / £2
+    originalDisplayPrice = display;
+    unit = Math.max(0, unit - p.cardPriceUnit);
+    display = Math.max(0, display - p.cardPrice);
     isDiscounted = true;
   }
 

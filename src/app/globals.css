@@ -11,6 +11,7 @@
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
   --font-serif: var(--font-playfair), ui-serif, Georgia, Cambria, serif;
+  --font-handwriting: var(--font-caveat), cursive, sans-serif;
 }
 
 body {

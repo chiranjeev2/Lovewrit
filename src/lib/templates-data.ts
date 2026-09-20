@@ -47,7 +47,45 @@ export type RevealType =
   | "ik_onkar_seal"
   | "crescent_seal"
   | "dove_cross_seal"
-  | "botanical_seal";
+  | "botanical_seal"
+export type FontFamilyKey = "serif" | "handwriting" | "sans";
+export type CardBorderStyleKey = "classic" | "floral" | "minimal_line" | "festive_gold";
+export type AmbientEffectKey = "none" | "petals" | "stars" | "rain";
+export type SeasonalKey = "valentines" | "diwali" | "rakhi" | "christmas" | "new_year";
+
+export interface StickerOption {
+  id: string;
+  emoji: string;
+  label: string;
+  category: "romance" | "celebration" | "devotional" | "nature";
+}
+
+export const STICKER_SETS: StickerOption[] = [
+  // Romance
+  { id: "heart", emoji: "❤️", label: "Heart", category: "romance" },
+  { id: "rose", emoji: "🌹", label: "Rose", category: "romance" },
+  { id: "sparkling_heart", emoji: "💖", label: "Sparkling Heart", category: "romance" },
+  { id: "cupid", emoji: "💘", label: "Cupid's Arrow", category: "romance" },
+  { id: "ring", emoji: "💍", label: "Ring", category: "romance" },
+  // Celebration
+  { id: "party", emoji: "🎉", label: "Party Popper", category: "celebration" },
+  { id: "balloon", emoji: "🎈", label: "Balloon", category: "celebration" },
+  { id: "champagne", emoji: "🥂", label: "Cheers", category: "celebration" },
+  { id: "cake", emoji: "🎂", label: "Cake", category: "celebration" },
+  { id: "sparkles", emoji: "✨", label: "Sparkles", category: "celebration" },
+  // Devotional / Sacred
+  { id: "diya", emoji: "🪔", label: "Diya Lamp", category: "devotional" },
+  { id: "namaste", emoji: "🙏", label: "Namaste", category: "devotional" },
+  { id: "crescent", emoji: "🌙", label: "Crescent", category: "devotional" },
+  { id: "dove", emoji: "🕊️", label: "Dove", category: "devotional" },
+  { id: "om", emoji: "🕉️", label: "Om", category: "devotional" },
+  // Nature & Warmth
+  { id: "flower", emoji: "🌸", label: "Cherry Blossom", category: "nature" },
+  { id: "sunflower", emoji: "🌻", label: "Sunflower", category: "nature" },
+  { id: "leaf", emoji: "🌿", label: "Botanical Leaf", category: "nature" },
+  { id: "star", emoji: "⭐", label: "Star", category: "nature" },
+  { id: "flame", emoji: "🔥", label: "Flame", category: "nature" },
+];
 
 export type ProposalQuestionKey =
   | "marry_me"
@@ -280,6 +318,8 @@ export interface TemplateDefinition {
   faith?: "hindu" | "sikh" | "muslim" | "christian" | "secular";
   showOmMotifSupported?: boolean;
   showBismillahSupported?: boolean;
+  seasonalKey?: SeasonalKey;
+  seasonalTag?: string; // e.g. "Limited Valentine's Drop"
 }
 
 export const TEMPLATES: TemplateDefinition[] = [
@@ -331,6 +371,8 @@ export const TEMPLATES: TemplateDefinition[] = [
     hasInteractiveDodging: true,
     revealType: "cupid_arrow",
     badge: "Romantic Hit",
+    seasonalKey: "valentines",
+    seasonalTag: "Valentine's Season",
   },
   {
     id: "golden-anniversary",
@@ -557,6 +599,8 @@ export const TEMPLATES: TemplateDefinition[] = [
     badge: "Hindu Devotional",
     faith: "hindu",
     showOmMotifSupported: true,
+    seasonalKey: "diwali",
+    seasonalTag: "Festive & Sacred",
   },
 
   // --- DEVOTIONAL: SIKH ---
