@@ -97,9 +97,9 @@ export default function CreateLovewritPage({
   const templateId = resolvedParams.templateId;
   const template = getTemplateById(templateId) || TEMPLATES[0];
 
-  // Selected format & tier
+  // Selected format & tier (respects template's primary format: CARD or PAGE)
   const [productType, setProductType] = useState<"CARD" | "PAGE">(
-    template.supportedFormats.includes("PAGE") ? "PAGE" : "CARD"
+    (template.supportedFormats[0] as "CARD" | "PAGE") || "CARD"
   );
   const [tier, setTier] = useState<TierType>("SELF_SERVICE");
   const [isBundle, setIsBundle] = useState<boolean>(false);
@@ -124,6 +124,7 @@ export default function CreateLovewritPage({
   // Photo uploads
   const [cardPhoto, setCardPhoto] = useState<string>(template.samplePhotos[0] || "");
   const [pagePhotos, setPagePhotos] = useState<string[]>(template.samplePhotos || []);
+  const [hasUserPhotos, setHasUserPhotos] = useState<boolean>(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -362,6 +363,7 @@ export default function CreateLovewritPage({
   const [customerName, setCustomerName] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
   const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
+  const [termsHighlight, setTermsHighlight] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -430,6 +432,7 @@ export default function CreateLovewritPage({
     const updated = pagePhotos.filter((_, i) => i !== index);
     setPagePhotos(updated);
     setCardPhoto(updated[0] || "");
+    setHasUserPhotos(true);
   };
 
   // Photo upload handler supporting both batch upload & one-by-one appending
@@ -444,7 +447,9 @@ export default function CreateLovewritPage({
     setUploadError(null);
 
     const maxCount = productType === "CARD" ? 3 : 6;
-    const currentCount = mode === "append" ? pagePhotos.length : 0;
+    // When user uploads for the first time, replace sample placeholder photos
+    const isFirstUserUpload = !hasUserPhotos;
+    const currentCount = isFirstUserUpload || mode === "replace" ? 0 : pagePhotos.length;
     const availableSlots = Math.max(0, maxCount - currentCount);
 
     if (availableSlots <= 0) {
@@ -458,9 +463,19 @@ export default function CreateLovewritPage({
       return;
     }
 
+    const filesToUpload = Array.from(files).slice(0, availableSlots);
+
+    // Instant local preview for zero-latency UI update (both PNG & JPG)
+    const localBlobUrls: string[] = filesToUpload.map((file) => URL.createObjectURL(file));
+    const basePhotos = isFirstUserUpload || mode === "replace" ? [] : pagePhotos;
+    const optimisticPhotos = [...basePhotos, ...localBlobUrls].slice(0, maxCount);
+
+    setPagePhotos(optimisticPhotos);
+    setCardPhoto(optimisticPhotos[0]);
+    setHasUserPhotos(true);
+
     try {
       const uploadedUrls: string[] = [];
-      const filesToUpload = Array.from(files).slice(0, availableSlots);
 
       for (const file of filesToUpload) {
         const formData = new FormData();
@@ -476,9 +491,28 @@ export default function CreateLovewritPage({
       }
 
       if (uploadedUrls.length > 0) {
-        const nextPhotos = mode === "append" ? [...pagePhotos, ...uploadedUrls] : uploadedUrls;
-        setPagePhotos(nextPhotos);
-        setCardPhoto(nextPhotos[0]);
+        // Swap local blob preview URLs with permanent server URLs
+        setPagePhotos((prevPhotos) => {
+          const updated = [...prevPhotos];
+          localBlobUrls.forEach((blobUrl, i) => {
+            const serverUrl = uploadedUrls[i];
+            if (serverUrl) {
+              const idx = updated.indexOf(blobUrl);
+              if (idx !== -1) {
+                updated[idx] = serverUrl;
+              }
+            }
+          });
+          return updated.slice(0, maxCount);
+        });
+
+        setCardPhoto((prevCardPhoto) => {
+          const matchIdx = localBlobUrls.indexOf(prevCardPhoto);
+          if (matchIdx !== -1 && uploadedUrls[matchIdx]) {
+            return uploadedUrls[matchIdx];
+          }
+          return uploadedUrls[0] || prevCardPhoto;
+        });
       }
     } catch (err: unknown) {
       setUploadError(err instanceof Error ? err.message : "Error uploading photo");
@@ -569,6 +603,7 @@ export default function CreateLovewritPage({
   const handleProceedToCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
+    setTermsHighlight(false);
 
     const finalEmail = customerEmail || (isFounderFree ? "founder@lovewrit.com" : "");
     if (!finalEmail || !finalEmail.includes("@")) {
@@ -577,7 +612,13 @@ export default function CreateLovewritPage({
     }
 
     if (!agreedToTerms) {
-      setFormError("Please agree to the Terms and Conditions and Privacy Policy before proceeding to checkout.");
+      setTermsHighlight(true);
+      setFormError("Please check the box agreeing to the Terms and Conditions and Privacy Policy to proceed.");
+      return;
+    }
+
+    if (isUploadingPhoto) {
+      setFormError("Please wait for your photo to finish uploading.");
       return;
     }
 
@@ -590,6 +631,10 @@ export default function CreateLovewritPage({
           : musicOption === "custom"
           ? customAudioUrl
           : null;
+
+      // Sanitize photos to exclude any temporary blob URLs
+      const cleanPagePhotos = pagePhotos.filter((p) => p && !p.startsWith("blob:"));
+      const cleanCardPhoto = cardPhoto && !cardPhoto.startsWith("blob:") ? cardPhoto : (cleanPagePhotos[0] || "");
 
       const payload = {
         productType,
@@ -614,7 +659,7 @@ export default function CreateLovewritPage({
           occasion,
           message,
           secondaryMessage: showBilingual && secondaryMessage.trim() ? secondaryMessage.trim() : undefined,
-          photoUrl: pagePhotos.length > 1 ? JSON.stringify(pagePhotos.slice(0, 3)) : cardPhoto,
+          photoUrl: cleanPagePhotos.length > 1 ? JSON.stringify(cleanPagePhotos.slice(0, 3)) : cleanCardPhoto,
           photoShape,
           colorTheme: selectedTheme,
           fontFamily: cardFontFamily,
@@ -639,7 +684,7 @@ export default function CreateLovewritPage({
           recipientName,
           occasion,
           letter: message,
-          photoUrls: pagePhotos,
+          photoUrls: cleanPagePhotos,
           collageLayout,
           musicTrack: currentTrack,
           musicType: musicOption,
@@ -1625,7 +1670,7 @@ export default function CreateLovewritPage({
                   <div className="flex items-center space-x-2">
                     <Camera className="h-4 w-4 text-rose-400" />
                     <label className="text-xs font-semibold text-neutral-300">
-                      Arranged Gallery ({pagePhotos.length} Added)
+                      Arranged Gallery ({hasUserPhotos ? `${pagePhotos.length} Added` : "Sample Preview"})
                     </label>
                   </div>
                   {pagePhotos.length > 0 && (
@@ -1634,6 +1679,7 @@ export default function CreateLovewritPage({
                       onClick={() => {
                         setPagePhotos([]);
                         setCardPhoto("");
+                        setHasUserPhotos(true);
                       }}
                       className="text-[11px] text-neutral-500 hover:text-red-400 transition"
                     >
@@ -1641,6 +1687,13 @@ export default function CreateLovewritPage({
                     </button>
                   )}
                 </div>
+
+                {!hasUserPhotos && pagePhotos.length > 0 && (
+                  <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-[11px] text-amber-300 flex items-center space-x-2">
+                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+                    <span>Sample photos shown. Upload your own to replace them in the live preview.</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {pagePhotos.map((photo, idx) => (
@@ -1713,8 +1766,8 @@ export default function CreateLovewritPage({
                     </div>
                   ))}
 
-                  {/* One-by-One Add Slot (if limit not reached) */}
-                  {pagePhotos.length < (productType === "CARD" ? 3 : 6) && (
+                  {/* One-by-One Add Slot (if limit not reached or replacing sample photos) */}
+                  {(!hasUserPhotos || pagePhotos.length < (productType === "CARD" ? 3 : 6)) && (
                     <label className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-neutral-700 hover:border-rose-500 bg-neutral-950/40 p-4 cursor-pointer transition min-h-[140px] text-center group">
                       <input
                         type="file"
@@ -2433,13 +2486,25 @@ export default function CreateLovewritPage({
               </div>
 
               {/* Required Terms & Privacy Agreement Checkbox */}
-              <div className="flex items-start space-x-2.5 pt-1">
+              <div
+                className={`flex items-start space-x-2.5 p-2 rounded-xl transition ${
+                  termsHighlight
+                    ? "bg-rose-950/40 border border-rose-500/60 ring-2 ring-rose-500/30"
+                    : "border border-transparent"
+                }`}
+              >
                 <input
                   type="checkbox"
                   id="checkout-terms-checkbox"
                   required
                   checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  onChange={(e) => {
+                    setAgreedToTerms(e.target.checked);
+                    if (e.target.checked) {
+                      setTermsHighlight(false);
+                      if (formError?.includes("Terms and Conditions")) setFormError(null);
+                    }
+                  }}
                   className="mt-0.5 h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-500 focus:ring-rose-500 focus:ring-offset-neutral-950 accent-rose-500 cursor-pointer"
                 />
                 <label
@@ -2465,10 +2530,22 @@ export default function CreateLovewritPage({
                 </label>
               </div>
 
+              {/* Prominent Inline Error Message (Rendered directly above button) */}
+              {formError && (
+                <div className="flex items-center space-x-2 rounded-xl bg-red-950/80 border border-red-800 p-3 text-xs text-red-300">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{formError}</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={isSubmitting || !agreedToTerms}
-                title={!agreedToTerms ? "Please accept the Terms & Conditions and Privacy Policy to proceed" : undefined}
+                disabled={isSubmitting || isUploadingPhoto}
+                title={
+                  isUploadingPhoto
+                    ? "Please wait for photo upload to finish"
+                    : undefined
+                }
                 className={`group relative flex w-full items-center justify-center rounded-2xl ${
                   isFounderFree
                     ? "bg-gradient-to-r from-amber-500 to-rose-500 shadow-amber-500/25"
@@ -2479,6 +2556,11 @@ export default function CreateLovewritPage({
                   <div className="flex items-center space-x-2">
                     <Loader2 className="h-4 w-4 animate-spin text-white" />
                     <span>Publishing Lovewrit...</span>
+                  </div>
+                ) : isUploadingPhoto ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    <span>Uploading photo...</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">

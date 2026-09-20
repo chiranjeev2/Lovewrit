@@ -275,12 +275,12 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorTheme> = {
   scroll: {
     id: "scroll",
     name: "Medieval Parchment Scroll",
-    bgGradient: "from-amber-950/80 via-stone-900 to-neutral-950",
-    cardBg: "bg-[#fdfaf1] border-[#b48a3c]/60 text-[#3d2f1f] shadow-amber-900/30",
-    textColor: "text-[#4a3b2c]",
-    accentColor: "#991b1b", // crimson wax seal
-    borderStyle: "border-[#b48a3c]/70 shadow-inner",
-    tagColor: "bg-amber-900/20 text-amber-800 border-amber-700/30",
+    bgGradient: "from-[#22160d] via-[#332214] to-[#1a1008]",
+    cardBg: "bg-[#fcf7ec] border-[#8c6227] text-[#2c1a0e] shadow-amber-950/40",
+    textColor: "text-[#3b2312]",
+    accentColor: "#991b1b", // Royal crimson wax seal
+    borderStyle: "border-[#8c6227]/80 shadow-md",
+    tagColor: "bg-[#8c6227]/20 text-[#6d4518] border-[#8c6227]/40",
   },
   modern: {
     id: "modern",
@@ -602,10 +602,10 @@ export const TEMPLATES: TemplateDefinition[] = [
     supportedFormats: ["CARD", "PAGE"],
     defaultTheme: "scroll",
     defaultShape: "rounded",
-    coverImage: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80",
+    coverImage: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&q=80",
     samplePhotos: [
-      "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=800&q=80",
       "https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=800&q=80",
+      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=800&q=80",
     ],
     sampleSender: "Aditya",
     sampleRecipient: "My Dearest Friend",
@@ -630,9 +630,8 @@ export const TEMPLATES: TemplateDefinition[] = [
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "sunset",
     defaultShape: "rounded",
-    coverImage: "https://images.unsplash.com/photo-1605649487212-47bdab064df8?w=800&q=80",
+    coverImage: "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80",
     samplePhotos: [
-      "https://images.unsplash.com/photo-1605649487212-47bdab064df8?w=800&q=80",
       "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=800&q=80",
     ],
     sampleSender: "Goyal Parivaar",
@@ -689,9 +688,9 @@ export const TEMPLATES: TemplateDefinition[] = [
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "saffron",
     defaultShape: "rounded",
-    coverImage: "https://images.unsplash.com/photo-1582650625119-3a31f8418365?w=800&q=80",
+    coverImage: "https://images.unsplash.com/photo-1590496793929-36417d3117de?w=800&q=80",
     samplePhotos: [
-      "https://images.unsplash.com/photo-1582650625119-3a31f8418365?w=800&q=80",
+      "https://images.unsplash.com/photo-1590496793929-36417d3117de?w=800&q=80",
     ],
     sampleSender: "Khalsa Sangat",
     sampleRecipient: "Pyari Sangat Ji (ਪਿਆਰੀ ਸੰਗਤ ਜੀ)",
@@ -771,9 +770,9 @@ export const TEMPLATES: TemplateDefinition[] = [
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "sacred_emerald",
     defaultShape: "rounded",
-    coverImage: "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?w=800&q=80",
+    coverImage: "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=800&q=80",
     samplePhotos: [
-      "https://images.unsplash.com/photo-1590076215667-875d4ef2d7ee?w=800&q=80",
+      "https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?w=800&q=80",
     ],
     sampleSender: "Zubair & Family",
     sampleRecipient: "Brothers, Sisters & Friends",
@@ -800,9 +799,9 @@ export const TEMPLATES: TemplateDefinition[] = [
     supportedFormats: ["PAGE", "CARD"],
     defaultTheme: "celestial",
     defaultShape: "oval",
-    coverImage: "https://images.unsplash.com/photo-1543157148-f815daaac015?w=800&q=80",
+    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
     samplePhotos: [
-      "https://images.unsplash.com/photo-1543157148-f815daaac015?w=800&q=80",
+      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
     ],
     sampleSender: "David & Sarah Johnson",
     sampleRecipient: "Beloved Family & Friends",

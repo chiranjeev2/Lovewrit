@@ -82,10 +82,33 @@ export default function CardPreview({
 }: CardPreviewProps) {
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
   const [isFlipped, setIsFlipped] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-  // Active photos list (fall back to photoUrl if photoUrls is empty)
-  const activePhotos =
-    photoUrls.length > 0 ? photoUrls.slice(0, 3) : photoUrl ? [photoUrl] : [];
+  // Active photos list (fall back to photoUrl if photoUrls is empty or contains blank values)
+  const activePhotos = (photoUrls || [])
+    .filter((u): u is string => Boolean(u && typeof u === "string" && u.trim().length > 0))
+    .slice(0, 3);
+  if (activePhotos.length === 0 && photoUrl && typeof photoUrl === "string" && photoUrl.trim().length > 0) {
+    if (photoUrl.trim().startsWith("[")) {
+      try {
+        const parsed = JSON.parse(photoUrl);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((p) => {
+            if (p && typeof p === "string" && p.trim().length > 0) {
+              activePhotos.push(p.trim());
+            }
+          });
+        }
+      } catch {
+        activePhotos.push(photoUrl.trim());
+      }
+    } else {
+      activePhotos.push(photoUrl.trim());
+    }
+  }
+
+  // Filter out any photos that encountered an image loading error
+  const displayPhotos = activePhotos.filter((p) => !imageErrors[p]);
 
   // Compute CSS shape class
   const getShapeClass = (shape: PhotoShapeKey) => {
@@ -167,7 +190,7 @@ export default function CardPreview({
           isFlipReveal ? "cursor-pointer" : ""
         } ${getBorderContainerClass(borderStyle)} ${
           isScrollTheme
-            ? "bg-[#fdfaf1] border-[#b48a3c]/70 text-[#3b2d18] shadow-amber-950/30"
+            ? "border-2 border-[#8c6227]/90 text-[#2c1a0e]"
             : isJagrata
             ? "bg-gradient-to-b from-red-950/85 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
             : isSikh
@@ -178,15 +201,51 @@ export default function CardPreview({
             ? "bg-gradient-to-b from-slate-900/95 via-sky-950/40 to-neutral-950 border-sky-400/40 text-sky-50 shadow-sky-950/30"
             : `${theme.cardBg} ${theme.borderStyle}`
         }`}
-        style={{
-          boxShadow:
-            isJagrata || isSikh
-              ? "0 25px 50px -12px rgba(180, 83, 9, 0.35)"
-              : isMuslim
-              ? "0 25px 50px -12px rgba(5, 150, 105, 0.35)"
-              : "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
-        }}
+        style={
+          isScrollTheme
+            ? {
+                background:
+                  "radial-gradient(ellipse at 50% 45%, #fcf7ec 0%, #f5e8cb 45%, #e9d5a5 75%, #cca76e 100%)",
+                boxShadow:
+                  "inset 0 0 45px rgba(95, 52, 14, 0.28), inset 0 0 10px rgba(60, 30, 8, 0.35), 0 25px 50px -12px rgba(28, 16, 7, 0.5)",
+              }
+            : {
+                boxShadow:
+                  isJagrata || isSikh
+                    ? "0 25px 50px -12px rgba(180, 83, 9, 0.35)"
+                    : isMuslim
+                    ? "0 25px 50px -12px rgba(5, 150, 105, 0.35)"
+                    : "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+              }
+        }
       >
+        {/* Medieval Scroll Turned Wood & Gilded End Rods */}
+        {isScrollTheme && (
+          <>
+            {/* Top Rod */}
+            <div className="absolute top-0 inset-x-3 h-2.5 bg-gradient-to-r from-[#45270f] via-[#c49b52] to-[#45270f] rounded-b-md shadow-md border-b border-[#2e1706]/70 z-20 flex items-center justify-center">
+              <div className="w-20 h-0.5 bg-amber-200/50 rounded-full blur-[0.5px]" />
+            </div>
+            {/* Bottom Rod */}
+            <div className="absolute bottom-0 inset-x-3 h-2.5 bg-gradient-to-r from-[#45270f] via-[#c49b52] to-[#45270f] rounded-t-md shadow-md border-t border-[#2e1706]/70 z-20 flex items-center justify-center">
+              <div className="w-20 h-0.5 bg-amber-200/50 rounded-full blur-[0.5px]" />
+            </div>
+            {/* Inner Calligraphic Gold & Sepia Margin Frame */}
+            <div className="absolute inset-3 rounded-[24px] border border-[#8c6227]/35 pointer-events-none z-10 flex flex-col justify-between p-2">
+              <div className="flex justify-between text-[#8c6227]/70 text-[10px] select-none">
+                <span>❦</span>
+                <span className="tracking-[0.3em] font-serif text-[8px] uppercase text-[#8c6227]/60">ROYAL SCROLL</span>
+                <span>❦</span>
+              </div>
+              <div className="flex justify-between text-[#8c6227]/70 text-[10px] select-none">
+                <span>❦</span>
+                <span className="tracking-[0.3em] font-serif text-[8px] uppercase text-[#8c6227]/60">ANNO MMXXVI</span>
+                <span>❦</span>
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Subtle background ambient glow */}
         <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-white/5 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-black/20 blur-2xl pointer-events-none" />
@@ -331,48 +390,54 @@ export default function CardPreview({
 
             {/* Central Photo Area (Supports single or multi-photo collage) */}
             <div className="relative z-10 my-auto flex flex-col items-center justify-center py-2">
-              {activePhotos.length === 0 ? (
+              {displayPhotos.length === 0 ? (
                 <div
                   className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
                     photoShape
-                  )} ${theme.borderStyle} bg-neutral-800/80 flex flex-col items-center justify-center text-neutral-400 p-4 text-center`}
+                  )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle} bg-neutral-800/80 flex flex-col items-center justify-center text-neutral-400 p-4 text-center`}
                 >
                   <Heart className="h-8 w-8 mb-2 opacity-50 text-rose-400 animate-pulse" />
                   <span className="text-xs">Photo will appear here</span>
                 </div>
-              ) : activePhotos.length === 1 ? (
+              ) : displayPhotos.length === 1 ? (
                 <div
                   className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
                     photoShape
-                  )} ${theme.borderStyle}`}
+                  )} ${isScrollTheme ? "border-[#8c6227] shadow-[0_10px_25px_rgba(60,30,10,0.3)]" : theme.borderStyle}`}
                 >
                   <img
-                    src={activePhotos[0]}
+                    src={displayPhotos[0]}
                     alt="Moment photo"
+                    onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[0]]: true }))}
                     className="w-full h-full object-cover"
                   />
+                  {isScrollTheme && (
+                    <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-[#8c6227]/40 ring-1 ring-inset ring-amber-900/20" />
+                  )}
                 </div>
-              ) : activePhotos.length === 2 ? (
+              ) : displayPhotos.length === 2 ? (
                 <div className="flex items-center justify-center -space-x-6 py-2">
                   <div
                     className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
                       photoShape
-                    )} ${theme.borderStyle}`}
+                    )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
                     <img
-                      src={activePhotos[0]}
+                      src={displayPhotos[0]}
                       alt="Moment 1"
+                      onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[0]]: true }))}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div
                     className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 ${getShapeClass(
                       photoShape
-                    )} ${theme.borderStyle}`}
+                    )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
                     <img
-                      src={activePhotos[1]}
+                      src={displayPhotos[1]}
                       alt="Moment 2"
+                      onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[1]]: true }))}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -382,33 +447,36 @@ export default function CardPreview({
                   <div
                     className={`relative w-28 h-28 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
                       photoShape
-                    )} ${theme.borderStyle}`}
+                    )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
                     <img
-                      src={activePhotos[0]}
+                      src={displayPhotos[0]}
                       alt="Moment 1"
+                      onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[0]]: true }))}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div
                     className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 ${getShapeClass(
                       photoShape
-                    )} ${theme.borderStyle}`}
+                    )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
                     <img
-                      src={activePhotos[1]}
+                      src={displayPhotos[1]}
                       alt="Moment 2"
+                      onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[1]]: true }))}
                       className="w-full h-full object-cover"
                     />
                   </div>
                   <div
                     className={`relative w-28 h-28 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
                       photoShape
-                    )} ${theme.borderStyle}`}
+                    )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
                     <img
-                      src={activePhotos[2]}
+                      src={displayPhotos[2]}
                       alt="Moment 3"
+                      onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[2]]: true }))}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -551,18 +619,60 @@ export default function CardPreview({
               {/* Card watermark/footer mark */}
               <div
                 className={`mt-3 flex items-center justify-between text-[9px] tracking-widest uppercase ${
-                  isScrollTheme ? "text-amber-900/70 font-semibold" : "opacity-50"
+                  isScrollTheme ? "text-[#5a3717] font-semibold" : "opacity-50"
                 }`}
               >
-                <span className="inline-flex items-center space-x-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-rose-300 font-bold">
-                  <span>✦ Made for you</span>
-                </span>
-                <div className="flex items-center space-x-1">
-                  {isScrollTheme && <span className="text-red-700 font-bold mr-1">✦ WAX SEALED ✦</span>}
-                  <span>Lovewrit</span>
-                  <Heart className="h-2 w-2 fill-current" />
-                  <span>Keepsake</span>
-                </div>
+                {isScrollTheme ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center space-x-1 rounded-full bg-[#8c6227]/20 border border-[#8c6227]/40 px-2 py-0.5 text-[#5c3716] font-bold text-[8px] tracking-wider">
+                      <span>⚜ ROYAL MANUSCRIPT</span>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="inline-flex items-center space-x-1 rounded-full bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 text-rose-300 font-bold">
+                    <span>✦ Made for you</span>
+                  </span>
+                )}
+
+                {isScrollTheme ? (
+                  <div className="flex items-center space-x-2.5">
+                    {/* Handcrafted 3D Crimson Wax Seal Badge with Draping Silk Ribbons */}
+                    <div className="relative flex items-center justify-center">
+                      {/* Draping Ribbon Tails */}
+                      <div className="absolute -bottom-2 inset-x-0 flex justify-center space-x-1 pointer-events-none z-0">
+                        <div className="w-1.5 h-3 bg-gradient-to-b from-[#881337] to-[#7f1d1d] transform -rotate-12 shadow-sm rounded-b-[2px]" />
+                        <div className="w-1.5 h-3 bg-gradient-to-b from-[#881337] to-[#7f1d1d] transform rotate-12 shadow-sm rounded-b-[2px]" />
+                      </div>
+                      {/* Relieved Wax Stamp Medallion */}
+                      <div
+                        className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-[0_3px_8px_rgba(120,20,30,0.45)] border border-[#f43f5e]/40 transition-transform hover:scale-110"
+                        style={{
+                          background:
+                            "radial-gradient(circle at 35% 30%, #e11d48 0%, #991b1b 50%, #4c0519 100%)",
+                        }}
+                        title="Authentic Wax Sealed Keepsake"
+                      >
+                        <div className="w-4.5 h-4.5 rounded-full border border-amber-300/40 flex items-center justify-center">
+                          <Heart className="h-2 w-2 text-amber-200 fill-amber-200/90 filter drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)]" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-left flex flex-col justify-center">
+                      <span className="text-[7.5px] font-serif font-bold text-[#45270f] tracking-widest uppercase leading-none">
+                        SEALED IN WAX
+                      </span>
+                      <span className="text-[6.5px] text-[#8c6227] tracking-widest font-mono uppercase mt-0.5 leading-none">
+                        LOVEWRIT
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-1">
+                    <span>Lovewrit</span>
+                    <Heart className="h-2 w-2 fill-current" />
+                    <span>Keepsake</span>
+                  </div>
+                )}
               </div>
             </div>
           </>

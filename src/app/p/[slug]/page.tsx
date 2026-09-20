@@ -246,13 +246,24 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     TEMPLATES.find((t) => t.id === order?.templateId) || TEMPLATES[0];
 
   let parsedPhotos: string[] = [];
-  try {
-    parsedPhotos =
-      typeof pageData.photoUrls === "string"
-        ? JSON.parse(pageData.photoUrls)
-        : pageData.photoUrls || [];
-  } catch {
-    parsedPhotos = [];
+  if (Array.isArray(pageData.photoUrls)) {
+    parsedPhotos = pageData.photoUrls.filter(
+      (u): u is string => Boolean(u && typeof u === "string" && u.trim().length > 0)
+    );
+  } else if (typeof pageData.photoUrls === "string" && pageData.photoUrls.trim().length > 0) {
+    const raw = pageData.photoUrls.trim();
+    if (raw.startsWith("[")) {
+      try {
+        const arr = JSON.parse(raw);
+        parsedPhotos = Array.isArray(arr)
+          ? arr.filter((u): u is string => Boolean(u && typeof u === "string" && u.trim().length > 0))
+          : [];
+      } catch {
+        parsedPhotos = [raw];
+      }
+    } else {
+      parsedPhotos = [raw];
+    }
   }
 
   let parsedTimeline: TimelineMilestone[] | undefined;

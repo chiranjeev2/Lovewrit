@@ -20,6 +20,7 @@ import {
   Copy,
   Gift,
   FileText,
+  AlertCircle,
 } from "lucide-react";
 import { toPng, toJpeg } from "html-to-image";
 import { FontFamilyKey, CardBorderStyleKey } from "@/lib/templates-data";
@@ -82,6 +83,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const [copied, setCopied] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showOpeningMoment, setShowOpeningMoment] = useState(true);
   const [isLockedCountdown, setIsLockedCountdown] = useState(false);
@@ -148,33 +150,124 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     }
   };
 
+  const convertDataUrlToJpeg = (pngDataUrl: string, bgColor: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(pngDataUrl);
+          return;
+        }
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/jpeg", 0.95));
+      };
+      img.onerror = () => resolve(pngDataUrl);
+      img.src = pngDataUrl;
+    });
+  };
+
   const handleDownloadImage = async (format: "png" | "jpeg" | "print" = "png") => {
-    const node = document.getElementById("lovewrit-card-node");
-    if (!node) return;
+    const node = cardRef.current || document.getElementById("lovewrit-card-node");
+    if (!node) {
+      setDownloadError("Could not locate card for download.");
+      return;
+    }
 
     setIsDownloading(true);
+    setDownloadError(null);
+
+    const isPrint = format === "print";
+    const isScroll = order?.cardData?.colorTheme === "scroll";
+    const cardBgColor = isScroll ? "#fcf7ec" : "#0a0a0a";
+
+    // Measure exact geometry to prevent responsive margins (e.g. mx-auto) or viewport offsets
+    // from shifting the cloned card out of the SVG foreignObject canvas bounds.
+    const rect = node.getBoundingClientRect();
+    const width = Math.round(rect.width);
+    const height = Math.round(rect.height);
+
+    const baseOptions = {
+      quality: 0.98,
+      cacheBust: false,
+      backgroundColor: cardBgColor,
+      width,
+      height,
+      style: {
+        margin: "0",
+        marginLeft: "0",
+        marginRight: "0",
+        marginTop: "0",
+        marginBottom: "0",
+        transform: "none",
+        position: "static",
+        left: "0",
+        top: "0",
+        width: `${width}px`,
+        height: `${height}px`,
+        maxWidth: "none",
+        maxHeight: "none",
+      },
+      imagePlaceholder:
+        "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23171717' width='100' height='100'/%3E%3C/svg%3E",
+    };
+
     try {
-      // For print-ready high-DPI export, use pixelRatio 4 (equivalent to 300 DPI for standard card sizes)
-      const isPrint = format === "print";
-      const options = {
-        quality: 1,
-        pixelRatio: isPrint ? 4 : 2,
-        cacheBust: true,
+      if (typeof document !== "undefined" && document.fonts) {
+        await document.fonts.ready;
+      }
+      let dataUrl: string = "";
+      // 3.5 ratio produces ~1400x1750px which equals 300 DPI for standard 4.6x5.8" greeting prints
+      const primaryRatio = isPrint ? 3.5 : 2;
+
+      const attemptCapture = async (ratio: number) => {
+        const opts = {
+          ...baseOptions,
+          pixelRatio: ratio,
+          canvasWidth: Math.round(width * ratio),
+          canvasHeight: Math.round(height * ratio),
+        };
+        if (format === "jpeg") {
+          try {
+            return await toJpeg(node, opts);
+          } catch {
+            const png = await toPng(node, opts);
+            return await convertDataUrlToJpeg(png, cardBgColor);
+          }
+        }
+        return await toPng(node, opts);
       };
 
-      const dataUrl =
-        format === "jpeg"
-          ? await toJpeg(node, options)
-          : await toPng(node, options);
+      try {
+        dataUrl = await attemptCapture(primaryRatio);
+      } catch (firstErr) {
+        console.warn(`Initial capture at pixelRatio ${primaryRatio} failed, retrying at ratio 2...`, firstErr);
+        dataUrl = await attemptCapture(2);
+      }
+
+      if (!dataUrl) {
+        throw new Error("Failed to generate image data.");
+      }
 
       const link = document.createElement("a");
       const suffix = isPrint ? "-print-300dpi" : "";
       const ext = format === "jpeg" ? "jpg" : "png";
-      link.download = `lovewrit-card-${order?.cardData?.recipientName || "love"}${suffix}.${ext}`;
+      const safeRecipient = (order?.cardData?.recipientName || "love")
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "-");
+      link.download = `lovewrit-card-${safeRecipient}${suffix}.${ext}`;
       link.href = dataUrl;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
     } catch (err) {
       console.error("Download card error:", err);
+      setDownloadError("Download could not be generated. Please try again or use the Foldable Card PDF option.");
     } finally {
       setIsDownloading(false);
     }
@@ -348,12 +441,15 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           let parsedCardPhotos: string[] = [];
           try {
             if (cardData.photoUrl?.startsWith("[")) {
-              parsedCardPhotos = JSON.parse(cardData.photoUrl);
-            } else if (cardData.photoUrl) {
-              parsedCardPhotos = [cardData.photoUrl];
+              const arr = JSON.parse(cardData.photoUrl);
+              parsedCardPhotos = Array.isArray(arr)
+                ? arr.filter((u): u is string => Boolean(u && typeof u === "string" && u.trim().length > 0))
+                : [];
+            } else if (cardData.photoUrl && cardData.photoUrl.trim()) {
+              parsedCardPhotos = [cardData.photoUrl.trim()];
             }
           } catch {
-            parsedCardPhotos = cardData.photoUrl ? [cardData.photoUrl] : [];
+            parsedCardPhotos = cardData.photoUrl?.trim() ? [cardData.photoUrl.trim()] : [];
           }
 
           let parsedStickers: StickerItem[] | undefined;
@@ -440,6 +536,23 @@ export default function CardSharePage({ params }: CardSharePageProps) {
             <span>Download JPG</span>
           </button>
         </div>
+
+        {/* Download Error Alert if needed */}
+        {downloadError && (
+          <div className="mt-4 flex items-center justify-between rounded-xl border border-red-500/40 bg-red-950/60 px-4 py-2.5 text-xs text-red-200 max-w-md">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="h-4 w-4 text-red-400 shrink-0" />
+              <span>{downloadError}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDownloadError(null)}
+              className="ml-2 text-red-400 hover:text-white"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Referral Perk Card */}
         {order?.myReferralCode && (

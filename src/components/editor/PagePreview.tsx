@@ -201,9 +201,12 @@ export default function PagePreview({
     ? `${recipientName} ("${nickname}")`
     : recipientName;
 
+  const validPhotos = (photoUrls || []).filter(
+    (u): u is string => Boolean(u && typeof u === "string" && u.trim().length > 0)
+  );
   const photos =
-    photoUrls.length > 0
-      ? photoUrls
+    validPhotos.length > 0
+      ? validPhotos
       : [
           "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
           "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
@@ -347,6 +350,20 @@ export default function PagePreview({
             ? `Honoring a cherished life, shared with deep reverence by ${senderName}.`
             : `${senderName} has crafted this keepsake to share a piece of their heart.`}
         </p>
+
+        {/* Featured Cover Photo (Immediate above-the-fold display across all interactive page services) */}
+        {photos[0] && (
+          <div className="pt-4 pb-1 flex justify-center">
+            <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl transition-all duration-300 hover:scale-105 group bg-neutral-900/60">
+              <img
+                src={photos[0]}
+                alt={displayedRecipient}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Milestone Landmark Map Pin (e.g. "Where we first met") */}
@@ -654,19 +671,100 @@ export default function PagePreview({
       )}
 
       {/* Heartfelt Message / Letter Section */}
-      <div className="relative z-10 mx-auto max-w-2xl rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-10 backdrop-blur-xl shadow-2xl my-10">
-        <div className="flex items-center space-x-2 text-rose-300 mb-4">
-          <Sparkles className="h-4 w-4" />
-          <span className="text-xs uppercase tracking-widest font-semibold">
-            {isMemorial ? "Eulogy & Remembrance" : isInvite ? "Event Note" : "Heartfelt Words"}
-          </span>
+      <div
+        className={`relative z-10 mx-auto max-w-2xl rounded-3xl border p-6 sm:p-10 shadow-2xl my-10 ${
+          colorTheme === "scroll"
+            ? "border-2 border-[#8c6227]/90 text-[#2a170a]"
+            : "border-white/10 bg-white/5 backdrop-blur-xl text-neutral-100"
+        }`}
+        style={
+          colorTheme === "scroll"
+            ? {
+                background:
+                  "radial-gradient(ellipse at 50% 45%, #fcf8ee 0%, #f6eacf 45%, #ebd7ab 75%, #cea970 100%)",
+                boxShadow:
+                  "inset 0 0 50px rgba(95, 52, 14, 0.28), inset 0 0 10px rgba(60, 30, 8, 0.35), 0 25px 50px -12px rgba(28, 16, 7, 0.5)",
+              }
+            : undefined
+        }
+      >
+        {colorTheme === "scroll" && (
+          <div className="absolute inset-3 rounded-[24px] border border-[#8c6227]/30 pointer-events-none flex flex-col justify-between p-2">
+            <div className="flex justify-between text-[#8c6227]/60 text-xs">
+              <span>❦</span>
+              <span>❦</span>
+            </div>
+            <div className="flex justify-between text-[#8c6227]/60 text-xs">
+              <span>❦</span>
+              <span>❦</span>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-2">
+            {colorTheme === "scroll" ? (
+              <span className="text-base">📜</span>
+            ) : (
+              <Sparkles className="h-4 w-4 text-rose-300" />
+            )}
+            <span
+              className={`text-xs uppercase tracking-widest font-semibold ${
+                colorTheme === "scroll" ? "text-[#7a481c] font-serif" : "text-rose-300"
+              }`}
+            >
+              {colorTheme === "scroll"
+                ? "A Sacred Letter • Hand-Inscribed"
+                : isMemorial
+                ? "Eulogy & Remembrance"
+                : isInvite
+                ? "Event Note"
+                : "Heartfelt Words"}
+            </span>
+          </div>
+
+          {colorTheme === "scroll" && (
+            <div className="relative flex items-center justify-center">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shadow-md border border-[#f43f5e]/40"
+                style={{
+                  background:
+                    "radial-gradient(circle at 35% 30%, #e11d48 0%, #991b1b 50%, #4c0519 100%)",
+                }}
+              >
+                <Heart className="h-2 w-2 text-amber-200 fill-amber-200" />
+              </div>
+            </div>
+          )}
         </div>
-        <p className={`${getLetterFontClass(fontFamily)} leading-relaxed text-neutral-100 whitespace-pre-wrap`}>
+
+        <p
+          className={`${getLetterFontClass(fontFamily)} leading-relaxed whitespace-pre-wrap ${
+            colorTheme === "scroll" ? "text-[#2a170a] font-medium" : "text-neutral-100"
+          }`}
+        >
           {letter || "A timeless message crafted with all my heart."}
         </p>
-        <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400">
-          <span>{isMemorial ? "Forever In Our Hearts," : "Warmest Regards,"}</span>
-          <span className="font-serif italic font-semibold text-white">
+
+        <div
+          className={`mt-6 pt-4 border-t flex items-center justify-between text-xs ${
+            colorTheme === "scroll"
+              ? "border-[#8c6227]/30 text-[#6d4518]"
+              : "border-white/10 text-neutral-400"
+          }`}
+        >
+          <span>
+            {colorTheme === "scroll"
+              ? "In Everlasting Devotion,"
+              : isMemorial
+              ? "Forever In Our Hearts,"
+              : "Warmest Regards,"}
+          </span>
+          <span
+            className={`font-serif italic font-semibold ${
+              colorTheme === "scroll" ? "text-[#3b200b] underline decoration-[#8c6227]/60" : "text-white"
+            }`}
+          >
             {senderName || "Always"}
           </span>
         </div>

@@ -153,8 +153,15 @@ export async function POST(req: NextRequest) {
     const isFreeOrder = totalUnit === 0 && !isFounderPass;
 
     // Abuse Protection / Rate Limiting on Free ($0) Orders:
-    // Limit: 5 free orders per rolling 24 hours per IP address or email
-    if (isFreeOrder) {
+    // Limit: 5 free orders per rolling 24 hours per IP address or email (exempt in local development)
+    const isLocalhost =
+      process.env.NODE_ENV === "development" ||
+      clientIp === "::1" ||
+      clientIp === "127.0.0.1" ||
+      clientIp === "localhost" ||
+      clientIp.includes("127.0.0.1");
+
+    if (isFreeOrder && !isLocalhost) {
       const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const freeOrderCount = await db.order.count({
         where: {

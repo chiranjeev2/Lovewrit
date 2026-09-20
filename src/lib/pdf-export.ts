@@ -137,10 +137,37 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
 
   if (cardRef) {
     try {
-      // Capture the card preview node directly
+      if (typeof document !== "undefined" && document.fonts) {
+        await document.fonts.ready;
+      }
+      const rect = cardRef.getBoundingClientRect();
+      const width = Math.round(rect.width);
+      const height = Math.round(rect.height);
+      const pixelRatio = 3;
+
+      // Capture the card preview node directly with zeroed margins and exact bounds
       const frontPng = await toPng(cardRef, {
-        pixelRatio: 3,
-        cacheBust: true,
+        width,
+        height,
+        canvasWidth: Math.round(width * pixelRatio),
+        canvasHeight: Math.round(height * pixelRatio),
+        pixelRatio,
+        cacheBust: false,
+        style: {
+          margin: "0",
+          marginLeft: "0",
+          marginRight: "0",
+          marginTop: "0",
+          marginBottom: "0",
+          transform: "none",
+          position: "static",
+          left: "0",
+          top: "0",
+          width: `${width}px`,
+          height: `${height}px`,
+          maxWidth: "none",
+          maxHeight: "none",
+        },
       });
 
       // Embed into front panel with 10mm margins
