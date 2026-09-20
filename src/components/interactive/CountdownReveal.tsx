@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Clock, Lock, Sparkles } from "lucide-react";
+import { Clock, Lock } from "lucide-react";
 
 interface CountdownRevealProps {
   revealAt: string | Date;

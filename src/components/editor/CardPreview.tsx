@@ -30,7 +30,7 @@ export interface StickerItem {
 interface CardPreviewProps {
   senderName: string;
   recipientName: string;
-  nickname?: string;
+  nickname?: string | null;
   occasion: string;
   message: string;
   secondaryMessage?: string;
@@ -296,7 +296,7 @@ export default function CardPreview({
                 <div className="flex items-center space-x-1.5 rounded-full bg-sky-500/20 border border-sky-500/40 px-2.5 py-0.5 shadow-sm">
                   <span className="text-xs text-sky-300">🕊️</span>
                   <span className="text-[10px] font-bold tracking-wider uppercase text-sky-200">
-                    IN GOD'S GRACE ✝
+                    {"IN GOD'S GRACE ✝"}
                   </span>
                 </div>
               ) : isSecular ? (

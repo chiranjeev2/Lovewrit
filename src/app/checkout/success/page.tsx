@@ -8,18 +8,25 @@ import Footer from "@/components/shared/Footer";
 import confetti from "canvas-confetti";
 import QRCode from "qrcode";
 import {
-  Heart,
   CheckCircle,
   Copy,
   Check,
   Download,
   ExternalLink,
-  Sparkles,
   Loader2,
-  Share2,
   QrCode,
-  Gift,
 } from "lucide-react";
+
+interface SuccessOrderRecord {
+  id: string;
+  slug: string;
+  productType?: string;
+  customerName?: string;
+  customerEmail?: string;
+  currency?: string;
+  amountTotal: number;
+  [key: string]: unknown;
+}
 
 function SuccessContent() {
   const searchParams = useSearchParams();
@@ -27,7 +34,7 @@ function SuccessContent() {
   const slug = searchParams.get("slug");
 
   const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<SuccessOrderRecord | null>(null);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>("");

@@ -32,18 +32,66 @@ export default function AdminPage() {
   const [showFounderModal, setShowFounderModal] = useState(false);
 
   // Tab navigation
+interface AdminOrder {
+  id: string;
+  slug: string;
+  templateId: string;
+  productType: string;
+  tier: string;
+  status: string;
+  customerName: string;
+  customerEmail: string;
+  amountTotal: number;
+  currency: string;
+  customData: string;
+  createdAt: string;
+  deliveryStatus?: string;
+  targetDeliveryDate?: string | null;
+  founderStatus?: string;
+  customNotes?: string | null;
+  cardData?: {
+    senderName?: string;
+    recipientName?: string;
+    occasion?: string;
+    [key: string]: unknown;
+  };
+  pageData?: {
+    senderName?: string;
+    recipientName?: string;
+    occasion?: string;
+    [key: string]: unknown;
+  };
+  [key: string]: unknown;
+}
+
+interface AdminStats {
+  totalOrders: number;
+  paidOrders: number;
+  pendingOrders: number;
+  totalRevenueINR: number;
+  queueCount: number;
+  revenueByCurrency?: {
+    INR?: number;
+    USD?: number;
+    EUR?: number;
+    GBP?: number;
+    [key: string]: number | undefined;
+  };
+  [key: string]: unknown;
+}
+
   const [activeTab, setActiveTab] = useState<"orders" | "queue">("orders");
 
   // Orders and metrics state
-  const [orders, setOrders] = useState<any[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [orders, setOrders] = useState<AdminOrder[]>([]);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "PAID" | "PENDING">("ALL");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Queue state
-  const [queueOrders, setQueueOrders] = useState<any[]>([]);
+  const [queueOrders, setQueueOrders] = useState<AdminOrder[]>([]);
   const [isRushAvailable, setIsRushAvailable] = useState(true);
   const [loadingQueue, setLoadingQueue] = useState(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -89,8 +137,10 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    fetchOrders();
-    fetchQueue();
+    queueMicrotask(() => {
+      void fetchOrders();
+      void fetchQueue();
+    });
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -387,7 +437,7 @@ export default function AdminPage() {
                     <span className="text-emerald-400 font-bold">₹</span>
                   </div>
                   <div className="mt-3 text-3xl font-bold text-emerald-400">
-                    ₹{(stats.revenueByCurrency?.INR / 100 || 0).toLocaleString()}
+                    ₹{((stats.revenueByCurrency?.INR ?? 0) / 100).toLocaleString()}
                   </div>
                   <div className="mt-1 text-[11px] text-neutral-400">Asia & Africa region</div>
                 </div>
@@ -400,7 +450,7 @@ export default function AdminPage() {
                     <span className="text-emerald-400 font-bold">$</span>
                   </div>
                   <div className="mt-3 text-3xl font-bold text-emerald-400">
-                    ${(stats.revenueByCurrency?.USD / 100 || 0).toLocaleString()}
+                    ${((stats.revenueByCurrency?.USD ?? 0) / 100).toLocaleString()}
                   </div>
                   <div className="mt-1 text-[11px] text-neutral-400">Americas region</div>
                 </div>
@@ -413,7 +463,7 @@ export default function AdminPage() {
                     <span className="text-emerald-400 font-bold">€ / £</span>
                   </div>
                   <div className="mt-3 text-2xl font-bold text-emerald-400">
-                    €{(stats.revenueByCurrency?.EUR / 100 || 0)} / £{(stats.revenueByCurrency?.GBP / 100 || 0)}
+                    €{((stats.revenueByCurrency?.EUR ?? 0) / 100)} / £{((stats.revenueByCurrency?.GBP ?? 0) / 100)}
                   </div>
                   <div className="mt-1 text-[11px] text-neutral-400">Europe & UK regions</div>
                 </div>
@@ -447,7 +497,7 @@ export default function AdminPage() {
 
                   <select
                     value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value as any)}
+                    onChange={(e) => setStatusFilter(e.target.value as "ALL" | "PAID" | "PENDING")}
                     className="rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500"
                   >
                     <option value="ALL">All Statuses</option>

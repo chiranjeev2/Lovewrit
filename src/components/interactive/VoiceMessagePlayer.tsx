@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, Play, Pause, Volume2 } from "lucide-react";
+import { Mic, Play, Pause } from "lucide-react";
 
 interface VoiceMessagePlayerProps {
   audioUrl?: string | null;
@@ -105,7 +105,7 @@ export default function VoiceMessagePlayer({
                         : "bg-neutral-700"
                     } ${isPlaying ? "animate-pulse" : ""}`}
                     style={{
-                      height: isPlaying ? `${Math.max(20, height * (0.6 + Math.random() * 0.4))}%` : `${height}%`,
+                      height: isPlaying ? `${Math.max(20, Math.min(100, height * (0.7 + ((i % 5) * 0.08))))}%` : `${height}%`,
                     }}
                   />
                 );

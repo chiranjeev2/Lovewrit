@@ -74,6 +74,17 @@ import {
   Mic,
 } from "lucide-react";
 
+function createStickerItem(emoji: string, count: number): StickerItem {
+  const pseudoX = 20 + ((count * 37 + 13) % 60);
+  const pseudoY = 20 + ((count * 43 + 29) % 60);
+  return {
+    id: `stk_${count}_${emoji}`,
+    emoji,
+    x: pseudoX,
+    y: pseudoY,
+  };
+}
+
 export default function CreateLovewritPage({
   params,
 }: {
@@ -193,53 +204,55 @@ export default function CreateLovewritPage({
       const toParam = urlParams.get("to");
       const fKeyParam = urlParams.get("founderKey");
 
-      if (toParam) {
-        const decodedTo = decodeURIComponent(toParam);
-        setRecipientName(decodedTo);
-        setReplySender(decodedTo);
-      }
-      if (replyParam) {
-        setReplyToSlug(replyParam);
-        // Strictly verify with database that this is a genuine completed order
-        fetch(`/api/reply/verify?slug=${encodeURIComponent(replyParam)}`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.valid) {
-              setIsRegiftDiscount(true);
-              if (data.senderName) {
-                setRecipientName(data.senderName);
-                setReplySender(data.senderName);
+      queueMicrotask(() => {
+        if (toParam) {
+          const decodedTo = decodeURIComponent(toParam);
+          setRecipientName(decodedTo);
+          setReplySender(decodedTo);
+        }
+        if (replyParam) {
+          setReplyToSlug(replyParam);
+          // Strictly verify with database that this is a genuine completed order
+          fetch(`/api/reply/verify?slug=${encodeURIComponent(replyParam)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.valid) {
+                setIsRegiftDiscount(true);
+                if (data.senderName) {
+                  setRecipientName(data.senderName);
+                  setReplySender(data.senderName);
+                }
+              } else {
+                setIsRegiftDiscount(false);
               }
-            } else {
-              setIsRegiftDiscount(false);
+            })
+            .catch((err) => console.error("Error verifying reply regift:", err));
+        }
+        if (
+          fKeyParam &&
+          (fKeyParam === "lovewrit_master_founder_secret_2026" ||
+            fKeyParam === "memoir_master_founder_secret_2026" ||
+            fKeyParam === "founder_master")
+        ) {
+          setIsFounderFree(true);
+          try {
+            localStorage.setItem("lovewrit_founder_pass", fKeyParam);
+          } catch {}
+        } else {
+          try {
+            const savedKey =
+              localStorage.getItem("lovewrit_founder_pass") ||
+              localStorage.getItem("memoir_founder_pass");
+            if (
+              savedKey === "lovewrit_master_founder_secret_2026" ||
+              savedKey === "memoir_master_founder_secret_2026" ||
+              savedKey === "founder_master"
+            ) {
+              setIsFounderFree(true);
             }
-          })
-          .catch((err) => console.error("Error verifying reply regift:", err));
-      }
-      if (
-        fKeyParam &&
-        (fKeyParam === "lovewrit_master_founder_secret_2026" ||
-          fKeyParam === "memoir_master_founder_secret_2026" ||
-          fKeyParam === "founder_master")
-      ) {
-        setIsFounderFree(true);
-        try {
-          localStorage.setItem("lovewrit_founder_pass", fKeyParam);
-        } catch {}
-      } else {
-        try {
-          const savedKey =
-            localStorage.getItem("lovewrit_founder_pass") ||
-            localStorage.getItem("memoir_founder_pass");
-          if (
-            savedKey === "lovewrit_master_founder_secret_2026" ||
-            savedKey === "memoir_master_founder_secret_2026" ||
-            savedKey === "founder_master"
-          ) {
-            setIsFounderFree(true);
-          }
-        } catch {}
-      }
+          } catch {}
+        }
+      });
     }
     return () => {
       if (audioPreviewRef.current) {
@@ -279,14 +292,10 @@ export default function CreateLovewritPage({
   };
 
   const handleAddSticker = (emoji: string) => {
-    if (placedStickers.length >= 6) return;
-    const newSticker: StickerItem = {
-      id: `stk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      emoji,
-      x: 20 + Math.floor(Math.random() * 60),
-      y: 20 + Math.floor(Math.random() * 60),
-    };
-    setPlacedStickers((prev) => [...prev, newSticker]);
+    setPlacedStickers((prev) => {
+      if (prev.length >= 6) return prev;
+      return [...prev, createStickerItem(emoji, prev.length + 1)];
+    });
   };
 
   const handleRemoveSticker = (id: string) => {

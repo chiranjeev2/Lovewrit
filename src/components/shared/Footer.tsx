@@ -15,7 +15,7 @@ export default function Footer() {
               <span className="font-serif text-lg font-bold text-white">Lovewrit</span>
             </div>
             <p className="mt-3 max-w-sm text-xs leading-relaxed text-neutral-400">
-              Personalized occasion cards & emotional mini-websites created for life's sacred moments.
+              Personalized occasion cards &amp; emotional mini-websites created for life&apos;s sacred moments.
               Craft heartfelt keepsakes for proposals, anniversaries, apologies, birthdays, and love letters.
             </p>
             <div className="mt-4 flex items-center space-x-2 text-[11px] text-neutral-500">

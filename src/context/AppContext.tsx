@@ -21,34 +21,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Auto-detect currency and region based on client timezone
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const detected = detectRegion(null, tz);
-      const initialCurrency: CurrencyCode =
-        detected === "asia_africa"
-          ? "INR"
-          : detected === "uk"
-          ? "GBP"
-          : detected === "europe"
-          ? "EUR"
-          : "USD";
+    queueMicrotask(() => {
+      try {
+        const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        const detected = detectRegion(null, tz);
+        const initialCurrency: CurrencyCode =
+          detected === "asia_africa"
+            ? "INR"
+            : detected === "uk"
+            ? "GBP"
+            : detected === "europe"
+            ? "EUR"
+            : "USD";
 
-      const savedCurrency = (localStorage.getItem("lovewrit_currency") ||
-        localStorage.getItem("memoir_currency")) as CurrencyCode;
-      if (savedCurrency && ["INR", "USD", "EUR", "GBP"].includes(savedCurrency)) {
-        setCurrencyState(savedCurrency);
-      } else {
-        setCurrencyState(initialCurrency);
-      }
+        const savedCurrency = (localStorage.getItem("lovewrit_currency") ||
+          localStorage.getItem("memoir_currency")) as CurrencyCode;
+        if (savedCurrency && ["INR", "USD", "EUR", "GBP"].includes(savedCurrency)) {
+          setCurrencyState(savedCurrency);
+        } else {
+          setCurrencyState(initialCurrency);
+        }
 
-      const savedLang = (localStorage.getItem("lovewrit_lang") ||
-        localStorage.getItem("memoir_lang")) as LanguageCode;
-      if (savedLang && ["en", "pa", "hi"].includes(savedLang)) {
-        setLanguageState(savedLang);
+        const savedLang = (localStorage.getItem("lovewrit_lang") ||
+          localStorage.getItem("memoir_lang")) as LanguageCode;
+        if (savedLang && ["en", "pa", "hi"].includes(savedLang)) {
+          setLanguageState(savedLang);
+        }
+      } catch {
+        // fallback
       }
-    } catch {
-      // fallback
-    }
+    });
   }, []);
 
   const setCurrency = (c: CurrencyCode) => {

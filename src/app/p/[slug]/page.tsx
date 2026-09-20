@@ -3,13 +3,17 @@
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import PagePreview from "@/components/editor/PagePreview";
+import PagePreview, {
+  TimelineMilestone,
+  SecretNote,
+  CollageLayoutStyle,
+} from "@/components/editor/PagePreview";
 import OpeningMoment from "@/components/shared/OpeningMoment";
 import CountdownReveal from "@/components/interactive/CountdownReveal";
 import QRCodeModal from "@/components/interactive/QRCodeModal";
 import GuestbookWall from "@/components/interactive/GuestbookWall";
 import AudioPlayer from "@/components/shared/AudioPlayer";
-import { ColorThemeKey, TEMPLATES } from "@/lib/templates-data";
+import { ColorThemeKey, ProposalQuestionKey, TEMPLATES } from "@/lib/templates-data";
 import { BUILTIN_AUDIO_TRACKS } from "@/lib/audio-tracks";
 import {
   Heart,
@@ -24,6 +28,57 @@ import {
 } from "lucide-react";
 import { FontFamilyKey, AmbientEffectKey } from "@/lib/templates-data";
 
+export interface PageCustomData {
+  senderName: string;
+  recipientName: string;
+  occasion: string;
+  letter: string;
+  photoUrls?: string | string[];
+  colorTheme?: ColorThemeKey;
+  fontFamily?: FontFamilyKey;
+  ambientEffect?: AmbientEffectKey;
+  collageLayout?: CollageLayoutStyle;
+  timelineJson?: string;
+  secretNotesJson?: string;
+  milestoneVenue?: string;
+  musicTrack?: string;
+  musicType?: string;
+  isProposal?: boolean;
+  proposalQuestion?: ProposalQuestionKey;
+  venueName?: string;
+  venueAddress?: string;
+  venueMapUrl?: string;
+  eventDate?: string;
+  eventTime?: string;
+  voiceMessageUrl?: string | null;
+  requireGuestbookApproval?: boolean;
+  revealAt?: string | null;
+  showOmMotif?: boolean;
+  showBismillah?: boolean;
+  isAdSupported?: boolean;
+}
+
+export interface PageOrderRecord {
+  id: string;
+  slug: string;
+  templateId: string;
+  senderName: string;
+  recipientName: string;
+  customerName?: string | null;
+  nickname?: string | null;
+  pinCode?: string | null;
+  tipUpiId?: string | null;
+  tipPaypalUsername?: string | null;
+  myReferralCode?: string | null;
+  adminToken?: string;
+  isAdSupported?: boolean;
+  revealAt?: string | null;
+  tier: string;
+  customData: string;
+  createdAt: string;
+  pageData?: PageCustomData;
+}
+
 interface TemplatePageProps {
   params: Promise<{ slug: string }>;
 }
@@ -35,7 +90,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   const token = searchParams.get("token");
 
   const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<PageOrderRecord | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [showOpeningMoment, setShowOpeningMoment] = useState(true);
@@ -109,7 +164,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slug,
-          pageDataId: order?.pageData?.id,
+          orderId: order?.id,
           senderName: order?.pageData?.recipientName || "Recipient",
           reactionType: "text",
           message: text,
@@ -172,7 +227,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     );
   }
 
-  const pageData = order?.pageData || {
+  const pageData: PageCustomData = order?.pageData || {
     senderName: "Aarav",
     recipientName: "Simran",
     occasion: "proposal",
@@ -200,14 +255,14 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     parsedPhotos = [];
   }
 
-  let parsedTimeline: any[] | undefined;
+  let parsedTimeline: TimelineMilestone[] | undefined;
   try {
     if (pageData.timelineJson) {
       parsedTimeline = JSON.parse(pageData.timelineJson);
     }
   } catch {}
 
-  let parsedSecretNotes: any[] | undefined;
+  let parsedSecretNotes: SecretNote[] | undefined;
   try {
     if (pageData.secretNotesJson) {
       parsedSecretNotes = JSON.parse(pageData.secretNotesJson);
@@ -317,7 +372,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           letter={pageData.letter}
           photoUrls={parsedPhotos}
           colorTheme={pageData.colorTheme as ColorThemeKey}
-          collageLayout={(pageData.collageLayout as any) || "masonry"}
+          collageLayout={(pageData.collageLayout as CollageLayoutStyle) || "masonry"}
           fontFamily={(pageData.fontFamily as FontFamilyKey) || "serif"}
           ambientEffect={(pageData.ambientEffect as AmbientEffectKey) || "none"}
           timeline={parsedTimeline}

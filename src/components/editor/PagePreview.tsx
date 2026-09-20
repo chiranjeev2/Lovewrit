@@ -24,10 +24,6 @@ import {
   Clock,
   Flame,
   Send,
-  Lock,
-  ChevronRight,
-  Eye,
-  MessageSquare,
   Gift,
 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -52,7 +48,7 @@ export interface SecretNote {
 interface PagePreviewProps {
   senderName: string;
   recipientName: string;
-  nickname?: string;
+  nickname?: string | null;
   occasion: string;
   letter: string;
   photoUrls: string[];
@@ -72,13 +68,13 @@ interface PagePreviewProps {
   eventDate?: string;
   eventTime?: string;
   voiceMessageUrl?: string | null;
-  tipUpiId?: string;
-  tipPaypalUsername?: string;
+  tipUpiId?: string | null;
+  tipPaypalUsername?: string | null;
   previewOnly?: boolean;
   showOmMotif?: boolean;
   showBismillah?: boolean;
   isAdSupported?: boolean;
-  onSendReaction?: (text: string) => Promise<void>;
+  onSendReaction?: (text: string) => Promise<void> | void;
 }
 
 export default function PagePreview({
@@ -707,7 +703,7 @@ export default function PagePreview({
           {(occasion === "christening" || occasion === "wedding_blessing") && (
             <div className="inline-flex items-center space-x-2 rounded-full border border-sky-500/40 bg-sky-500/15 px-3.5 py-1 text-xs font-bold text-sky-300">
               <span className="text-sm">🕊️</span>
-              <span>IN GOD'S GRACE • CELEBRATION & BLESSING ✝</span>
+              <span>{"IN GOD'S GRACE • CELEBRATION & BLESSING ✝"}</span>
             </div>
           )}
           {occasion === "blessing_ceremony" && (

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useRef, use } from "react";
 import Link from "next/link";
-import CardPreview from "@/components/editor/CardPreview";
+import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
 import OpeningMoment from "@/components/shared/OpeningMoment";
 import CountdownReveal from "@/components/interactive/CountdownReveal";
 import QRCodeModal from "@/components/interactive/QRCodeModal";
@@ -23,6 +23,50 @@ import {
 import { toPng, toJpeg } from "html-to-image";
 import { FontFamilyKey, CardBorderStyleKey } from "@/lib/templates-data";
 
+export interface CardCustomData {
+  senderName: string;
+  recipientName: string;
+  occasion: string;
+  message: string;
+  secondaryMessage?: string;
+  photoUrl?: string;
+  photoShape?: PhotoShapeKey;
+  colorTheme?: ColorThemeKey;
+  fontFamily?: FontFamilyKey;
+  borderStyle?: CardBorderStyleKey;
+  stickersJson?: string;
+  isFlipReveal?: boolean;
+  location?: string;
+  venueName?: string;
+  venueAddress?: string;
+  venueMapUrl?: string;
+  eventDate?: string;
+  eventTime?: string;
+  voiceMessageUrl?: string | null;
+  revealAt?: string | null;
+  showOmMotif?: boolean;
+  showBismillah?: boolean;
+}
+
+export interface CardOrderRecord {
+  id: string;
+  slug: string;
+  templateId: string;
+  senderName: string;
+  recipientName: string;
+  customerName?: string | null;
+  nickname?: string | null;
+  pinCode?: string | null;
+  tipUpiId?: string | null;
+  tipPaypalUsername?: string | null;
+  myReferralCode?: string | null;
+  revealAt?: string | null;
+  tier: string;
+  customData: string;
+  createdAt: string;
+  cardData?: CardCustomData;
+}
+
 interface CardSharePageProps {
   params: Promise<{ slug: string }>;
 }
@@ -32,7 +76,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const slug = resolvedParams.slug;
 
   const [loading, setLoading] = useState(true);
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<CardOrderRecord | null>(null);
   const [copied, setCopied] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
@@ -185,7 +229,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     );
   }
 
-  const cardData = order?.cardData || {
+  const cardData: CardCustomData = order?.cardData || {
     senderName: "Dev",
     recipientName: "Ananya",
     occasion: "anniversary",
@@ -285,7 +329,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
             parsedCardPhotos = cardData.photoUrl ? [cardData.photoUrl] : [];
           }
 
-          let parsedStickers: any[] | undefined;
+          let parsedStickers: StickerItem[] | undefined;
           try {
             if (cardData.stickersJson) {
               parsedStickers = JSON.parse(cardData.stickersJson);
@@ -305,7 +349,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
               borderStyle={(cardData.borderStyle as CardBorderStyleKey) || "classic"}
               stickers={parsedStickers}
               isFlipReveal={Boolean(cardData.isFlipReveal)}
-              photoUrl={cardData.photoUrl}
+              photoUrl={cardData.photoUrl || ""}
               photoUrls={parsedCardPhotos}
               photoShape={cardData.photoShape as PhotoShapeKey}
               colorTheme={cardData.colorTheme as ColorThemeKey}

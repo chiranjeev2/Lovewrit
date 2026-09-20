@@ -19,7 +19,7 @@ export default function OpeningMoment({
   revealType = "velvet_box",
   senderName,
   recipientName,
-  occasion = "anniversary",
+  occasion: _occasion = "anniversary",
   hasMusic = false,
   onOpen,
 }: OpeningMomentProps) {

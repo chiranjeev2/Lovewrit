@@ -54,7 +54,7 @@ export default function HomePage() {
             {/* Tagline Pill */}
             <div className="inline-flex items-center space-x-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-4 py-1.5 text-xs font-semibold text-rose-300 backdrop-blur-md mb-6 animate-pulse">
               <Sparkles className="h-3.5 w-3.5" />
-              <span>Personalized Cards & Mini-Websites for Life's Sacred Moments</span>
+              <span>Personalized Cards &amp; Mini-Websites for Life&apos;s Sacred Moments</span>
             </div>
 
             {/* Headline */}
@@ -347,7 +347,7 @@ export default function HomePage() {
                       {tmpl.hasInteractiveDodging && (
                         <div className="flex items-center text-rose-300">
                           <Check className="mr-1.5 h-3.5 w-3.5 text-rose-400" />
-                          <span>Interactive Dodging "No" Button</span>
+                          <span>Interactive Dodging &quot;No&quot; Button</span>
                         </div>
                       )}
                       {tmpl.occasion === "memorial" && (

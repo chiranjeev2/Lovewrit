@@ -14,7 +14,6 @@ export default function VoiceRecorder({
 }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
-  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentAudioUrl || null);
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -48,7 +47,6 @@ export default function VoiceRecorder({
 
       mediaRecorder.onstop = () => {
         const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
-        setAudioBlob(blob);
         const url = URL.createObjectURL(blob);
         setPreviewUrl(url);
 
@@ -73,7 +71,7 @@ export default function VoiceRecorder({
           return prev + 1;
         });
       }, 1000);
-    } catch (err: unknown) {
+    } catch {
       setErrorMsg("Microphone permission denied or not supported on this browser.");
     }
   };
@@ -135,7 +133,6 @@ export default function VoiceRecorder({
       audioPlayerRef.current.pause();
       setIsPlayingPreview(false);
     }
-    setAudioBlob(null);
     setPreviewUrl(null);
     setRecordSeconds(0);
   };

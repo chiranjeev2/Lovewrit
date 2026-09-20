@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { MessageSquare, Heart, ShieldCheck, Flag, Check, Trash2, Send, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { MessageSquare, ShieldCheck, Flag, Check, Trash2, Send, Loader2 } from "lucide-react";
 
 interface GuestbookWallProps {
   slug: string;
@@ -10,13 +10,21 @@ interface GuestbookWallProps {
   requireApproval?: boolean;
 }
 
+export interface GuestbookEntry {
+  id: string;
+  authorName: string;
+  message: string;
+  createdAt: string;
+  status?: string;
+}
+
 export default function GuestbookWall({
   slug,
   occasion = "anniversary",
   token,
   requireApproval = false,
 }: GuestbookWallProps) {
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [authorName, setAuthorName] = useState("");
   const [message, setMessage] = useState("");
@@ -24,7 +32,7 @@ export default function GuestbookWall({
   const [submitFeedback, setSubmitFeedback] = useState<string | null>(null);
   const [isCreator, setIsCreator] = useState(false);
 
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     try {
       const res = await fetch(`/api/guestbook?slug=${slug}${token ? `&token=${token}` : ""}`);
       const data = await res.json();
@@ -37,11 +45,13 @@ export default function GuestbookWall({
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug, token]);
 
   useEffect(() => {
-    fetchEntries();
-  }, [slug, token]);
+    queueMicrotask(() => {
+      void fetchEntries();
+    });
+  }, [fetchEntries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +78,7 @@ export default function GuestbookWall({
           fetchEntries();
         }
       }
-    } catch (err) {
+    } catch {
       setSubmitFeedback("Error submitting message. Please try again.");
     } finally {
       setSubmitting(false);
@@ -203,7 +213,7 @@ export default function GuestbookWall({
               </div>
 
               <p className="text-xs text-neutral-200 font-serif leading-relaxed whitespace-pre-wrap">
-                "{item.message}"
+                &ldquo;{item.message}&rdquo;
               </p>
 
               {/* Moderation Controls (for family/creator with token or master admin) */}

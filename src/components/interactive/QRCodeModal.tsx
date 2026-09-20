@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import QRCode from "qrcode";
-import { QrCode, Download, X, Copy, Check, Sparkles } from "lucide-react";
+import { QrCode, Download, X, Copy, Check } from "lucide-react";
 
 interface QRCodeModalProps {
   url: string;

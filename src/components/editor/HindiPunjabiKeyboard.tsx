@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Keyboard, X, Sparkles } from "lucide-react";
+import { Keyboard, X } from "lucide-react";
 
 interface HindiPunjabiKeyboardProps {
   language?: "hi" | "pa" | "en" | string;
@@ -58,7 +58,6 @@ export default function HindiPunjabiKeyboard({
 
   const chars = activeTab === "pa" ? punjabiChars : hindiChars;
   const phrases = activeTab === "pa" ? punjabiPhrases : hindiPhrases;
-  const langTitle = activeTab === "pa" ? "ਪੰਜਾਬੀ (Gurmukhi)" : "हिन्दी (Devanagari)";
 
   return (
     <div className="mt-2">
