@@ -18,6 +18,26 @@ export type OccasionType =
   | "wedding_blessing"
   | "blessing_ceremony";
 
+export const EVENT_INVITE_OCCASIONS: OccasionType[] = [
+  "jagrata_kirtan",
+  "kitty_party",
+  "birthday",
+  "godhbharai",
+  "akhand_path",
+  "gurpurab",
+  "aqeeqah",
+  "nikah",
+  "iftar",
+  "christening",
+  "wedding_blessing",
+  "blessing_ceremony",
+];
+
+export function isEventInviteOccasion(occasion?: string): boolean {
+  if (!occasion) return false;
+  return EVENT_INVITE_OCCASIONS.includes(occasion as OccasionType);
+}
+
 export type ColorThemeKey =
   | "rose"
   | "midnight"
@@ -343,6 +363,7 @@ export interface TemplateDefinition {
   showBismillahSupported?: boolean;
   seasonalKey?: SeasonalKey;
   seasonalTag?: string; // e.g. "Limited Valentine's Drop"
+  defaultMusicTrack?: string;
 }
 
 export const TEMPLATES: TemplateDefinition[] = [
@@ -442,6 +463,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     sampleLocation: "Our Favorite Coffee Shop",
     hasInteractiveDodging: false,
     revealType: "wax_heart",
+    defaultMusicTrack: "heartfelt-apology",
   },
   {
     id: "sweet-reminiscing",
@@ -512,6 +534,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     venueRequired: false,
     hasInteractiveDodging: false,
     revealType: "balloon_pop",
+    defaultMusicTrack: "birthday-confetti-pop",
     badge: "New in Phase 2",
   },
 
@@ -564,6 +587,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     venueRequired: true,
     hasInteractiveDodging: false,
     revealType: "golden_invite",
+    defaultMusicTrack: "baby-lullaby-blessings",
     badge: "Venue & RSVP",
   },
 
@@ -589,6 +613,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     sampleLocation: "Written with Love",
     hasInteractiveDodging: false,
     revealType: "scroll_unfurl",
+    defaultMusicTrack: "quill-acoustic",
     badge: "100% FREE",
     isFreeCard: true,
     hasAdOption: true,
@@ -619,6 +644,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     venueRequired: true,
     hasInteractiveDodging: false,
     revealType: "diya_aarti",
+    defaultMusicTrack: "temple-aarti-flute",
     badge: "Hindu Devotional",
     faith: "hindu",
     showOmMotifSupported: true,

@@ -118,4 +118,44 @@ export const BUILTIN_AUDIO_TRACKS: AudioTrack[] = [
     category: "social",
     url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=tender-love-10874.mp3",
   },
+  // Apology & Love Letter Keepsake
+  {
+    id: "heartfelt-apology",
+    title: "Soft Embers & Forgiveness",
+    artist: "Lovewrit Solace",
+    duration: "2:55",
+    genre: "Tender Piano & Cello",
+    category: "couples",
+    url: "https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=tender-love-10874.mp3",
+  },
+  // Baby Shower & Godhbharai Blessings
+  {
+    id: "baby-lullaby-blessings",
+    title: "Sweet Cradle & Flute",
+    artist: "Lovewrit Joy",
+    duration: "3:10",
+    genre: "Soothing Lullaby & Flute",
+    category: "social",
+    url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-acoustic-guitar-112191.mp3",
+  },
+  // Devotional Temple Bells & Aarti
+  {
+    id: "temple-aarti-flute",
+    title: "Sacred Temple Chimes & Flute",
+    artist: "Lovewrit Sacred",
+    duration: "4:00",
+    genre: "Divine Bansuri & Bells",
+    category: "devotional",
+    url: "https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=romantic-acoustic-guitar-112191.mp3",
+  },
+  // Birthday Party & Confetti Pop
+  {
+    id: "birthday-confetti-pop",
+    title: "Celebration Pop & Horns",
+    artist: "Lovewrit Party",
+    duration: "2:30",
+    genre: "Vibrant Celebration Funk",
+    category: "birthday",
+    url: "https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=lofi-study-112191.mp3",
+  },
 ];

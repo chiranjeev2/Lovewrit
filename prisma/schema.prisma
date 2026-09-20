@@ -133,6 +133,8 @@ model GuestbookEntry {
   pageData   PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
   authorName String
   message    String
+  attendance String?  @default("ATTENDING") // "ATTENDING" | "REGRETS" | "MESSAGE_ONLY"
+  headcount  Int      @default(1)
   status     String   @default("APPROVED") // "PENDING" | "APPROVED" | "FLAGGED"
   createdAt  DateTime @default(now())
 }

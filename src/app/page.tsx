@@ -212,73 +212,78 @@ export default function HomePage() {
 
         {/* TEMPLATES GALLERY */}
         <section id="templates" className="py-16 sm:py-20 mx-auto max-w-7xl px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-            <div>
-              <span className="text-xs uppercase font-bold tracking-widest text-rose-400">
-                Occasion Collection
-              </span>
-              <h2 className="font-serif text-3xl font-bold text-white mt-1">
-                Curated Occasions & Templates
-              </h2>
-              <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-                Select your occasion style, customize details & voice notes, and deliver unforgettable moments.
-              </p>
+          {/* Section Header Block with clear vertical spacing */}
+          <div className="max-w-2xl mb-8 space-y-2.5">
+            <span className="text-xs uppercase font-bold tracking-widest text-rose-400">
+              Occasion Collection
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
+              Curated Occasions & Templates
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-400 leading-relaxed">
+              Select your occasion style, customize details & voice notes, and deliver unforgettable moments.
+            </p>
+          </div>
+
+          {/* Dedicated Filter Controls Row (Responsive & Clearly Separated) */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-10 pb-5 border-b border-neutral-800/60">
+            {/* Category tabs */}
+            <div className="flex items-center space-x-1.5 overflow-x-auto rounded-2xl border border-neutral-800 bg-neutral-900/90 p-1.5 max-w-full">
+              {[
+                { id: "all", label: "All Occasions" },
+                { id: "letters", label: "Letters & Notes (100% Free)" },
+                { id: "devotional", label: "Devotional & Sacred" },
+                { id: "couples", label: "Couples & Proposals" },
+                { id: "birthdays", label: "Birthdays" },
+                { id: "memorials", label: "Memorials" },
+                { id: "invites", label: "Invites & Gatherings" },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSelectedCategory(tab.id)}
+                  className={`rounded-xl px-3.5 py-2 text-xs font-medium whitespace-nowrap transition ${
+                    selectedCategory === tab.id
+                      ? "bg-rose-500 text-white shadow-sm font-semibold"
+                      : "text-neutral-400 hover:text-neutral-200 hover:bg-neutral-800/60"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {/* Filters */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              {/* Category tabs */}
-              <div className="flex items-center space-x-1 overflow-x-auto rounded-xl border border-neutral-800 bg-neutral-900/80 p-1">
-                {[
-                  { id: "all", label: "All Occasions" },
-                  { id: "letters", label: "Letters & Notes (100% Free)" },
-                  { id: "devotional", label: "Devotional & Sacred" },
-                  { id: "couples", label: "Couples & Proposals" },
-                  { id: "birthdays", label: "Birthdays" },
-                  { id: "memorials", label: "Memorials" },
-                  { id: "invites", label: "Invites & Gatherings" },
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setSelectedCategory(tab.id)}
-                    className={`rounded-lg px-3 py-1.5 text-xs font-medium whitespace-nowrap transition ${
-                      selectedCategory === tab.id
-                        ? "bg-rose-500 text-white shadow-sm"
-                        : "text-neutral-400 hover:text-neutral-200"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Format Filter */}
-              <div className="flex items-center space-x-1 rounded-xl border border-neutral-800 bg-neutral-900/80 p-1">
-                <button
-                  onClick={() => setFormatFilter("ALL")}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                    formatFilter === "ALL" ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setFormatFilter("CARD")}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                    formatFilter === "CARD" ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
-                  }`}
-                >
-                  Cards
-                </button>
-                <button
-                  onClick={() => setFormatFilter("PAGE")}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                    formatFilter === "PAGE" ? "bg-neutral-700 text-white" : "text-neutral-400 hover:text-neutral-200"
-                  }`}
-                >
-                  Pages
-                </button>
-              </div>
+            {/* Format Filter */}
+            <div className="flex items-center space-x-1 rounded-2xl border border-neutral-800 bg-neutral-900/90 p-1.5 shrink-0 self-start lg:self-auto">
+              <button
+                onClick={() => setFormatFilter("ALL")}
+                className={`rounded-xl px-3.5 py-2 text-xs font-medium transition ${
+                  formatFilter === "ALL"
+                    ? "bg-neutral-700 text-white font-semibold"
+                    : "text-neutral-400 hover:text-neutral-200"
+                }`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setFormatFilter("CARD")}
+                className={`rounded-xl px-3.5 py-2 text-xs font-medium transition ${
+                  formatFilter === "CARD"
+                    ? "bg-neutral-700 text-white font-semibold"
+                    : "text-neutral-400 hover:text-neutral-200"
+                }`}
+              >
+                Cards
+              </button>
+              <button
+                onClick={() => setFormatFilter("PAGE")}
+                className={`rounded-xl px-3.5 py-2 text-xs font-medium transition ${
+                  formatFilter === "PAGE"
+                    ? "bg-neutral-700 text-white font-semibold"
+                    : "text-neutral-400 hover:text-neutral-200"
+                }`}
+              >
+                Pages
+              </button>
             </div>
           </div>
 

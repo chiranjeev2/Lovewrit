@@ -6,6 +6,7 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const slug = searchParams.get("slug");
     const token = searchParams.get("token");
+    const format = searchParams.get("format");
 
     if (!slug) {
       return NextResponse.json({ error: "Missing page slug" }, { status: 400 });
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!order || !order.pageData) {
-      return NextResponse.json({ entries: [] });
+      return NextResponse.json({ entries: [], stats: { attendingCount: 0, headcountTotal: 0, regretsCount: 0, totalResponses: 0 } });
     }
 
     const isCreator = Boolean(token && order.adminToken && token === order.adminToken);
@@ -31,8 +32,45 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
+    // Compute live RSVP stats (based on approved entries for public, or all non-flagged for creator)
+    const validEntries = isCreator ? entries.filter((e) => e.status !== "FLAGGED") : entries;
+    const attendingEntries = validEntries.filter((e) => e.attendance === "ATTENDING");
+    const regretsEntries = validEntries.filter((e) => e.attendance === "REGRETS");
+    const headcountTotal = attendingEntries.reduce((acc, curr) => acc + (curr.headcount || 1), 0);
+
+    const stats = {
+      attendingCount: attendingEntries.length,
+      headcountTotal,
+      regretsCount: regretsEntries.length,
+      totalResponses: validEntries.length,
+    };
+
+    // Return CSV export if requested
+    if (format === "csv") {
+      const csvHeader = ["Date", "Guest Name", "RSVP Status", "Headcount", "Blessing / Note", "Status"].join(",");
+      const csvRows = entries.map((e) => {
+        const dateStr = new Date(e.createdAt).toISOString().split("T")[0];
+        const safeName = `"${(e.authorName || "").replace(/"/g, '""')}"`;
+        const rsvpStatus = e.attendance || "ATTENDING";
+        const count = e.headcount || 1;
+        const safeMsg = `"${(e.message || "").replace(/"/g, '""')}"`;
+        const status = e.status;
+        return [dateStr, safeName, rsvpStatus, count, safeMsg, status].join(",");
+      });
+      const csvContent = [csvHeader, ...csvRows].join("\n");
+
+      return new NextResponse(csvContent, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv; charset=utf-8",
+          "Content-Disposition": `attachment; filename="lovewrit-rsvp-${slug}.csv"`,
+        },
+      });
+    }
+
     return NextResponse.json({
       entries,
+      stats,
       isCreator,
       requireApproval: order.pageData.requireGuestbookApproval,
     });
@@ -47,7 +85,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { slug, authorName, message } = body;
+    const { slug, authorName, message, attendance = "ATTENDING", headcount = 1 } = body;
 
     if (!slug || !authorName || !message) {
       return NextResponse.json(
@@ -68,11 +106,18 @@ export async function POST(req: NextRequest) {
     const requireApproval = order.pageData.requireGuestbookApproval;
     const initialStatus = requireApproval ? "PENDING" : "APPROVED";
 
+    const parsedHeadcount = Math.max(1, Math.min(50, parseInt(String(headcount), 10) || 1));
+    const validAttendance = ["ATTENDING", "REGRETS", "MESSAGE_ONLY"].includes(attendance)
+      ? attendance
+      : "ATTENDING";
+
     const entry = await db.guestbookEntry.create({
       data: {
         pageDataId: order.pageData.id,
         authorName: authorName.trim(),
         message: message.trim(),
+        attendance: validAttendance,
+        headcount: validAttendance === "ATTENDING" ? parsedHeadcount : 1,
         status: initialStatus,
       },
     });

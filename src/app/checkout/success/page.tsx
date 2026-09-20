@@ -15,17 +15,26 @@ import {
   ExternalLink,
   Loader2,
   QrCode,
+  Users,
 } from "lucide-react";
+import { isEventInviteOccasion } from "@/lib/templates-data";
 
 interface SuccessOrderRecord {
   id: string;
   slug: string;
   productType?: string;
+  templateId?: string;
   customerName?: string;
   customerEmail?: string;
   currency?: string;
   amountTotal: number;
-  [key: string]: unknown;
+  adminToken?: string | null;
+  pageData?: {
+    occasion?: string;
+  } | null;
+  cardData?: {
+    occasion?: string;
+  } | null;
 }
 
 function SuccessContent() {
@@ -224,6 +233,43 @@ function SuccessContent() {
             </div>
           )}
         </div>
+
+        {/* RSVP Management Box (for Event/Invitation Templates) */}
+        {order.templateId && isEventInviteOccasion(order.pageData?.occasion || "") && (
+          <div className="mt-8 rounded-2xl border border-amber-500/30 bg-neutral-950/80 p-6 text-left">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center space-x-2 text-amber-400">
+                <Users className="h-5 w-5" />
+                <span className="text-xs font-bold uppercase tracking-wider">
+                  Guest RSVP Registry & Management
+                </span>
+              </div>
+              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                Live Host Dashboard
+              </span>
+            </div>
+            <p className="text-xs text-neutral-400 mb-4">
+              As guests view your invitation, their attendance confirmations (+1 counts & blessings) will register in real time. You can export the list to CSV anytime.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/api/guestbook?slug=${targetSlug}&token=${order.adminToken || ""}&format=csv`}
+                download={`lovewrit-rsvp-${targetSlug}.csv`}
+                className="inline-flex items-center space-x-2 rounded-xl border border-amber-500/40 bg-amber-500/20 px-4 py-2 text-xs font-bold text-amber-200 hover:bg-amber-500/30 transition shadow-sm"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span>Download Guest Responses (CSV)</span>
+              </a>
+              <Link
+                href={`/p/${targetSlug}?token=${order.adminToken || ""}`}
+                className="inline-flex items-center space-x-2 rounded-xl border border-neutral-700 bg-neutral-900 px-4 py-2 text-xs font-medium text-neutral-200 hover:text-white transition"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-neutral-400" />
+                <span>Moderate Guest Registry</span>
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="mt-6 flex flex-col sm:flex-row gap-3">

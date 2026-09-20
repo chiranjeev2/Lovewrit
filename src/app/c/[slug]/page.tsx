@@ -19,9 +19,11 @@ import {
   Printer,
   Copy,
   Gift,
+  FileText,
 } from "lucide-react";
 import { toPng, toJpeg } from "html-to-image";
 import { FontFamilyKey, CardBorderStyleKey } from "@/lib/templates-data";
+import { generateFoldableCardPdf } from "@/lib/pdf-export";
 
 export interface CardCustomData {
   senderName: string;
@@ -80,6 +82,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const [copied, setCopied] = useState(false);
   const [copiedReferral, setCopiedReferral] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const [showOpeningMoment, setShowOpeningMoment] = useState(true);
   const [isLockedCountdown, setIsLockedCountdown] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
@@ -243,6 +246,30 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const template = TEMPLATES.find((t) => t.id === order?.templateId) || TEMPLATES[1];
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
+  const handleDownloadPdf = async () => {
+    setIsExportingPdf(true);
+    try {
+      await generateFoldableCardPdf({
+        senderName: cardData.senderName,
+        recipientName: cardData.recipientName,
+        occasion: cardData.occasion,
+        message: cardData.message,
+        secondaryMessage: cardData.secondaryMessage,
+        fontFamily: cardData.fontFamily,
+        colorTheme: cardData.colorTheme,
+        borderStyle: cardData.borderStyle,
+        location: cardData.location,
+        eventDate: cardData.eventDate,
+        shareUrl: currentUrl,
+        cardRef: cardRef.current,
+      });
+    } catch (err) {
+      console.error("PDF export error:", err);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   return (
     <div className="relative min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8">
       {/* QR Code Printable Modal */}
@@ -370,7 +397,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <button
             onClick={() => handleDownloadImage("png")}
-            disabled={isDownloading}
+            disabled={isDownloading || isExportingPdf}
             className="inline-flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition disabled:opacity-50"
           >
             {isDownloading ? (
@@ -382,8 +409,22 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           </button>
 
           <button
+            onClick={handleDownloadPdf}
+            disabled={isDownloading || isExportingPdf}
+            className="inline-flex items-center space-x-2 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/20 px-5 py-3 text-xs font-bold text-amber-200 hover:bg-amber-500/30 hover:text-white shadow-lg shadow-amber-500/15 hover:scale-105 active:scale-95 transition disabled:opacity-50"
+            title="Download a foldable 2-page duplex greeting card PDF (5x7 standard) with front cover, inside note, and back panel QR code"
+          >
+            {isExportingPdf ? (
+              <Loader2 className="h-4 w-4 animate-spin text-amber-300" />
+            ) : (
+              <FileText className="h-4 w-4 text-amber-400" />
+            )}
+            <span>Foldable Card (PDF)</span>
+          </button>
+
+          <button
             onClick={() => handleDownloadImage("print")}
-            disabled={isDownloading}
+            disabled={isDownloading || isExportingPdf}
             className="inline-flex items-center space-x-2 rounded-2xl border border-rose-500/40 bg-neutral-900/90 px-5 py-3 text-xs font-bold text-rose-300 hover:bg-neutral-800 hover:text-white shadow-lg shadow-rose-500/10 hover:scale-105 active:scale-95 transition disabled:opacity-50"
             title="Export high-resolution 300 DPI image suited for physical 4x6 / 5x7 prints"
           >
@@ -393,7 +434,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
 
           <button
             onClick={() => handleDownloadImage("jpeg")}
-            disabled={isDownloading}
+            disabled={isDownloading || isExportingPdf}
             className="inline-flex items-center space-x-2 rounded-2xl border border-neutral-800 bg-neutral-900/80 px-5 py-3 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition disabled:opacity-50"
           >
             <span>Download JPG</span>
