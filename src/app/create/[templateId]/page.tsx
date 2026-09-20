@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, use } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
@@ -37,28 +38,38 @@ import {
   Upload,
   Calendar,
   Clock,
+  Sparkle,
   Music,
   Eye,
   Sliders,
   AlertCircle,
+  HelpCircle,
   Check,
+  ShieldCheck,
   Loader2,
   Gift,
   CreditCard,
   Tag,
+  Volume2,
   Lock,
   Camera,
   Film,
   Play,
   Pause,
   MapPin,
+  Flame,
   Crown,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Info,
+  Layers,
   FileText,
   Plus,
   Trash2,
+  ArrowRight,
+  ArrowUp,
+  ArrowDown,
   Zap,
   Mic,
 } from "lucide-react";
@@ -80,7 +91,8 @@ export default function CreateLovewritPage({
   params: Promise<{ templateId: string }>;
 }) {
   const resolvedParams = use(params);
-  const { currency, setCurrency, region, language } = useApp();
+  const router = useRouter();
+  const { currency, setCurrency, region, language, setLanguage, t } = useApp();
 
   const templateId = resolvedParams.templateId;
   const template = getTemplateById(templateId) || TEMPLATES[0];
@@ -187,12 +199,12 @@ export default function CreateLovewritPage({
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const replyParam = urlParams.get("replyTo");
-      const toParam = urlParams.get("to");
-      const fKeyParam = urlParams.get("founderKey");
-
       queueMicrotask(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const replyParam = urlParams.get("replyTo");
+        const toParam = urlParams.get("to");
+        const fKeyParam = urlParams.get("founderKey");
+
         if (toParam) {
           const decodedTo = decodeURIComponent(toParam);
           setRecipientName(decodedTo);
@@ -1546,19 +1558,6 @@ export default function CreateLovewritPage({
                   className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
                 />
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                  City / Location
-                </label>
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="e.g. Chandigarh, India"
-                  className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
-                />
-              </div>
             </div>
 
             {/* Step 7: Photo Upload & Frame Shape */}
@@ -1719,11 +1718,7 @@ export default function CreateLovewritPage({
                         className="hidden"
                       />
                       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-900 text-neutral-400 group-hover:bg-rose-500/20 group-hover:text-rose-400 transition mb-2">
-                        {isUploadingPhoto ? (
-                          <Loader2 className="h-5 w-5 animate-spin text-rose-400" />
-                        ) : (
-                          <Plus className="h-5 w-5" />
-                        )}
+                        <Plus className="h-5 w-5" />
                       </div>
                       <span className="text-xs font-semibold text-neutral-300 group-hover:text-white transition">
                         + Add One Photo
@@ -1948,29 +1943,26 @@ export default function CreateLovewritPage({
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {(["romance", "celebration", "devotional", "nature"] as const).map((cat) => {
-                        const items = STICKER_SETS.filter((s) => s.category === cat);
-                        return (
-                          <div key={cat} className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
-                            <span className="text-[10px] uppercase font-bold text-neutral-400 w-full sm:w-24 shrink-0 capitalize">
-                              {cat}:
-                            </span>
-                            <div className="flex flex-wrap gap-1">
-                              {items.map((stk) => (
-                                <button
-                                  key={stk.id}
-                                  type="button"
-                                  onClick={() => handleAddSticker(stk.emoji)}
-                                  title={stk.label}
-                                  className="h-8 w-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
-                                >
-                                  {stk.emoji}
-                                </button>
-                              ))}
-                            </div>
+                      {STICKER_SETS.map((set) => (
+                        <div key={set.category} className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-neutral-950/60 border border-neutral-800/80">
+                          <span className="text-[10px] uppercase font-bold text-neutral-400 w-full sm:w-24 shrink-0">
+                            {set.category}:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {set.stickers.map((stk) => (
+                              <button
+                                key={stk.id}
+                                type="button"
+                                onClick={() => handleAddSticker(stk.emoji)}
+                                title={stk.label}
+                                className="h-8 w-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
+                              >
+                                {stk.emoji}
+                              </button>
+                            ))}
                           </div>
-                        );
-                      })}
+                        </div>
+                      ))}
                     </div>
 
                     {/* Placed Stickers Chips */}

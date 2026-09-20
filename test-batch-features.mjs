@@ -28,11 +28,12 @@ async function runTests() {
 
   // 2. Sticker sets verification
   console.log("\n2. Testing Sticker Sets:");
-  if (STICKER_SETS.length < 20) {
-    throw new Error(`Expected at least 20 stickers in STICKER_SETS, got ${STICKER_SETS.length}`);
+  const totalStickers = STICKER_SETS.reduce((acc, g) => acc + g.stickers.length, 0);
+  if (totalStickers < 20) {
+    throw new Error(`Expected at least 20 stickers in STICKER_SETS, got ${totalStickers}`);
   }
   const categories = new Set(STICKER_SETS.map((s) => s.category));
-  console.log(`✓ Total stickers: ${STICKER_SETS.length} across categories: ${Array.from(categories).join(", ")}`);
+  console.log(`✓ Total stickers: ${totalStickers} across categories: ${Array.from(categories).join(", ")}`);
 
   // 3. Database schema verification
   console.log("\n3. Testing Database Models & Fields:");

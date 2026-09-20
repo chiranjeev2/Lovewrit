@@ -57,35 +57,58 @@ export interface StickerOption {
   id: string;
   emoji: string;
   label: string;
-  category: "romance" | "celebration" | "devotional" | "nature";
+  category?: "romance" | "celebration" | "devotional" | "nature";
 }
 
-export const STICKER_SETS: StickerOption[] = [
-  // Romance
-  { id: "heart", emoji: "❤️", label: "Heart", category: "romance" },
-  { id: "rose", emoji: "🌹", label: "Rose", category: "romance" },
-  { id: "sparkling_heart", emoji: "💖", label: "Sparkling Heart", category: "romance" },
-  { id: "cupid", emoji: "💘", label: "Cupid's Arrow", category: "romance" },
-  { id: "ring", emoji: "💍", label: "Ring", category: "romance" },
-  // Celebration
-  { id: "party", emoji: "🎉", label: "Party Popper", category: "celebration" },
-  { id: "balloon", emoji: "🎈", label: "Balloon", category: "celebration" },
-  { id: "champagne", emoji: "🥂", label: "Cheers", category: "celebration" },
-  { id: "cake", emoji: "🎂", label: "Cake", category: "celebration" },
-  { id: "sparkles", emoji: "✨", label: "Sparkles", category: "celebration" },
-  // Devotional / Sacred
-  { id: "diya", emoji: "🪔", label: "Diya Lamp", category: "devotional" },
-  { id: "namaste", emoji: "🙏", label: "Namaste", category: "devotional" },
-  { id: "crescent", emoji: "🌙", label: "Crescent", category: "devotional" },
-  { id: "dove", emoji: "🕊️", label: "Dove", category: "devotional" },
-  { id: "om", emoji: "🕉️", label: "Om", category: "devotional" },
-  // Nature & Warmth
-  { id: "flower", emoji: "🌸", label: "Cherry Blossom", category: "nature" },
-  { id: "sunflower", emoji: "🌻", label: "Sunflower", category: "nature" },
-  { id: "leaf", emoji: "🌿", label: "Botanical Leaf", category: "nature" },
-  { id: "star", emoji: "⭐", label: "Star", category: "nature" },
-  { id: "flame", emoji: "🔥", label: "Flame", category: "nature" },
+export interface StickerCategoryGroup {
+  category: "romance" | "celebration" | "devotional" | "nature";
+  stickers: StickerOption[];
+}
+
+export const STICKER_SETS: StickerCategoryGroup[] = [
+  {
+    category: "romance",
+    stickers: [
+      { id: "heart", emoji: "❤️", label: "Heart", category: "romance" },
+      { id: "rose", emoji: "🌹", label: "Rose", category: "romance" },
+      { id: "sparkling_heart", emoji: "💖", label: "Sparkling Heart", category: "romance" },
+      { id: "cupid", emoji: "💘", label: "Cupid's Arrow", category: "romance" },
+      { id: "ring", emoji: "💍", label: "Ring", category: "romance" },
+    ],
+  },
+  {
+    category: "celebration",
+    stickers: [
+      { id: "party", emoji: "🎉", label: "Party Popper", category: "celebration" },
+      { id: "balloon", emoji: "🎈", label: "Balloon", category: "celebration" },
+      { id: "champagne", emoji: "🥂", label: "Cheers", category: "celebration" },
+      { id: "cake", emoji: "🎂", label: "Cake", category: "celebration" },
+      { id: "sparkles", emoji: "✨", label: "Sparkles", category: "celebration" },
+    ],
+  },
+  {
+    category: "devotional",
+    stickers: [
+      { id: "diya", emoji: "🪔", label: "Diya Lamp", category: "devotional" },
+      { id: "namaste", emoji: "🙏", label: "Namaste", category: "devotional" },
+      { id: "crescent", emoji: "🌙", label: "Crescent", category: "devotional" },
+      { id: "dove", emoji: "🕊️", label: "Dove", category: "devotional" },
+      { id: "om", emoji: "🕉️", label: "Om", category: "devotional" },
+    ],
+  },
+  {
+    category: "nature",
+    stickers: [
+      { id: "flower", emoji: "🌸", label: "Cherry Blossom", category: "nature" },
+      { id: "sunflower", emoji: "🌻", label: "Sunflower", category: "nature" },
+      { id: "leaf", emoji: "🌿", label: "Botanical Leaf", category: "nature" },
+      { id: "star", emoji: "⭐", label: "Star", category: "nature" },
+      { id: "flame", emoji: "🔥", label: "Flame", category: "nature" },
+    ],
+  },
 ];
+
+export const ALL_STICKERS: StickerOption[] = STICKER_SETS.flatMap((g) => g.stickers);
 
 export type ProposalQuestionKey =
   | "marry_me"
