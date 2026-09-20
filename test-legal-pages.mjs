@@ -81,3 +81,4 @@ test("Create page contains required terms checkbox blocking checkout until check
 console.log("\n=================================================");
 console.log(`RESULTS: ${passed}/${total} TESTS PASSED (100%)`);
 console.log("=================================================");
+
