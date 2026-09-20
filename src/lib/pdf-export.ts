@@ -283,3 +283,4 @@ function renderVectorFrontCover(
   doc.setTextColor(120, 110, 110);
   doc.text(`With Love from ${senderName}`, centerX, 100, { align: "center" });
 }
+

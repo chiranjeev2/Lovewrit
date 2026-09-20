@@ -361,6 +361,7 @@ export default function CreateLovewritPage({
   // Customer checkout details
   const [customerName, setCustomerName] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
+  const [agreedToTerms, setAgreedToTerms] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -572,6 +573,11 @@ export default function CreateLovewritPage({
     const finalEmail = customerEmail || (isFounderFree ? "founder@lovewrit.com" : "");
     if (!finalEmail || !finalEmail.includes("@")) {
       setFormError("Please enter a valid email address to receive your order links.");
+      return;
+    }
+
+    if (!agreedToTerms) {
+      setFormError("Please agree to the Terms and Conditions and Privacy Policy before proceeding to checkout.");
       return;
     }
 
@@ -2426,14 +2432,48 @@ export default function CreateLovewritPage({
                 </div>
               </div>
 
+              {/* Required Terms & Privacy Agreement Checkbox */}
+              <div className="flex items-start space-x-2.5 pt-1">
+                <input
+                  type="checkbox"
+                  id="checkout-terms-checkbox"
+                  required
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-500 focus:ring-rose-500 focus:ring-offset-neutral-950 accent-rose-500 cursor-pointer"
+                />
+                <label
+                  htmlFor="checkout-terms-checkbox"
+                  className="text-xs text-neutral-400 leading-snug cursor-pointer select-none"
+                >
+                  I agree to the{" "}
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    className="text-rose-400 hover:text-rose-300 underline underline-offset-2 font-medium"
+                  >
+                    Terms and Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    className="text-rose-400 hover:text-rose-300 underline underline-offset-2 font-medium"
+                  >
+                    Privacy Policy
+                  </Link>
+                </label>
+              </div>
+
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !agreedToTerms}
+                title={!agreedToTerms ? "Please accept the Terms & Conditions and Privacy Policy to proceed" : undefined}
                 className={`group relative flex w-full items-center justify-center rounded-2xl ${
                   isFounderFree
                     ? "bg-gradient-to-r from-amber-500 to-rose-500 shadow-amber-500/25"
                     : "bg-gradient-to-r from-rose-500 to-pink-500 shadow-rose-500/25"
-                } px-6 py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50`}
+                } px-6 py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed`}
               >
                 {isSubmitting ? (
                   <div className="flex items-center space-x-2">

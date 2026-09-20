@@ -55,17 +55,27 @@ export default function Footer() {
 
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-200">
-              Platform
+              Platform & Legal
             </h4>
             <ul className="mt-3 space-y-2 text-xs">
               <li>
                 <Link href="/#pricing" className="hover:text-rose-400 transition">
-                  Fair Region-Based Pricing
+                  Fair Regional Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/#templates" className="hover:text-rose-400 transition">
-                  Templates Gallery
+                <Link href="/faq" className="hover:text-rose-400 transition">
+                  Frequently Asked Questions
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-rose-400 transition">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="hover:text-rose-400 transition">
+                  Terms & Conditions
                 </Link>
               </li>
               <li>
@@ -77,10 +87,22 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t border-neutral-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500">
+        <div className="mt-8 border-t border-neutral-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 gap-3">
           <p>© {new Date().getFullYear()} Lovewrit. All rights reserved.</p>
-          <div className="mt-2 sm:mt-0 flex items-center space-x-4">
-            <span className="inline-flex items-center text-[11px] text-rose-400/80">
+          <div className="flex flex-wrap items-center gap-4 text-[11px]">
+            <Link href="/faq" className="hover:text-neutral-300 transition">
+              FAQ
+            </Link>
+            <span className="text-neutral-700">•</span>
+            <Link href="/privacy" className="hover:text-neutral-300 transition">
+              Privacy Policy
+            </Link>
+            <span className="text-neutral-700">•</span>
+            <Link href="/terms" className="hover:text-neutral-300 transition">
+              Terms & Conditions
+            </Link>
+            <span className="text-neutral-700">•</span>
+            <span className="inline-flex items-center text-rose-400/80">
               <Sparkles className="mr-1 h-3 w-3" />
               Digital Keepsakes & Cards
             </span>
