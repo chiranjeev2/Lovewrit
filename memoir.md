@@ -69,20 +69,22 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
    - On-screen phonetic virtual keyboards for Hindi and Punjabi script entry.
 10. **Founder Fulfillment Queue & Rush Availability Switch**:
     - Dedicated `/admin` tab for tracking and fulfilling Custom and Rush orders with priority badges.
+11. **Interactive RSVP & Guest Registry**:
+    - Dual-branch architecture: live attendance counter, headcount selector (`1` to `5+`), blessing/note submission, and host 1-click CSV export on event/invitation templates.
+12. **Occasion-Specific Unboxing Reveals & Curated Audio**:
+    - Tailored interactive reveal rituals: Wax-sealed envelope unsealing for Apology/Letter, Diya flame lighting ceremony (*दीप प्रज्वलन*) for Devotional, Marigold petal shower for Baby Showers, and Balloon pop for Birthdays with paired ambient tracks.
+13. **Foldable Printable PDF Keepsake Export**:
+    - Standard 5×7" bi-fold greeting card (10×7" flat landscape sheet) featuring front design, inside heartfelt message (bilingual & handwriting support), and back panel with digital keepsake QR code.
+14. **Legal Compliance & Checkout Protection**:
+    - Dedicated `/privacy`, `/terms`, and `/faq` routes linked in footer, with a mandatory checkout agreement checkbox blocking payment until accepted.
 
 ---
 
 ## 3. Roadmap & Strategic Direction
 
-### Next Focus: Service Depth & Polished Polish (Recommended Before Phase 3)
-Before adding AI writing or automated video rendering (Phase 3), the highest ROI comes from deepening the distinction of each individual service:
-- Occasion-specific unboxing animations (e.g. envelope unsealing for Apologies, garland/floral animations for Godhbharai, diya lighting for Kirtan).
-- Curated background soundtracks per occasion.
-- Interactive RSVP counters & guest gift registries for event invitations.
-- High-res PDF printable card variants.
-
 ### Phase 3 (Scaling & Automation)
 - **AI-Powered Heartfelt Writing Assistant**: Multilingual emotion-guided letter writer (English, Hindi, Punjabi) powered by Gemini API.
 - **AI Stylized Photos**: Optional cartoon/Ghibli/watercolor artistic filters for user photos.
 - **Automated Video Montage Generator**: Server-side MP4 generation compiling photos, message captions, and audio into an exportable video for Instagram/WhatsApp status.
+- **Production Cloud Deployment & Custom Domain**: PostgreSQL migration (Supabase/Neon), production Stripe webhooks, and live domain configuration.
 - **Mobile Native App**: React Native / Flutter wrapper once web sales reach target volume.
