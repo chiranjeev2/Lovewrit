@@ -54,7 +54,7 @@ interface CardPreviewProps {
   showBismillah?: boolean;
 }
 
-export default function CardPreview({
+const CardPreview = React.memo(function CardPreview({
   senderName,
   recipientName,
   nickname,
@@ -162,6 +162,9 @@ export default function CardPreview({
   const isSecular = occasion === "blessing_ceremony";
   const isLetter = occasion === "letter_to_dear_one";
   const isScrollTheme = colorTheme === "scroll";
+  const isModernTheme = colorTheme === "modern";
+  const isModernGoldTheme = colorTheme === "modern_gold";
+  const isAnyModern = isModernTheme || isModernGoldTheme;
 
   // Display recipient name with optional pet name / nickname
   const displayedRecipient = nickname
@@ -186,19 +189,15 @@ export default function CardPreview({
         ref={cardRef}
         id="lovewrit-card-node"
         onClick={() => isFlipReveal && setIsFlipped(!isFlipped)}
-        className={`relative mx-auto w-full max-w-sm sm:max-w-md aspect-[4/5] rounded-[32px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-500 ${
+        className={`relative mx-auto w-full max-w-sm sm:max-w-md min-h-[540px] sm:min-h-[580px] h-auto rounded-[32px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden shadow-2xl transition-all duration-500 ${
           isFlipReveal ? "cursor-pointer" : ""
         } ${getBorderContainerClass(borderStyle)} ${
           isScrollTheme
-            ? "border-2 border-[#8c6227]/90 text-[#2c1a0e]"
-            : isJagrata
-            ? "bg-gradient-to-b from-red-950/85 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
-            : isSikh
-            ? "bg-gradient-to-b from-amber-950/90 via-neutral-950 to-amber-950/80 border-amber-500/50 text-amber-50 shadow-amber-950/40"
-            : isMuslim
-            ? "bg-gradient-to-b from-emerald-950/90 via-neutral-950 to-emerald-950/80 border-emerald-500/50 text-emerald-50 shadow-emerald-950/40"
-            : isChristian
-            ? "bg-gradient-to-b from-slate-900/95 via-sky-950/40 to-neutral-950 border-sky-400/40 text-sky-50 shadow-sky-950/30"
+            ? "border-2 border-[#8c6227]/90 text-[#2a170a]"
+            : isModernGoldTheme
+            ? "border-2 border-amber-500/60 bg-neutral-900/95 text-amber-50 shadow-[0_25px_50px_-12px_rgba(245,158,11,0.25)]"
+            : isModernTheme
+            ? "border-2 border-slate-600/70 bg-neutral-900/95 text-slate-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
             : `${theme.cardBg} ${theme.borderStyle}`
         }`}
         style={
@@ -210,12 +209,9 @@ export default function CardPreview({
                   "inset 0 0 45px rgba(95, 52, 14, 0.28), inset 0 0 10px rgba(60, 30, 8, 0.35), 0 25px 50px -12px rgba(28, 16, 7, 0.5)",
               }
             : {
-                boxShadow:
-                  isJagrata || isSikh
-                    ? "0 25px 50px -12px rgba(180, 83, 9, 0.35)"
-                    : isMuslim
-                    ? "0 25px 50px -12px rgba(5, 150, 105, 0.35)"
-                    : "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
+                boxShadow: theme.accentColor
+                  ? `0 25px 50px -12px ${theme.accentColor}33, 0 10px 20px -5px rgba(0, 0, 0, 0.5)`
+                  : "0 25px 50px -12px rgba(0, 0, 0, 0.7)",
               }
         }
       >
@@ -241,6 +237,60 @@ export default function CardPreview({
                 <span>❦</span>
                 <span className="tracking-[0.3em] font-serif text-[8px] uppercase text-[#8c6227]/60">ANNO MMXXVI</span>
                 <span>❦</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Modern Scroll Brushed Silver / Platinum Rails & Margin Frame */}
+        {isModernTheme && isLetter && (
+          <>
+            {/* Top Rod */}
+            <div className="absolute top-0 inset-x-3 h-2 bg-gradient-to-r from-slate-600 via-slate-200 to-slate-600 rounded-b-sm shadow-md border-b border-slate-700 z-20 flex items-center justify-center">
+              <div className="w-20 h-0.5 bg-white/70 rounded-full blur-[0.5px]" />
+            </div>
+            {/* Bottom Rod */}
+            <div className="absolute bottom-0 inset-x-3 h-2 bg-gradient-to-r from-slate-600 via-slate-200 to-slate-600 rounded-t-sm shadow-md border-t border-slate-700 z-20 flex items-center justify-center">
+              <div className="w-20 h-0.5 bg-white/70 rounded-full blur-[0.5px]" />
+            </div>
+            {/* Inner Modern Calligraphic Margin Frame */}
+            <div className="absolute inset-3 rounded-[24px] border border-slate-700/50 pointer-events-none z-10 flex flex-col justify-between p-2">
+              <div className="flex justify-between text-slate-400 text-[10px] select-none font-mono">
+                <span>✦</span>
+                <span className="tracking-[0.25em] text-[8px] uppercase text-slate-300 font-semibold">MODERN MANUSCRIPT</span>
+                <span>✦</span>
+              </div>
+              <div className="flex justify-between text-slate-400 text-[10px] select-none font-mono">
+                <span>✦</span>
+                <span className="tracking-[0.25em] text-[8px] uppercase text-slate-400">SILVER EDITION</span>
+                <span>✦</span>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Modern Scroll Gilded Gold Rails & Margin Frame */}
+        {isModernGoldTheme && isLetter && (
+          <>
+            {/* Top Rod */}
+            <div className="absolute top-0 inset-x-3 h-2 bg-gradient-to-r from-amber-700 via-amber-300 to-amber-700 rounded-b-sm shadow-md border-b border-amber-600/70 z-20 flex items-center justify-center">
+              <div className="w-20 h-0.5 bg-amber-100/90 rounded-full blur-[0.5px]" />
+            </div>
+            {/* Bottom Rod */}
+            <div className="absolute bottom-0 inset-x-3 h-2 bg-gradient-to-r from-amber-700 via-amber-300 to-amber-700 rounded-t-sm shadow-md border-t border-amber-600/70 z-20 flex items-center justify-center">
+              <div className="w-20 h-0.5 bg-amber-100/90 rounded-full blur-[0.5px]" />
+            </div>
+            {/* Inner Modern Calligraphic Margin Frame */}
+            <div className="absolute inset-3 rounded-[24px] border border-amber-500/40 pointer-events-none z-10 flex flex-col justify-between p-2">
+              <div className="flex justify-between text-amber-400/80 text-[10px] select-none font-mono">
+                <span>✦</span>
+                <span className="tracking-[0.25em] text-[8px] uppercase text-amber-300 font-semibold">MODERN MANUSCRIPT</span>
+                <span>✦</span>
+              </div>
+              <div className="flex justify-between text-amber-400/80 text-[10px] select-none font-mono">
+                <span>✦</span>
+                <span className="tracking-[0.25em] text-[8px] uppercase text-amber-400">GOLDEN EDITION</span>
+                <span>✦</span>
               </div>
             </div>
           </>
@@ -285,18 +335,26 @@ export default function CardPreview({
         {isFlipReveal && isFlipped ? (
           <div className="relative z-20 h-full flex flex-col justify-between items-center text-center py-4 px-2">
             <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">
+              <span
+                className={`text-[10px] font-bold uppercase tracking-widest ${
+                  isScrollTheme ? "text-[#7a481c]" : "text-rose-400"
+                }`}
+              >
                 A Letter From The Heart
               </span>
-              <h3 className="font-serif text-xl font-bold text-white">
+              <h3
+                className={`font-serif text-xl font-bold ${
+                  isScrollTheme ? "text-[#2a170a]" : "text-white"
+                }`}
+              >
                 Dearest {displayedRecipient}
               </h3>
             </div>
 
             <div className="my-auto max-w-xs space-y-3">
               <p
-                className={`${getFontClass(fontFamily)} leading-relaxed ${
-                  isScrollTheme ? "text-[#3b2d18]" : "text-neutral-100"
+                className={`${getFontClass(fontFamily)} whitespace-pre-line break-words leading-relaxed ${
+                  isScrollTheme ? "text-[#2a170a] font-medium" : "text-neutral-100"
                 }`}
               >
                 &ldquo;{message || "You make every single day brighter, warmer, and filled with love."}&rdquo;
@@ -304,10 +362,14 @@ export default function CardPreview({
 
               {/* Bilingual Secondary Message */}
               {secondaryMessage && (
-                <div className="pt-3 border-t border-white/10">
+                <div
+                  className={`pt-3 border-t ${
+                    isScrollTheme ? "border-[#8c6227]/30" : "border-white/10"
+                  }`}
+                >
                   <p
-                    className={`${getFontClass(fontFamily)} leading-relaxed text-xs sm:text-sm ${
-                      isScrollTheme ? "text-[#4a3a22]" : "text-neutral-300"
+                    className={`${getFontClass(fontFamily)} whitespace-pre-line break-words leading-relaxed text-xs sm:text-sm ${
+                      isScrollTheme ? "text-[#45270f] font-medium" : "text-neutral-300"
                     }`}
                   >
                     &ldquo;{secondaryMessage}&rdquo;
@@ -317,10 +379,43 @@ export default function CardPreview({
             </div>
 
             <div className="pt-2">
-              <p className="text-xs font-serif italic text-neutral-300">
-                Forever yours, <span className="font-bold text-white underline">{senderName}</span>
+              <p
+                className={`text-xs font-serif italic ${
+                  isScrollTheme
+                    ? "text-[#5c3716]"
+                    : isModernGoldTheme
+                    ? "text-amber-200/90"
+                    : isModernTheme
+                    ? "text-slate-300"
+                    : "text-neutral-300"
+                }`}
+              >
+                Forever yours,{" "}
+                <span
+                  className={`font-bold underline ${
+                    isScrollTheme
+                      ? "text-[#2a170a] decoration-[#8c6227]"
+                      : isModernGoldTheme
+                      ? "text-white decoration-amber-400 font-semibold"
+                      : isModernTheme
+                      ? "text-white decoration-slate-400 font-semibold"
+                      : "text-white"
+                  }`}
+                >
+                  {senderName}
+                </span>
               </p>
-              <span className="text-[9px] text-neutral-500 mt-2 block">
+              <span
+                className={`text-[9px] mt-2 block ${
+                  isScrollTheme
+                    ? "text-[#7a481c]"
+                    : isModernGoldTheme
+                    ? "text-amber-400/80"
+                    : isModernTheme
+                    ? "text-slate-400"
+                    : "text-neutral-500"
+                }`}
+              >
                 Tap anywhere to flip back to front view
               </span>
             </div>
@@ -331,57 +426,120 @@ export default function CardPreview({
             {/* Top Header: Occasion badge & Location */}
             <div className="relative z-10 flex items-center justify-between">
               {isJagrata ? (
-                <div className="flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 shadow-sm">
-                  <Flame className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-amber-300">
+                <div
+                  className={`flex items-center space-x-1.5 rounded-full px-2.5 py-0.5 shadow-sm border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/20 border-[#8c6227]/50 text-[#3b200b]"
+                      : "bg-amber-500/20 border-amber-500/40 text-amber-300"
+                  }`}
+                >
+                  <Flame
+                    className={`h-3.5 w-3.5 animate-pulse ${
+                      isScrollTheme ? "text-[#8c6227]" : "text-amber-400"
+                    }`}
+                  />
+                  <span className="text-[10px] font-bold tracking-wider uppercase">
                     {showOmMotif ? "ॐ 🚩 JAI MATA DI 🚩 ॐ" : "🚩 JAI MATA DI 🚩"}
                   </span>
                 </div>
               ) : isSikh ? (
-                <div className="flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 shadow-sm">
-                  <span className="text-xs font-bold text-amber-300">ੴ</span>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-amber-200">
+                <div
+                  className={`flex items-center space-x-1.5 rounded-full px-2.5 py-0.5 shadow-sm border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/20 border-[#8c6227]/50 text-[#3b200b]"
+                      : "bg-amber-500/20 border-amber-500/40 text-amber-200"
+                  }`}
+                >
+                  <span className="text-xs font-bold">ੴ</span>
+                  <span className="text-[10px] font-bold tracking-wider uppercase">
                     SATNAM WAHEGURU
                   </span>
                 </div>
               ) : isMuslim ? (
-                <div className="flex items-center space-x-1.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2.5 py-0.5 shadow-sm">
-                  <span className="text-xs text-emerald-300">🌙</span>
-                  <span className="text-[10px] font-bold tracking-wider text-emerald-200">
+                <div
+                  className={`flex items-center space-x-1.5 rounded-full px-2.5 py-0.5 shadow-sm border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/20 border-[#8c6227]/50 text-[#3b200b]"
+                      : "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
+                  }`}
+                >
+                  <span className="text-xs">🌙</span>
+                  <span className="text-[10px] font-bold tracking-wider">
                     {showBismillah ? "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ" : "SACRED BLESSING"}
                   </span>
                 </div>
               ) : isChristian ? (
-                <div className="flex items-center space-x-1.5 rounded-full bg-sky-500/20 border border-sky-500/40 px-2.5 py-0.5 shadow-sm">
-                  <span className="text-xs text-sky-300">🕊️</span>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-sky-200">
+                <div
+                  className={`flex items-center space-x-1.5 rounded-full px-2.5 py-0.5 shadow-sm border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/20 border-[#8c6227]/50 text-[#3b200b]"
+                      : "bg-sky-500/20 border-sky-500/40 text-sky-200"
+                  }`}
+                >
+                  <span className="text-xs">🕊️</span>
+                  <span className="text-[10px] font-bold tracking-wider uppercase">
                     {"IN GOD'S GRACE ✝"}
                   </span>
                 </div>
               ) : isSecular ? (
-                <div className="flex items-center space-x-1.5 rounded-full bg-stone-500/20 border border-stone-500/40 px-2.5 py-0.5 shadow-sm">
-                  <span className="text-xs text-stone-300">🌿</span>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-stone-200">
+                <div
+                  className={`flex items-center space-x-1.5 rounded-full px-2.5 py-0.5 shadow-sm border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/20 border-[#8c6227]/50 text-[#3b200b]"
+                      : "bg-stone-500/20 border-stone-500/40 text-stone-200"
+                  }`}
+                >
+                  <span className="text-xs">🌿</span>
+                  <span className="text-[10px] font-bold tracking-wider uppercase">
                     SACRED MOMENT
                   </span>
                 </div>
               ) : isLetter ? (
-                <div className="flex items-center space-x-1.5 rounded-full bg-amber-500/20 border border-amber-500/40 px-2.5 py-0.5 shadow-sm">
-                  <span className="text-xs">📜</span>
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-amber-800 dark:text-amber-300">
+                <div
+                  className={`flex items-center space-x-1.5 rounded-full px-2.5 py-0.5 shadow-sm border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/20 border-[#8c6227]/50 text-[#3b200b]"
+                      : isModernGoldTheme
+                      ? "bg-amber-950/70 border-amber-500/60 text-amber-100"
+                      : isModernTheme
+                      ? "bg-slate-800/90 border-slate-600/70 text-slate-100"
+                      : "bg-rose-500/20 border-rose-500/40 text-rose-200"
+                  }`}
+                >
+                  <span className="text-xs">{isAnyModern ? "✉️" : "📜"}</span>
+                  <span className="text-[10px] font-bold tracking-wider uppercase">
                     LETTER TO A DEAR ONE • 100% FREE
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center space-x-1.5">
-                  <Sparkles className="h-3.5 w-3.5" style={{ color: theme.accentColor }} />
-                  <span className="text-[11px] font-semibold tracking-widest uppercase opacity-80">
+                  <Sparkles
+                    className="h-3.5 w-3.5"
+                    style={{
+                      color: isScrollTheme ? "#8c6227" : theme.accentColor,
+                    }}
+                  />
+                  <span
+                    className={`text-[11px] font-bold tracking-widest uppercase ${
+                      isScrollTheme ? "text-[#45270f]" : "opacity-80"
+                    }`}
+                  >
                     {occasion.replace("_", " ").toUpperCase()}
                   </span>
                 </div>
               )}
               {(location || venueName) && (
-                <div className="flex items-center space-x-1 text-[11px] opacity-75">
+                <div
+                  className={`flex items-center space-x-1 text-[11px] ${
+                    isScrollTheme
+                      ? "text-[#5c3716] font-semibold"
+                      : isModernGoldTheme
+                      ? "text-amber-200 font-medium"
+                      : isModernTheme
+                      ? "text-slate-200 font-medium"
+                      : "opacity-75"
+                  }`}
+                >
                   <MapPin className="h-3 w-3" />
                   <span className="truncate max-w-[140px]">{venueName || location}</span>
                 </div>
@@ -392,18 +550,42 @@ export default function CardPreview({
             <div className="relative z-10 my-auto flex flex-col items-center justify-center py-2">
               {displayPhotos.length === 0 ? (
                 <div
-                  className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
+                  className={`relative w-40 h-40 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
                     photoShape
-                  )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle} bg-neutral-800/80 flex flex-col items-center justify-center text-neutral-400 p-4 text-center`}
+                  )} ${
+                    isScrollTheme
+                      ? "border-[#8c6227] bg-[#8c6227]/10 text-[#5c3716]"
+                      : isModernGoldTheme
+                      ? "border-amber-500/50 bg-amber-950/40 text-amber-200"
+                      : isModernTheme
+                      ? "border-slate-600 bg-slate-800/80 text-slate-200"
+                      : `${theme.borderStyle} bg-neutral-800/80 text-neutral-400`
+                  } flex flex-col items-center justify-center p-4 text-center`}
                 >
-                  <Heart className="h-8 w-8 mb-2 opacity-50 text-rose-400 animate-pulse" />
+                  <Heart
+                    className={`h-8 w-8 mb-2 ${
+                      isModernGoldTheme
+                        ? "text-amber-300 opacity-70"
+                        : isModernTheme
+                        ? "text-slate-300 opacity-70"
+                        : "text-rose-400 opacity-50"
+                    } animate-pulse`}
+                  />
                   <span className="text-xs">Photo will appear here</span>
                 </div>
               ) : displayPhotos.length === 1 ? (
                 <div
-                  className={`relative w-44 h-44 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
+                  className={`relative w-40 h-40 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
                     photoShape
-                  )} ${isScrollTheme ? "border-[#8c6227] shadow-[0_10px_25px_rgba(60,30,10,0.3)]" : theme.borderStyle}`}
+                  )} ${
+                    isScrollTheme
+                      ? "border-[#8c6227] shadow-[0_10px_25px_rgba(60,30,10,0.3)]"
+                      : isModernGoldTheme
+                      ? "border-amber-500/50 shadow-[0_10px_25px_rgba(245,158,11,0.25)]"
+                      : isModernTheme
+                      ? "border-slate-600 shadow-[0_10px_25px_rgba(0,0,0,0.6)]"
+                      : theme.borderStyle
+                  }`}
                 >
                   <img
                     src={displayPhotos[0]}
@@ -414,11 +596,17 @@ export default function CardPreview({
                   {isScrollTheme && (
                     <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-[#8c6227]/40 ring-1 ring-inset ring-amber-900/20" />
                   )}
+                  {isModernTheme && isLetter && (
+                    <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-slate-400/40 ring-1 ring-inset ring-white/10" />
+                  )}
+                  {isModernGoldTheme && isLetter && (
+                    <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-amber-400/40 ring-1 ring-inset ring-amber-500/20" />
+                  )}
                 </div>
               ) : displayPhotos.length === 2 ? (
-                <div className="flex items-center justify-center -space-x-6 py-2">
+                <div className="flex items-center justify-center -space-x-4 sm:-space-x-6 py-2">
                   <div
-                    className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -430,7 +618,7 @@ export default function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 ${getShapeClass(
+                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -443,9 +631,9 @@ export default function CardPreview({
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center -space-x-5 py-2">
+                <div className="flex items-center justify-center -space-x-3 sm:-space-x-5 py-2">
                   <div
-                    className={`relative w-28 h-28 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -457,7 +645,7 @@ export default function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-32 h-32 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 ${getShapeClass(
+                    className={`relative w-26 h-26 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -469,7 +657,7 @@ export default function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-28 h-28 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -504,14 +692,14 @@ export default function CardPreview({
                   <>
                     <h3
                       className={`font-serif text-xl sm:text-2xl font-bold tracking-tight ${
-                        isScrollTheme ? "text-[#2e2313]" : "text-white"
+                        isScrollTheme ? "text-[#2a170a]" : "text-white"
                       }`}
                     >
                       {displayedRecipient || "Honored Memory"}
                     </h3>
                     <p
                       className={`text-[12px] font-medium ${
-                        isScrollTheme ? "text-amber-900/80" : "opacity-80"
+                        isScrollTheme ? "text-[#5c3716]" : "opacity-80"
                       }`}
                     >
                       Remembered by {senderName || "Family"}
@@ -521,21 +709,35 @@ export default function CardPreview({
                   <>
                     <h3
                       className={`font-serif text-xl sm:text-2xl font-bold tracking-tight ${
-                        isScrollTheme ? "text-[#2e2313]" : "text-white"
+                        isScrollTheme
+                          ? "text-[#2a170a]"
+                          : isModernGoldTheme
+                          ? "text-amber-50"
+                          : "text-white"
                       }`}
                     >
                       {displayedRecipient || "Honored Guest"}
                     </h3>
                     <p
                       className={`text-[12px] font-medium ${
-                        isScrollTheme ? "text-amber-900/80" : "opacity-80"
+                        isScrollTheme
+                          ? "text-[#5c3716]"
+                          : isModernGoldTheme
+                          ? "text-amber-200/90"
+                          : isModernTheme
+                          ? "text-slate-300"
+                          : "opacity-80"
                       }`}
                     >
                       with love from{" "}
                       <span
                         className={`underline ${
                           isScrollTheme
-                            ? "decoration-amber-700/60 font-semibold"
+                            ? "text-[#2a170a] decoration-[#8c6227] font-bold"
+                            : isModernGoldTheme
+                            ? "text-white decoration-amber-400 font-semibold"
+                            : isModernTheme
+                            ? "text-white decoration-slate-400 font-semibold"
                             : "decoration-rose-400/50"
                         }`}
                       >
@@ -551,26 +753,78 @@ export default function CardPreview({
             <div className="relative z-10 pt-2 text-center">
               {secondaryMessage ? (
                 /* Bilingual side-by-side mode */
-                <div className="grid grid-cols-2 gap-2 text-left bg-black/20 p-2.5 rounded-2xl border border-white/10">
-                  <div className="border-r border-white/10 pr-2">
-                    <span className="text-[9px] uppercase tracking-wider text-rose-300 font-bold block mb-1">
+                <div
+                  className={`grid grid-cols-2 gap-2 text-left p-2.5 rounded-2xl border ${
+                    isScrollTheme
+                      ? "bg-[#8c6227]/10 border-[#8c6227]/30"
+                      : isModernGoldTheme
+                      ? "bg-amber-950/40 border-amber-600/40"
+                      : isModernTheme
+                      ? "bg-slate-800/70 border-slate-700/80"
+                      : "bg-black/20 border-white/10"
+                  }`}
+                >
+                  <div
+                    className={`border-r pr-2 ${
+                      isScrollTheme
+                        ? "border-[#8c6227]/30"
+                        : isModernGoldTheme
+                        ? "border-amber-600/40"
+                        : isModernTheme
+                        ? "border-slate-700/80"
+                        : "border-white/10"
+                    }`}
+                  >
+                    <span
+                      className={`text-[9px] uppercase tracking-wider font-bold block mb-1 ${
+                        isScrollTheme
+                          ? "text-[#7a481c]"
+                          : isModernGoldTheme
+                          ? "text-amber-300 font-mono"
+                          : isModernTheme
+                          ? "text-slate-300 font-mono"
+                          : "text-rose-300"
+                      }`}
+                    >
                       Primary
                     </span>
                     <p
-                      className={`${getFontClass(fontFamily)} line-clamp-3 leading-relaxed ${
-                        isScrollTheme ? "text-[#3b2d18]" : "text-neutral-100"
+                      className={`${getFontClass(fontFamily)} whitespace-pre-line break-words leading-relaxed text-xs sm:text-sm ${
+                        isScrollTheme
+                          ? "text-[#2a170a] font-medium"
+                          : isModernGoldTheme
+                          ? "text-amber-50 font-medium"
+                          : isModernTheme
+                          ? "text-slate-100 font-medium"
+                          : "text-neutral-100"
                       }`}
                     >
                       &ldquo;{message || "With love..."}&rdquo;
                     </p>
                   </div>
                   <div className="pl-1">
-                    <span className="text-[9px] uppercase tracking-wider text-amber-300 font-bold block mb-1">
+                    <span
+                      className={`text-[9px] uppercase tracking-wider font-bold block mb-1 ${
+                        isScrollTheme
+                          ? "text-[#8c6227]"
+                          : isModernGoldTheme
+                          ? "text-yellow-400 font-mono"
+                          : isModernTheme
+                          ? "text-slate-400 font-mono"
+                          : "text-amber-300"
+                      }`}
+                    >
                       Translation
                     </span>
                     <p
-                      className={`${getFontClass(fontFamily)} line-clamp-3 leading-relaxed ${
-                        isScrollTheme ? "text-[#4a3a22]" : "text-neutral-300"
+                      className={`${getFontClass(fontFamily)} whitespace-pre-line break-words leading-relaxed text-xs sm:text-sm ${
+                        isScrollTheme
+                          ? "text-[#3b200b] font-medium"
+                          : isModernGoldTheme
+                          ? "text-amber-100 font-medium"
+                          : isModernTheme
+                          ? "text-slate-200 font-medium"
+                          : "text-neutral-300"
                       }`}
                     >
                       &ldquo;{secondaryMessage}&rdquo;
@@ -579,8 +833,14 @@ export default function CardPreview({
                 </div>
               ) : (
                 <p
-                  className={`${getFontClass(fontFamily)} leading-relaxed line-clamp-4 px-2 ${
-                    isScrollTheme ? "text-[#3b2d18] font-medium" : "opacity-90 text-neutral-100"
+                  className={`${getFontClass(fontFamily)} leading-relaxed whitespace-pre-line break-words px-2 ${
+                    isScrollTheme
+                      ? "text-[#2a170a] font-medium"
+                      : isModernGoldTheme
+                      ? "text-amber-50 font-medium"
+                      : isModernTheme
+                      ? "text-slate-100 font-medium"
+                      : "opacity-90 text-neutral-100"
                   }`}
                 >
                   &ldquo;{message || "You make every single day brighter, warmer, and filled with love."}&rdquo;
@@ -590,17 +850,61 @@ export default function CardPreview({
               {/* Pretty Event Date & Timing Ribbon */}
               {(eventDate || eventTime) && (
                 <div className="mt-2.5 flex items-center justify-center">
-                  <div className="inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl border border-amber-500/30 bg-amber-950/50 px-3.5 py-1.5 text-[11px] text-amber-200 backdrop-blur-md shadow-sm">
+                  <div
+                    className={`inline-flex flex-wrap items-center justify-center gap-2 rounded-2xl border px-3.5 py-1.5 text-[11px] backdrop-blur-md shadow-sm ${
+                      isScrollTheme
+                        ? "border-[#8c6227]/50 bg-[#8c6227]/15 text-[#3b200b]"
+                        : isModernGoldTheme
+                        ? "border-amber-500/60 bg-amber-950/70 text-amber-100 shadow-md"
+                        : isModernTheme
+                        ? "border-slate-600/70 bg-slate-800/90 text-slate-100 shadow-md"
+                        : "border-amber-500/30 bg-amber-950/50 text-amber-200"
+                    }`}
+                  >
                     {eventDate && (
                       <span className="flex items-center space-x-1 font-medium">
-                        <Calendar className="h-3 w-3 text-amber-400" />
+                        <Calendar
+                          className={`h-3 w-3 ${
+                            isScrollTheme
+                              ? "text-[#7a481c]"
+                              : isModernGoldTheme
+                              ? "text-amber-300"
+                              : isModernTheme
+                              ? "text-slate-300"
+                              : "text-amber-400"
+                          }`}
+                        />
                         <span>{eventDate}</span>
                       </span>
                     )}
-                    {eventDate && eventTime && <span className="text-amber-500/50">•</span>}
+                    {eventDate && eventTime && (
+                      <span
+                        className={
+                          isScrollTheme
+                            ? "text-[#8c6227]/60"
+                            : isModernGoldTheme
+                            ? "text-amber-500/60"
+                            : isModernTheme
+                            ? "text-slate-500"
+                            : "text-amber-500/50"
+                        }
+                      >
+                        •
+                      </span>
+                    )}
                     {eventTime && (
                       <span className="flex items-center space-x-1 font-medium">
-                        <Clock className="h-3 w-3 text-amber-400" />
+                        <Clock
+                          className={`h-3 w-3 ${
+                            isScrollTheme
+                              ? "text-[#7a481c]"
+                              : isModernGoldTheme
+                              ? "text-amber-300"
+                              : isModernTheme
+                              ? "text-slate-300"
+                              : "text-amber-400"
+                          }`}
+                        />
                         <span>{eventTime}</span>
                       </span>
                     )}
@@ -610,8 +914,28 @@ export default function CardPreview({
 
               {/* Venue address highlight for invite-cards */}
               {venueAddress && (
-                <div className="mt-2 text-[10px] text-amber-200/90 font-medium truncate flex items-center justify-center space-x-1">
-                  <MapPin className="h-3 w-3 text-rose-400 shrink-0" />
+                <div
+                  className={`mt-2 text-[10px] font-medium truncate flex items-center justify-center space-x-1 ${
+                    isScrollTheme
+                      ? "text-[#45270f] font-semibold"
+                      : isModernGoldTheme
+                      ? "text-amber-200 font-medium"
+                      : isModernTheme
+                      ? "text-slate-200 font-medium"
+                      : "text-amber-200/90"
+                  }`}
+                >
+                  <MapPin
+                    className={`h-3 w-3 shrink-0 ${
+                      isScrollTheme
+                        ? "text-[#7a481c]"
+                        : isModernGoldTheme
+                        ? "text-amber-400"
+                        : isModernTheme
+                        ? "text-slate-300"
+                        : "text-rose-400"
+                    }`}
+                  />
                   <span>{venueAddress}</span>
                 </div>
               )}
@@ -619,13 +943,31 @@ export default function CardPreview({
               {/* Card watermark/footer mark */}
               <div
                 className={`mt-3 flex items-center justify-between text-[9px] tracking-widest uppercase ${
-                  isScrollTheme ? "text-[#5a3717] font-semibold" : "opacity-50"
+                  isScrollTheme
+                    ? "text-[#5a3717] font-semibold"
+                    : isModernGoldTheme
+                    ? "text-amber-300 font-semibold"
+                    : isModernTheme
+                    ? "text-slate-300 font-semibold"
+                    : "opacity-50"
                 }`}
               >
                 {isScrollTheme ? (
                   <div className="flex items-center space-x-2">
                     <span className="inline-flex items-center space-x-1 rounded-full bg-[#8c6227]/20 border border-[#8c6227]/40 px-2 py-0.5 text-[#5c3716] font-bold text-[8px] tracking-wider">
                       <span>⚜ ROYAL MANUSCRIPT</span>
+                    </span>
+                  </div>
+                ) : isModernGoldTheme && isLetter ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center space-x-1 rounded-full bg-amber-950/70 border border-amber-500/60 px-2 py-0.5 text-amber-200 font-bold text-[8px] tracking-wider font-mono">
+                      <span>⚜ MODERN MANUSCRIPT • GOLD</span>
+                    </span>
+                  </div>
+                ) : isModernTheme && isLetter ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="inline-flex items-center space-x-1 rounded-full bg-slate-800/90 border border-slate-600/70 px-2 py-0.5 text-slate-200 font-bold text-[8px] tracking-wider font-mono">
+                      <span>⚜ MODERN MANUSCRIPT • SILVER</span>
                     </span>
                   </div>
                 ) : (
@@ -666,6 +1008,66 @@ export default function CardPreview({
                       </span>
                     </div>
                   </div>
+                ) : isModernGoldTheme && isLetter ? (
+                  <div className="flex items-center space-x-2.5">
+                    {/* Handcrafted 3D Gilded Gold Wax Seal with Draping Amber Ribbons */}
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute -bottom-2 inset-x-0 flex justify-center space-x-1 pointer-events-none z-0">
+                        <div className="w-1.5 h-3 bg-gradient-to-b from-amber-600 to-amber-800 transform -rotate-12 shadow-sm rounded-b-[2px]" />
+                        <div className="w-1.5 h-3 bg-gradient-to-b from-amber-600 to-amber-800 transform rotate-12 shadow-sm rounded-b-[2px]" />
+                      </div>
+                      <div
+                        className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-[0_3px_8px_rgba(245,158,11,0.4)] border border-amber-300/70 transition-transform hover:scale-110"
+                        style={{
+                          background:
+                            "radial-gradient(circle at 35% 30%, #fef08a 0%, #eab308 45%, #854d0e 100%)",
+                        }}
+                        title="Modern Gold Sealed Keepsake"
+                      >
+                        <div className="w-4.5 h-4.5 rounded-full border border-amber-200/80 flex items-center justify-center">
+                          <Sparkles className="h-2.5 w-2.5 text-amber-950 fill-amber-950 filter drop-shadow-[0_1px_1px_rgba(254,240,138,0.8)]" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-left flex flex-col justify-center">
+                      <span className="text-[7.5px] font-sans font-bold text-amber-200 tracking-widest uppercase leading-none">
+                        SEALED IN GOLD
+                      </span>
+                      <span className="text-[6.5px] text-amber-400 tracking-widest font-mono uppercase mt-0.5 leading-none">
+                        LOVEWRIT
+                      </span>
+                    </div>
+                  </div>
+                ) : isModernTheme && isLetter ? (
+                  <div className="flex items-center space-x-2.5">
+                    {/* Handcrafted 3D Silver Platinum Wax Seal with Draping Slate Ribbons */}
+                    <div className="relative flex items-center justify-center">
+                      <div className="absolute -bottom-2 inset-x-0 flex justify-center space-x-1 pointer-events-none z-0">
+                        <div className="w-1.5 h-3 bg-gradient-to-b from-slate-500 to-slate-700 transform -rotate-12 shadow-sm rounded-b-[2px]" />
+                        <div className="w-1.5 h-3 bg-gradient-to-b from-slate-500 to-slate-700 transform rotate-12 shadow-sm rounded-b-[2px]" />
+                      </div>
+                      <div
+                        className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center shadow-[0_3px_8px_rgba(0,0,0,0.6)] border border-slate-300/60 transition-transform hover:scale-110"
+                        style={{
+                          background:
+                            "radial-gradient(circle at 35% 30%, #f8fafc 0%, #94a3b8 50%, #334155 100%)",
+                        }}
+                        title="Modern Silver Sealed Keepsake"
+                      >
+                        <div className="w-4.5 h-4.5 rounded-full border border-white/60 flex items-center justify-center">
+                          <Sparkles className="h-2.5 w-2.5 text-slate-900 fill-slate-900 filter drop-shadow-[0_1px_1px_rgba(255,255,255,0.7)]" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-left flex flex-col justify-center">
+                      <span className="text-[7.5px] font-sans font-bold text-slate-200 tracking-widest uppercase leading-none">
+                        SEALED IN SILVER
+                      </span>
+                      <span className="text-[6.5px] text-slate-400 tracking-widest font-mono uppercase mt-0.5 leading-none">
+                        LOVEWRIT
+                      </span>
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex items-center space-x-1">
                     <span>Lovewrit</span>
@@ -702,4 +1104,6 @@ export default function CardPreview({
       )}
     </div>
   );
-}
+});
+
+export default CardPreview;

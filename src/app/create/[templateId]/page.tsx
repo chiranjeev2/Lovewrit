@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, use } from "react";
+import React, { useState, useRef, useEffect, use, useDeferredValue } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
@@ -9,6 +9,7 @@ import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
 import PagePreview, { CollageLayoutStyle } from "@/components/editor/PagePreview";
 import VoiceRecorder from "@/components/interactive/VoiceRecorder";
 import HindiPunjabiKeyboard from "@/components/editor/HindiPunjabiKeyboard";
+import DesktopEmojiPicker from "@/components/editor/DesktopEmojiPicker";
 import { useApp } from "@/context/AppContext";
 import {
   TEMPLATES,
@@ -198,6 +199,17 @@ export default function CreateLovewritPage({
   const [ambientEffect, setAmbientEffect] = useState<AmbientEffectKey>("none");
   const [milestoneVenue, setMilestoneVenue] = useState<string>("");
 
+  // Deferred values for zero-latency 60fps typing & concurrent live preview rendering
+  const deferredMessage = useDeferredValue(message);
+  const deferredSecondaryMessage = useDeferredValue(secondaryMessage);
+  const deferredSenderName = useDeferredValue(senderName);
+  const deferredRecipientName = useDeferredValue(recipientName);
+  const deferredNickname = useDeferredValue(nickname);
+  const deferredLocation = useDeferredValue(location);
+  const deferredVenueName = useDeferredValue(venueName);
+  const deferredVenueAddress = useDeferredValue(venueAddress);
+  const deferredMilestoneVenue = useDeferredValue(milestoneVenue);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       queueMicrotask(() => {
@@ -268,6 +280,41 @@ export default function CreateLovewritPage({
       localStorage.removeItem("lovewrit_founder_pass");
       localStorage.removeItem("memoir_founder_pass");
     } catch {}
+  };
+
+  const messageTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const secondaryTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insertEmojiIntoMessage = (emoji: string) => {
+    const el = messageTextareaRef.current;
+    if (el) {
+      const start = el.selectionStart ?? message.length;
+      const end = el.selectionEnd ?? message.length;
+      const next = message.slice(0, start) + emoji + message.slice(end);
+      setMessage(next);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      setMessage((prev) => prev + emoji);
+    }
+  };
+
+  const insertEmojiIntoSecondary = (emoji: string) => {
+    const el = secondaryTextareaRef.current;
+    if (el) {
+      const start = el.selectionStart ?? secondaryMessage.length;
+      const end = el.selectionEnd ?? secondaryMessage.length;
+      const next = secondaryMessage.slice(0, start) + emoji + secondaryMessage.slice(end);
+      setSecondaryMessage(next);
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      setSecondaryMessage((prev) => prev + emoji);
+    }
   };
 
   const handleValidateReferral = async () => {
@@ -1142,6 +1189,25 @@ export default function CreateLovewritPage({
                     +{symbol}{PRICING_TIERS[region].bundleAddonPrice}
                   </span>
                 </button>
+
+                {isBundle && (
+                  <div className="mt-2.5 rounded-2xl border border-rose-500/30 bg-rose-950/25 p-3.5 space-y-2 animate-in fade-in duration-200">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-rose-300">
+                      <span>🎁</span>
+                      <span>2 Separate Deliverables Generated Together:</span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-neutral-300">
+                      <div className="bg-neutral-900/80 p-2.5 rounded-xl border border-white/5 space-y-0.5">
+                        <strong className="text-white block text-xs">1. Digital Card Deliverable</strong>
+                        <span className="text-neutral-400">High-res PNG/JPG card export + printable PDF card with individual link & QR.</span>
+                      </div>
+                      <div className="bg-neutral-900/80 p-2.5 rounded-xl border border-white/5 space-y-0.5">
+                        <strong className="text-white block text-xs">2. Interactive Page Deliverable</strong>
+                        <span className="text-neutral-400">Interactive website with music soundtrack, photo montage, secret notes & guestbook.</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Custom Notes input if Custom or Rush selected */}
@@ -1179,7 +1245,7 @@ export default function CreateLovewritPage({
                     type="text"
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
-                    placeholder="e.g. Aarav"
+                    placeholder="e.g. John"
                     className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
                   />
                 </div>
@@ -1192,7 +1258,7 @@ export default function CreateLovewritPage({
                     type="text"
                     value={recipientName}
                     onChange={(e) => setRecipientName(e.target.value)}
-                    placeholder="e.g. Simran"
+                    placeholder="e.g. Snow"
                     className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
                   />
                 </div>
@@ -1320,16 +1386,20 @@ export default function CreateLovewritPage({
                 <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
                   Step 3: Heartfelt Message / Letter
                 </span>
-                <button
-                  type="button"
-                  onClick={handleInsertSamplePrompt}
-                  className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 underline transition"
-                >
-                  Insert Sample Words
-                </button>
+                <div className="flex items-center space-x-2">
+                  <DesktopEmojiPicker onSelectEmoji={insertEmojiIntoMessage} buttonLabel="😊 Add Emoji" />
+                  <button
+                    type="button"
+                    onClick={handleInsertSamplePrompt}
+                    className="text-[11px] font-semibold text-rose-400 hover:text-rose-300 underline transition"
+                  >
+                    Insert Sample Words
+                  </button>
+                </div>
               </div>
 
               <textarea
+                ref={messageTextareaRef}
                 rows={5}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -1361,10 +1431,14 @@ export default function CreateLovewritPage({
 
                   {showBilingual && (
                     <div className="space-y-2 pt-1 animate-in fade-in duration-200">
-                      <p className="text-[11px] text-neutral-400">
-                        Add a secondary translation (e.g. Punjabi or Hindi). Both will be presented side by side on the card.
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[11px] text-neutral-400">
+                          Add a secondary translation (e.g. Punjabi or Hindi). Both will be presented side by side on the card.
+                        </p>
+                        <DesktopEmojiPicker onSelectEmoji={insertEmojiIntoSecondary} buttonLabel="😊 Add Emoji" />
+                      </div>
                       <textarea
+                        ref={secondaryTextareaRef}
                         rows={4}
                         value={secondaryMessage}
                         onChange={(e) => setSecondaryMessage(e.target.value)}
@@ -1435,41 +1509,65 @@ export default function CreateLovewritPage({
               </label>
             </div>
 
-            {/* Step 5: Timed / Countdown Reveal (Phase 2 Feature) */}
+            {/* Step 5: Timed / Countdown Reveal */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-1.5 text-rose-400">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-xs font-bold uppercase tracking-wider">
-                    Step 5: Timed Surprise / Countdown Reveal
-                  </span>
+                <div className="flex items-center space-x-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-rose-300 block">
+                      Step 5: Timed Surprise / Countdown Reveal
+                    </span>
+                    <span className="text-[11px] text-neutral-400">
+                      Lock your card or page until an exact special moment
+                    </span>
+                  </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={enableRevealCountdown}
-                  onChange={(e) => setEnableRevealCountdown(e.target.checked)}
-                  className="h-4 w-4 rounded border-neutral-700 bg-neutral-900 text-rose-600 focus:ring-rose-500"
-                />
+
+                {/* Elegant Switch Toggle */}
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={enableRevealCountdown}
+                  onClick={() => {
+                    const nextState = !enableRevealCountdown;
+                    setEnableRevealCountdown(nextState);
+                    if (nextState && !revealDateTime) {
+                      applyDatePreset("tonight");
+                    }
+                  }}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    enableRevealCountdown ? "bg-rose-500" : "bg-neutral-800"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      enableRevealCountdown ? "translate-x-5" : "translate-x-0"
+                    }`}
+                  />
+                </button>
               </div>
 
               {enableRevealCountdown && (
-                <div className="space-y-3 pt-2 animate-in fade-in duration-300">
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Set a target date & time. The link will display an anticipatory ticking countdown until that exact moment, then automatically unveil!
+                <div className="space-y-4 pt-2 animate-in fade-in duration-300 border-t border-neutral-800/80">
+                  <p className="text-xs text-neutral-300 leading-relaxed">
+                    Set a target date & time. When your recipient opens their link before this moment, they see a beautiful ticking anticipation countdown, and it automatically unlocks the second time arrives!
                   </p>
 
-                  {/* 1-Click Quick Presets */}
-                  <div>
-                    <label className="block text-[11px] font-semibold text-neutral-400 mb-1.5">
-                      ⚡ Quick Reveal Presets (1-Click Set)
+                  {/* Quick Reveal Preset Chips */}
+                  <div className="space-y-2">
+                    <label className="block text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+                      ⚡ Quick Reveal Presets
                     </label>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       {[
-                        { id: "tonight", label: "Tonight (11:59 PM)" },
-                        { id: "tomorrow_morning", label: "Tomorrow Morning (9 AM)" },
-                        { id: "tomorrow_evening", label: "Tomorrow Evening (8 PM)" },
-                        { id: "in_24h", label: "In 24 Hours" },
-                        { id: "weekend", label: "Weekend (Sat 8 PM)" },
+                        { id: "tonight", label: "🌙 Tonight (11:59 PM)" },
+                        { id: "tomorrow_morning", label: "🌅 Tomorrow Morning (9 AM)" },
+                        { id: "tomorrow_evening", label: "🌆 Tomorrow Evening (8 PM)" },
+                        { id: "in_24h", label: "⏳ In 24 Hours" },
+                        { id: "weekend", label: "🥂 Weekend (Sat 8 PM)" },
                       ].map((preset) => (
                         <button
                           key={preset.id}
@@ -1484,37 +1582,121 @@ export default function CreateLovewritPage({
                                 | "weekend"
                             )
                           }
-                          className="rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-neutral-300 hover:border-rose-500/60 hover:text-white transition"
+                          className="rounded-xl border border-neutral-700 bg-neutral-950/80 px-3 py-1.5 text-xs text-neutral-300 hover:border-rose-500/70 hover:bg-rose-500/10 hover:text-white transition shadow-sm font-medium"
                         >
                           {preset.label}
                         </button>
                       ))}
-                      {revealDateTime && (
+                    </div>
+                  </div>
+
+                  {/* Polished Visual Date & Time Selection */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="rounded-2xl border border-neutral-700 bg-neutral-950 p-3 space-y-1.5 focus-within:border-rose-500 transition">
+                      <label className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-300">
+                        <Calendar className="h-3.5 w-3.5 text-rose-400" />
+                        <span>Unlock Date</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={revealDateTime ? revealDateTime.split("T")[0] : ""}
+                        onChange={(e) => {
+                          const datePart = e.target.value;
+                          const timePart = revealDateTime && revealDateTime.includes("T")
+                            ? revealDateTime.split("T")[1]
+                            : "20:00";
+                          if (datePart) {
+                            setRevealDateTime(`${datePart}T${timePart}`);
+                          }
+                        }}
+                        className="w-full bg-transparent text-sm font-mono text-white focus:outline-none [color-scheme:dark]"
+                      />
+                    </div>
+
+                    <div className="rounded-2xl border border-neutral-700 bg-neutral-950 p-3 space-y-1.5 focus-within:border-rose-500 transition">
+                      <label className="flex items-center space-x-1.5 text-xs font-semibold text-neutral-300">
+                        <Clock className="h-3.5 w-3.5 text-rose-400" />
+                        <span>Unlock Time</span>
+                      </label>
+                      <input
+                        type="time"
+                        value={revealDateTime && revealDateTime.includes("T") ? revealDateTime.split("T")[1] : "20:00"}
+                        onChange={(e) => {
+                          const timePart = e.target.value;
+                          const datePart = revealDateTime && revealDateTime.includes("T")
+                            ? revealDateTime.split("T")[0]
+                            : new Date().toISOString().split("T")[0];
+                          if (timePart) {
+                            setRevealDateTime(`${datePart}T${timePart}`);
+                          }
+                        }}
+                        className="w-full bg-transparent text-sm font-mono text-white focus:outline-none [color-scheme:dark]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Dynamic Time-Until-Unlock Card */}
+                  {revealDateTime && (
+                    <div className="rounded-2xl border border-rose-500/30 bg-gradient-to-r from-rose-950/40 via-neutral-900 to-amber-950/20 p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-base animate-pulse">⏳</span>
+                          <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">
+                            Anticipation Reveal Scheduled
+                          </span>
+                        </div>
                         <button
                           type="button"
                           onClick={() => {
                             setRevealDateTime("");
                             setEnableRevealCountdown(false);
                           }}
-                          className="rounded-lg border border-neutral-800 bg-neutral-950 px-2.5 py-1 text-[11px] text-red-400 hover:border-red-500/60 transition"
+                          className="text-[11px] text-neutral-400 hover:text-red-400 transition"
                         >
-                          Clear
+                          Remove Lock
                         </button>
-                      )}
-                    </div>
-                  </div>
+                      </div>
 
-                  <div>
-                    <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                      Reveal Unlock Date & Time
-                    </label>
-                    <input
-                      type="datetime-local"
-                      value={revealDateTime}
-                      onChange={(e) => setRevealDateTime(e.target.value)}
-                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-rose-500"
-                    />
-                  </div>
+                      <div className="rounded-xl bg-black/40 border border-white/5 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <div className="text-xs text-neutral-300 font-medium">
+                            {new Date(revealDateTime).toLocaleString(undefined, {
+                              weekday: "short",
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </div>
+                          <div className="text-[11px] text-neutral-400 mt-0.5">
+                            Target local timezone of recipient
+                          </div>
+                        </div>
+
+                        <div className="inline-flex items-center space-x-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-200 self-start sm:self-auto">
+                          <span>🔒</span>
+                          <span>
+                            {new Date(revealDateTime).getTime() > Date.now() ? (
+                              <>
+                                Locks until{" "}
+                                {Math.max(
+                                  1,
+                                  Math.round(
+                                    (new Date(revealDateTime).getTime() - Date.now()) / (1000 * 60 * 60)
+                                  )
+                                )}{" "}
+                                hours from now
+                              </>
+                            ) : (
+                              "Time in past (Unlocks Immediately)"
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Trust warning: If Rush selected and reveal is far */}
                   {tier === "RUSH" && revealDateTime && (
@@ -1867,31 +2049,95 @@ export default function CreateLovewritPage({
             </div>
 
             {/* Step 8: Color Palette */}
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-3">
-              <span className="text-xs font-bold uppercase tracking-wider text-rose-400">
-                Step 8: Color Palette & Aesthetics
-              </span>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                {Object.values(COLOR_THEMES).map((thm) => (
-                  <button
-                    key={thm.id}
-                    type="button"
-                    onClick={() => setSelectedTheme(thm.id)}
-                    className={`flex items-center space-x-3 rounded-2xl border p-3 text-left transition ${
-                      selectedTheme === thm.id
-                        ? "border-rose-500 bg-rose-500/20"
-                        : "border-neutral-800 bg-neutral-950 hover:border-neutral-700"
-                    }`}
-                  >
-                    <div
-                      className="h-6 w-6 rounded-full shrink-0 shadow-md"
-                      style={{ backgroundColor: thm.accentColor }}
-                    />
-                    <div className="text-xs font-bold text-white truncate">{thm.name}</div>
-                  </button>
-                ))}
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-rose-400 block">
+                  Step 8: Color Palette & Aesthetics
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  {occasion === "letter_to_dear_one"
+                    ? "Exclusive letter & parchment styles crafted specifically for heartfelt correspondence"
+                    : "Select the atmosphere and aesthetic for your card & interactive page"}
+                </span>
               </div>
+
+              {occasion === "letter_to_dear_one" ? (
+                /* Letter to a Dear One: Exclusive Letter Themes */
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {[
+                    {
+                      id: "scroll" as ColorThemeKey,
+                      name: "Medieval Parchment Scroll",
+                      desc: "Authentic aged golden parchment, turned wood end rods & royal crimson wax seal",
+                      accent: "#991b1b",
+                      badge: "Authentic Scroll",
+                    },
+                    {
+                      id: "modern" as ColorThemeKey,
+                      name: "Modern Manuscript (Silver)",
+                      desc: "Contemporary slate manuscript with brushed platinum rails & sleek silver seal",
+                      accent: "#94a3b8",
+                      badge: "Silver Lining",
+                    },
+                    {
+                      id: "modern_gold" as ColorThemeKey,
+                      name: "Modern Manuscript (Gold)",
+                      desc: "Contemporary obsidian manuscript with brushed gilded gold rails & gold wax seal",
+                      accent: "#f59e0b",
+                      badge: "Golden Lining",
+                    },
+                  ].map((thm) => (
+                    <button
+                      key={thm.id}
+                      type="button"
+                      onClick={() => setSelectedTheme(thm.id)}
+                      className={`flex flex-col justify-between rounded-2xl border p-3.5 text-left transition ${
+                        selectedTheme === thm.id
+                          ? "border-rose-500 bg-rose-500/20 shadow-md ring-2 ring-rose-500/30"
+                          : "border-neutral-800 bg-neutral-950 hover:border-neutral-700"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div
+                          className="h-6 w-6 rounded-full shrink-0 shadow-md"
+                          style={{ backgroundColor: thm.accent }}
+                        />
+                        <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-300">
+                          {thm.badge}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white">{thm.name}</div>
+                        <div className="text-[11px] text-neutral-400 mt-1 leading-snug">{thm.desc}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                /* General Occasions: Standard Color Palettes */
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {Object.values(COLOR_THEMES)
+                    .filter((thm) => thm.id !== "scroll" && thm.id !== "modern_gold")
+                    .map((thm) => (
+                      <button
+                        key={thm.id}
+                        type="button"
+                        onClick={() => setSelectedTheme(thm.id)}
+                        className={`flex items-center space-x-3 rounded-2xl border p-3 text-left transition ${
+                          selectedTheme === thm.id
+                            ? "border-rose-500 bg-rose-500/20 shadow-sm"
+                            : "border-neutral-800 bg-neutral-950 hover:border-neutral-700"
+                        }`}
+                      >
+                        <div
+                          className="h-6 w-6 rounded-full shrink-0 shadow-md"
+                          style={{ backgroundColor: thm.accentColor }}
+                        />
+                        <div className="text-xs font-bold text-white truncate">{thm.name}</div>
+                      </button>
+                    ))}
+                </div>
+              )}
             </div>
 
             {/* Step 8.5: Typography, Decorative Frames & Accents */}
@@ -2465,7 +2711,7 @@ export default function CreateLovewritPage({
                     required
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    placeholder="e.g. Aarav Sharma"
+                    placeholder="e.g. John Snow"
                     className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
                   />
                 </div>
@@ -2479,11 +2725,27 @@ export default function CreateLovewritPage({
                     required={!isFounderFree}
                     value={customerEmail}
                     onChange={(e) => setCustomerEmail(e.target.value)}
-                    placeholder="aarav@example.com"
+                    placeholder="john@example.com"
                     className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:border-rose-500 focus:outline-none"
                   />
                 </div>
               </div>
+
+              {/* Bundle Confirmation Pill in Checkout Step */}
+              {isBundle && (
+                <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-3 flex items-center justify-between text-xs text-rose-300">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-base">🎁</span>
+                    <div>
+                      <span className="font-semibold text-white block">Keepsake Bundle Active</span>
+                      <span className="text-[10px] text-neutral-400">Includes 2 deliverables: 1 Digital Card + 1 Interactive Page</span>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-rose-500/20 px-2.5 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/30 uppercase shrink-0">
+                    2 Links
+                  </span>
+                </div>
+              )}
 
               {/* Required Terms & Privacy Agreement Checkbox */}
               <div
@@ -2587,7 +2849,7 @@ export default function CreateLovewritPage({
 
           {/* RIGHT: LIVE PREVIEW (6 cols on tablet, 5 cols on desktop, isolated sticky scroll container) */}
           <div
-            className={`md:col-span-6 lg:col-span-5 md:sticky md:top-20 md:max-h-[calc(100vh-5rem)] md:overflow-y-auto overscroll-contain pr-1 space-y-4 ${
+            className={`md:col-span-6 lg:col-span-5 md:sticky md:top-24 md:max-h-[calc(100vh-6.5rem)] md:overflow-y-auto overscroll-contain px-1 pb-16 space-y-4 scrollbar-thin scrollbar-thumb-neutral-800 hover:scrollbar-thumb-neutral-700 ${
               mobileTab === "edit" ? "hidden md:block" : "block"
             }`}
           >
@@ -2595,19 +2857,19 @@ export default function CreateLovewritPage({
               <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
                 Live Dynamic Preview
               </span>
-              <span className="text-[10px] text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">
-                Updates in Real-Time
+              <span className="text-[10px] text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full border border-rose-500/20 font-medium">
+                ⚡ Real-Time Instant Updates
               </span>
             </div>
 
             {productType === "CARD" ? (
               <CardPreview
-                senderName={senderName}
-                recipientName={recipientName}
-                nickname={nickname}
+                senderName={deferredSenderName}
+                recipientName={deferredRecipientName}
+                nickname={deferredNickname}
                 occasion={occasion}
-                message={message}
-                secondaryMessage={showBilingual ? secondaryMessage : undefined}
+                message={deferredMessage}
+                secondaryMessage={showBilingual ? deferredSecondaryMessage : undefined}
                 fontFamily={cardFontFamily}
                 borderStyle={cardBorderStyle}
                 stickers={placedStickers}
@@ -2616,9 +2878,9 @@ export default function CreateLovewritPage({
                 photoUrls={pagePhotos}
                 photoShape={photoShape}
                 colorTheme={selectedTheme}
-                location={location}
-                venueName={venueName}
-                venueAddress={venueAddress}
+                location={deferredLocation}
+                venueName={deferredVenueName}
+                venueAddress={deferredVenueAddress}
                 venueMapUrl={venueMapUrl}
                 eventDate={eventDate}
                 eventTime={eventTime}
@@ -2628,23 +2890,23 @@ export default function CreateLovewritPage({
               />
             ) : (
               <PagePreview
-                senderName={senderName}
-                recipientName={recipientName}
-                nickname={nickname}
+                senderName={deferredSenderName}
+                recipientName={deferredRecipientName}
+                nickname={deferredNickname}
                 occasion={occasion}
-                letter={message}
+                letter={deferredMessage}
                 photoUrls={pagePhotos}
                 colorTheme={selectedTheme}
                 collageLayout={collageLayout}
                 fontFamily={pageFontFamily}
                 ambientEffect={ambientEffect}
-                milestoneVenue={milestoneVenue}
+                milestoneVenue={deferredMilestoneVenue}
                 tipUpiId={tipUpiId}
                 tipPaypalUsername={tipPaypalUsername}
                 isProposal={isProposal && occasion === "proposal"}
                 proposalQuestion={proposalQuestion}
-                venueName={venueName}
-                venueAddress={venueAddress}
+                venueName={deferredVenueName}
+                venueAddress={deferredVenueAddress}
                 venueMapUrl={venueMapUrl}
                 eventDate={eventDate}
                 eventTime={eventTime}

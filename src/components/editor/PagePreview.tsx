@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import {
   COLOR_THEMES,
   ColorThemeKey,
@@ -25,6 +25,9 @@ import {
   Flame,
   Send,
   Gift,
+  Compass,
+  Feather,
+  HeartHandshake,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
@@ -77,7 +80,115 @@ interface PagePreviewProps {
   onSendReaction?: (text: string) => Promise<void> | void;
 }
 
-export default function PagePreview({
+function getMilestoneDetails(occasion?: string) {
+  switch (occasion) {
+    case "memorial":
+      return {
+        icon: <Flame className="h-5 w-5 text-amber-200 animate-pulse" />,
+        badgeText: "Sacred Resting Place • Eternal Memory",
+        containerClass: "border-amber-700/40 bg-stone-900/70 text-amber-100",
+        iconBoxClass: "bg-amber-900/40 text-amber-200 border border-amber-600/30",
+        badgeClass: "text-amber-300",
+      };
+    case "birthday":
+      return {
+        icon: <Sparkles className="h-5 w-5 text-amber-300 animate-bounce" />,
+        badgeText: "Celebration Venue • Gathering Place",
+        containerClass: "border-amber-500/40 bg-amber-950/40 text-amber-100",
+        iconBoxClass: "bg-amber-500/20 text-amber-300 border border-amber-500/30",
+        badgeClass: "text-amber-300",
+      };
+    case "sorry":
+      return {
+        icon: <HeartHandshake className="h-5 w-5 text-purple-300" />,
+        badgeText: "Where We Reconnected • Place of Peace",
+        containerClass: "border-purple-500/40 bg-purple-950/40 text-purple-100",
+        iconBoxClass: "bg-purple-500/20 text-purple-300 border border-purple-500/30",
+        badgeClass: "text-purple-300",
+      };
+    case "reminiscing":
+      return {
+        icon: <Compass className="h-5 w-5 text-amber-300 animate-spin-slow" />,
+        badgeText: "Unforgettable Landmark • Where Time Stood Still",
+        containerClass: "border-amber-600/40 bg-amber-950/30 text-amber-100",
+        iconBoxClass: "bg-amber-700/20 text-amber-300 border border-amber-600/30",
+        badgeClass: "text-amber-300",
+      };
+    case "letter_to_dear_one":
+      return {
+        icon: <Feather className="h-5 w-5 text-[#c49b52]" />,
+        badgeText: "Cherished Landmark • Inscribed in Our Hearts",
+        containerClass: "border-[#8c6227]/50 bg-[#2a170a]/60 text-[#fcf8ee]",
+        iconBoxClass: "bg-[#8c6227]/20 text-[#c49b52] border border-[#8c6227]/40",
+        badgeClass: "text-[#c49b52]",
+      };
+    case "jagrata_kirtan":
+      return {
+        icon: <Flame className="h-5 w-5 text-amber-400 animate-pulse" />,
+        badgeText: "🚩 Pavitra Mandir Sthan • Divine Gathering",
+        containerClass: "border-amber-500/50 bg-amber-950/50 text-amber-100",
+        iconBoxClass: "bg-red-600/20 text-amber-300 border border-amber-500/40",
+        badgeClass: "text-amber-300",
+      };
+    case "akhand_path":
+    case "gurpurab":
+      return {
+        icon: <span className="text-base font-bold text-amber-300">ੴ</span>,
+        badgeText: "Gurdwara Sahib • Sacred Sthan",
+        containerClass: "border-amber-500/50 bg-amber-950/50 text-amber-100",
+        iconBoxClass: "bg-amber-600/20 text-amber-300 border border-amber-500/40",
+        badgeClass: "text-amber-200",
+      };
+    case "aqeeqah":
+    case "nikah":
+    case "iftar":
+      return {
+        icon: <span className="text-base text-emerald-300">🌙</span>,
+        badgeText: "Mubarak Venue • Sacred Gathering",
+        containerClass: "border-emerald-500/50 bg-emerald-950/50 text-emerald-100",
+        iconBoxClass: "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40",
+        badgeClass: "text-emerald-300",
+      };
+    case "christening":
+    case "wedding_blessing":
+    case "blessing_ceremony":
+      return {
+        icon: <span className="text-base text-sky-300">🕊️</span>,
+        badgeText: "Place of Sacred Blessing & Grace",
+        containerClass: "border-sky-500/40 bg-sky-950/40 text-sky-100",
+        iconBoxClass: "bg-sky-600/20 text-sky-300 border border-sky-500/40",
+        badgeClass: "text-sky-300",
+      };
+    case "godhbharai":
+      return {
+        icon: <span className="text-base text-rose-300">🌸</span>,
+        badgeText: "Blessing Gathering • Joyous Celebration",
+        containerClass: "border-rose-400/40 bg-rose-950/40 text-rose-100",
+        iconBoxClass: "bg-rose-500/20 text-rose-300 border border-rose-400/40",
+        badgeClass: "text-rose-300",
+      };
+    case "kitty_party":
+      return {
+        icon: <Sparkles className="h-5 w-5 text-pink-400" />,
+        badgeText: "Party Venue • Gathering Spot",
+        containerClass: "border-pink-500/40 bg-pink-950/40 text-pink-100",
+        iconBoxClass: "bg-pink-500/20 text-pink-300 border border-pink-500/40",
+        badgeClass: "text-pink-300",
+      };
+    case "proposal":
+    case "anniversary":
+    default:
+      return {
+        icon: <Heart className="h-5 w-5 text-rose-400 fill-rose-500/30 animate-pulse" />,
+        badgeText: "Romantic Landmark • Where Our Story Began",
+        containerClass: "border-rose-500/40 bg-rose-950/30 text-rose-100",
+        iconBoxClass: "bg-rose-500/20 text-rose-400 border border-rose-500/30",
+        badgeClass: "text-rose-300",
+      };
+  }
+}
+
+const PagePreview = React.memo(function PagePreview({
   senderName,
   recipientName,
   nickname,
@@ -113,7 +224,54 @@ export default function PagePreview({
 
   // Chapter Navigation State
   const [activeChapter, setActiveChapter] = useState<number>(0);
-  const chapters = ["Intro", "Memories", "Letter", ...(timeline.length > 0 ? ["Timeline"] : []), "Moments"];
+
+  const hasVenue = Boolean(venueName || venueAddress || milestoneVenue || eventDate || eventTime);
+  const hasTimeline = Boolean(timeline && timeline.length > 0);
+
+  const chapters = useMemo(() => [
+    { id: "intro", label: "Intro" },
+    { id: "memories", label: "Photos" },
+    { id: "letter", label: "Letter" },
+    ...(hasVenue ? [{ id: "venue", label: "Location & Event" }] : []),
+    ...(hasTimeline ? [{ id: "timeline", label: "Timeline" }] : []),
+    { id: "moments", label: "Interactive" },
+  ], [hasVenue, hasTimeline]);
+
+  const scrollToChapter = (id: string, idx: number) => {
+    setActiveChapter(idx);
+    const target = containerRef.current?.querySelector(`#preview-section-${id}`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const sectionId = entry.target.id.replace("preview-section-", "");
+            const index = chapters.findIndex((c) => c.id === sectionId);
+            if (index !== -1) {
+              setActiveChapter(index);
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.25,
+        rootMargin: "-10% 0px -40% 0px",
+      }
+    );
+
+    chapters.forEach((ch) => {
+      const el = containerRef.current?.querySelector(`#preview-section-${ch.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [chapters]);
 
   // Dodging "No" Button State
   const [noButtonPos, setNoButtonPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
@@ -274,26 +432,40 @@ export default function PagePreview({
         </div>
       )}
 
-      {/* CHAPTER PROGRESSION DOTS (Instagram Story style) */}
-      <div className="relative z-20 mb-6 flex items-center justify-center space-x-1.5 px-2">
-        {chapters.map((ch, idx) => (
-          <button
-            key={idx}
-            type="button"
-            onClick={() => setActiveChapter(idx)}
-            className="flex-1 max-w-[80px] h-1.5 rounded-full transition-all duration-300 overflow-hidden bg-white/20 hover:bg-white/40"
-          >
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                activeChapter === idx
-                  ? "bg-rose-500 w-full"
-                  : activeChapter > idx
-                  ? "bg-white/60 w-full"
-                  : "w-0"
-              }`}
-            />
-          </button>
-        ))}
+      {/* CHAPTER PROGRESSION DOTS (Instagram Story style - Click to navigate) */}
+      <div className="sticky top-2 z-30 mb-6 flex flex-col items-center">
+        <div className="flex items-center justify-between space-x-1.5 sm:space-x-2 px-3 py-1.5 rounded-full bg-neutral-950/80 backdrop-blur-md border border-white/15 shadow-xl w-full max-w-md">
+          {chapters.map((ch, idx) => (
+            <button
+              key={ch.id}
+              type="button"
+              onClick={() => scrollToChapter(ch.id, idx)}
+              title={`Jump to ${ch.label}`}
+              className="group relative flex-1 h-2 rounded-full transition-all duration-300 overflow-visible bg-white/20 hover:bg-white/40 cursor-pointer focus:outline-none"
+            >
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  activeChapter === idx
+                    ? "bg-rose-500 w-full shadow-[0_0_8px_rgba(244,63,94,0.8)]"
+                    : activeChapter > idx
+                    ? "bg-white/70 w-full"
+                    : "w-0"
+                }`}
+              />
+              {/* Tooltip on hover */}
+              <span className="pointer-events-none absolute -bottom-8 left-1/2 -translate-x-1/2 rounded-md bg-neutral-900 border border-white/15 px-2 py-0.5 text-[10px] font-medium text-white shadow-xl opacity-0 group-hover:opacity-100 transition whitespace-nowrap z-50">
+                {ch.label}
+              </span>
+            </button>
+          ))}
+        </div>
+        {/* Active Chapter Label with quick jump pill */}
+        <div className="flex items-center justify-center space-x-2 mt-1.5">
+          <span className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80">Section:</span>
+          <span className="text-xs font-bold text-white bg-rose-500/20 border border-rose-500/40 px-2.5 py-0.5 rounded-full shadow-sm animate-in fade-in duration-200">
+            {chapters[activeChapter]?.label || "Intro"}
+          </span>
+        </div>
       </div>
 
       {/* Top Banner */}
@@ -326,7 +498,7 @@ export default function PagePreview({
       </div>
 
       {/* Hero Headline Section */}
-      <div className="relative z-10 my-10 text-center space-y-3">
+      <div id="preview-section-intro" className="relative z-10 my-10 text-center space-y-3 scroll-mt-20">
         <span className="inline-block rounded-full bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-widest text-rose-300 backdrop-blur-md border border-white/10">
           {isMemorial
             ? "Remembering with Sacred Love"
@@ -366,24 +538,33 @@ export default function PagePreview({
         )}
       </div>
 
-      {/* Milestone Landmark Map Pin (e.g. "Where we first met") */}
-      {milestoneVenue && (
-        <div className="relative z-10 mx-auto max-w-xl rounded-2xl border border-rose-500/30 bg-rose-950/30 p-4 backdrop-blur-xl shadow-lg my-6 flex items-center space-x-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400">
-            <MapPin className="h-5 w-5 animate-bounce" />
+      {/* Milestone Landmark Map Pin (Occasion-Aware) */}
+      {milestoneVenue && (() => {
+        const pinConfig = getMilestoneDetails(occasion);
+        return (
+          <div
+            id={!venueName && !venueAddress ? "preview-section-venue" : undefined}
+            className={`relative z-10 mx-auto max-w-xl rounded-2xl border p-4 backdrop-blur-xl shadow-lg my-6 flex items-center space-x-3 scroll-mt-20 ${pinConfig.containerClass}`}
+          >
+            <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${pinConfig.iconBoxClass}`}>
+              {pinConfig.icon}
+            </div>
+            <div>
+              <span className={`text-[10px] font-bold uppercase tracking-wider block ${pinConfig.badgeClass}`}>
+                {pinConfig.badgeText}
+              </span>
+              <p className="text-xs text-white font-medium mt-0.5">{milestoneVenue}</p>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-300 block">
-              Sacred Milestone Location
-            </span>
-            <p className="text-xs text-white font-medium">{milestoneVenue}</p>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Venue & Maps Card (for Event Invites) */}
       {(venueName || venueAddress) && (
-        <div className="relative z-10 mx-auto max-w-xl rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-xl shadow-xl my-6 text-center">
+        <div
+          id="preview-section-venue"
+          className="relative z-10 mx-auto max-w-xl rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-xl shadow-xl my-6 text-center scroll-mt-20"
+        >
           <div className="flex items-center justify-center space-x-1.5 text-amber-300 text-xs font-semibold uppercase tracking-wider mb-1">
             <MapPin className="h-4 w-4" />
             <span>Event Venue Details</span>
@@ -415,7 +596,7 @@ export default function PagePreview({
 
       {/* RELATIONSHIP TIMELINE SLIDER (for anniversaries/milestones) */}
       {timeline.length > 0 && (
-        <div className="relative z-10 my-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-black/30 p-6 backdrop-blur-xl shadow-2xl">
+        <div id="preview-section-timeline" className="relative z-10 my-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-black/30 p-6 backdrop-blur-xl shadow-2xl scroll-mt-20">
           <div className="flex items-center space-x-2 text-rose-300 mb-3">
             <Calendar className="h-4 w-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
@@ -465,7 +646,7 @@ export default function PagePreview({
       )}
 
       {/* Photo Montage Collage with 3 Distinct Layout Styles */}
-      <div className="relative z-10 my-10">
+      <div id="preview-section-memories" className="relative z-10 my-10 scroll-mt-20">
         <div className="flex items-center justify-between mb-4 px-1">
           <div className="flex items-center space-x-2 text-rose-300">
             <Camera className="h-4 w-4" />
@@ -571,30 +752,88 @@ export default function PagePreview({
 
         {/* 3. FILMSTRIP CINEMATIC HORIZONTAL SCROLL */}
         {collageLayout === "filmstrip" && (
-          <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-950/90 py-6 px-4 shadow-2xl">
-            <div className="flex items-center space-x-2 text-neutral-400 mb-3 text-xs">
-              <Film className="h-4 w-4 text-rose-400" />
-              <span>Scroll horizontally to view reel</span>
+          <div className="relative overflow-hidden rounded-3xl border border-neutral-800 bg-[#0d0d0f] py-6 px-3 sm:px-5 shadow-2xl space-y-4">
+            {/* Header Film Strip Info */}
+            <div className="flex items-center justify-between text-neutral-400 text-xs px-2 border-b border-neutral-800/80 pb-3">
+              <div className="flex items-center space-x-2">
+                <Film className="h-4 w-4 text-amber-500" />
+                <span className="font-mono text-neutral-200 font-semibold tracking-wider text-[11px] uppercase">
+                  35mm Analog Negative Reel • KODAK PORTRA 400
+                </span>
+              </div>
+              <span className="text-[10px] text-amber-500/80 font-mono tracking-widest hidden sm:inline">
+                ISO 400 • C-41 • SAFETY FILM
+              </span>
             </div>
-            <div className="flex space-x-5 overflow-x-auto pb-4 pt-1 snap-x scrollbar-thin">
-              {photos.map((img, i) => (
-                <div
-                  key={i}
-                  onClick={() => setLightboxImage(img)}
-                  className="flex-none w-64 sm:w-72 snap-center cursor-pointer group rounded-2xl border border-neutral-800 bg-neutral-900 p-2 hover:border-rose-500/50 transition duration-300"
-                >
-                  <div className="aspect-[3/4] w-full overflow-hidden rounded-xl bg-black">
-                    <img
-                      src={img}
-                      alt={`Filmstrip frame ${i + 1}`}
-                      className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
-                    />
+
+            {/* Continuous Film Negative Track with Sprocket Perforations */}
+            <div className="relative rounded-2xl bg-[#09090b] border border-neutral-800 shadow-[inset_0_2px_12px_rgba(0,0,0,0.95)] py-3 px-1 sm:px-2 overflow-hidden">
+              {/* Top Continuous Sprocket Track */}
+              <div className="flex items-center justify-between space-x-3 overflow-hidden px-3 pb-2.5 opacity-90 select-none pointer-events-none border-b border-white/5">
+                {Array.from({ length: 28 }).map((_, spIdx) => (
+                  <div key={spIdx} className="flex items-center space-x-2 shrink-0">
+                    <div className="w-3 h-2 rounded-[2px] bg-neutral-950 border border-neutral-700/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.85)]" />
+                    {spIdx % 3 === 0 && (
+                      <span className="text-[8px] font-mono text-amber-500/75 font-semibold tracking-widest">
+                        ▶ {20 + spIdx}A
+                      </span>
+                    )}
                   </div>
-                  <div className="pt-2 text-center text-xs text-neutral-400 font-mono">
-                    Frame {String(i + 1).padStart(2, "0")}
+                ))}
+              </div>
+
+              {/* Photos Reel */}
+              <div className="flex space-x-5 overflow-x-auto py-3 px-3 sm:px-4 snap-x scrollbar-thin">
+                {photos.map((img, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setLightboxImage(img)}
+                    className="flex-none w-64 sm:w-72 snap-center cursor-pointer group rounded-xl border border-neutral-800 bg-[#141418] p-2.5 hover:border-amber-500/70 transition duration-300 shadow-2xl relative"
+                  >
+                    {/* Top frame stencil code */}
+                    <div className="flex items-center justify-between text-[9px] font-mono text-amber-500/75 mb-1.5 px-1 select-none">
+                      <span className="tracking-widest">KODAK 5063</span>
+                      <span className="text-amber-400 font-bold">FRAME {String(i + 1).padStart(2, "0")}A</span>
+                    </div>
+
+                    {/* Negative Frame Image */}
+                    <div className="aspect-[3/4] w-full overflow-hidden rounded-md bg-black relative border-2 border-black/90 shadow-inner">
+                      <img
+                        src={img}
+                        alt={`Filmstrip frame ${i + 1}`}
+                        className="h-full w-full object-cover group-hover:scale-105 group-hover:contrast-105 transition duration-500 filter"
+                      />
+                      {/* Subtle retro vignette overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none opacity-60" />
+                    </div>
+
+                    {/* Bottom frame caption */}
+                    <div className="pt-2 flex items-center justify-between text-[10px] text-neutral-400 font-mono px-1">
+                      <span className="text-amber-500/90 font-bold">▶ {String(i + 1).padStart(2, "0")}</span>
+                      <span className="text-[9px] text-neutral-500 tracking-wider">LOVEWRIT 35MM</span>
+                      <span className="text-neutral-500">EXP {i + 1}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Bottom Continuous Sprocket Track */}
+              <div className="flex items-center justify-between space-x-3 overflow-hidden px-3 pt-2.5 opacity-90 select-none pointer-events-none border-t border-white/5">
+                {Array.from({ length: 28 }).map((_, spIdx) => (
+                  <div key={spIdx} className="flex items-center space-x-2 shrink-0">
+                    <div className="w-3 h-2 rounded-[2px] bg-neutral-950 border border-neutral-700/60 shadow-[inset_0_1px_2px_rgba(0,0,0,0.85)]" />
+                    {spIdx % 2 === 0 && (
+                      <span className="text-[7.5px] font-mono text-amber-500/60 font-medium tracking-wider">
+                        • DX 400 •
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="text-center text-[11px] text-neutral-500 font-mono">
+              ✦ Swipe or scroll horizontally • Tap any frame to enlarge in high resolution
             </div>
           </div>
         )}
@@ -602,7 +841,7 @@ export default function PagePreview({
 
       {/* TAP-TO-REVEAL SECRET MESSAGES SECTION */}
       {secretNotes.length > 0 && (
-        <div className="relative z-10 mx-auto max-w-2xl my-8 space-y-3">
+        <div id="preview-section-moments" className="relative z-10 mx-auto max-w-2xl my-8 space-y-3 scroll-mt-20">
           <div className="flex items-center space-x-2 text-amber-300 px-1">
             <Sparkles className="h-4 w-4" />
             <span className="text-xs font-bold uppercase tracking-wider">
@@ -672,9 +911,14 @@ export default function PagePreview({
 
       {/* Heartfelt Message / Letter Section */}
       <div
-        className={`relative z-10 mx-auto max-w-2xl rounded-3xl border p-6 sm:p-10 shadow-2xl my-10 ${
+        id="preview-section-letter"
+        className={`relative z-10 mx-auto max-w-2xl rounded-3xl border p-6 sm:p-10 shadow-2xl my-10 scroll-mt-20 ${
           colorTheme === "scroll"
             ? "border-2 border-[#8c6227]/90 text-[#2a170a]"
+            : colorTheme === "modern_gold"
+            ? "border-2 border-amber-500/60 bg-gradient-to-b from-neutral-900/95 via-stone-900/95 to-neutral-950/95 text-amber-50 shadow-[0_25px_50px_-12px_rgba(245,158,11,0.25)]"
+            : colorTheme === "modern"
+            ? "border-2 border-slate-600/70 bg-slate-900/95 text-slate-100 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.8)]"
             : "border-white/10 bg-white/5 backdrop-blur-xl text-neutral-100"
         }`}
         style={
@@ -701,20 +945,58 @@ export default function PagePreview({
           </div>
         )}
 
+        {colorTheme === "modern" && (
+          <div className="absolute inset-3 rounded-[24px] border border-slate-700/50 pointer-events-none flex flex-col justify-between p-2">
+            <div className="flex justify-between text-slate-500 text-xs font-mono">
+              <span>✦</span>
+              <span>✦</span>
+            </div>
+            <div className="flex justify-between text-slate-500 text-xs font-mono">
+              <span>✦</span>
+              <span>✦</span>
+            </div>
+          </div>
+        )}
+
+        {colorTheme === "modern_gold" && (
+          <div className="absolute inset-3 rounded-[24px] border border-amber-500/40 pointer-events-none flex flex-col justify-between p-2">
+            <div className="flex justify-between text-amber-400/80 text-xs font-mono">
+              <span>✦</span>
+              <span>✦</span>
+            </div>
+            <div className="flex justify-between text-amber-400/80 text-xs font-mono">
+              <span>✦</span>
+              <span>✦</span>
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
             {colorTheme === "scroll" ? (
               <span className="text-base">📜</span>
+            ) : colorTheme === "modern" || colorTheme === "modern_gold" ? (
+              <span className="text-base">✉️</span>
             ) : (
               <Sparkles className="h-4 w-4 text-rose-300" />
             )}
             <span
               className={`text-xs uppercase tracking-widest font-semibold ${
-                colorTheme === "scroll" ? "text-[#7a481c] font-serif" : "text-rose-300"
+                colorTheme === "scroll"
+                  ? "text-[#7a481c] font-serif"
+                  : colorTheme === "modern_gold"
+                  ? "text-amber-300 font-sans"
+                  : colorTheme === "modern"
+                  ? "text-slate-300 font-sans"
+                  : "text-rose-300"
               }`}
             >
               {colorTheme === "scroll"
                 ? "A Sacred Letter • Hand-Inscribed"
+                : colorTheme === "modern_gold"
+                ? "A Modern Letter • Golden Edition"
+                : colorTheme === "modern"
+                ? "A Modern Letter • Carefully Authored"
                 : isMemorial
                 ? "Eulogy & Remembrance"
                 : isInvite
@@ -736,11 +1018,47 @@ export default function PagePreview({
               </div>
             </div>
           )}
+
+          {colorTheme === "modern" && (
+            <div className="relative flex items-center justify-center">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shadow-md border border-slate-300/60"
+                style={{
+                  background:
+                    "radial-gradient(circle at 35% 30%, #f8fafc 0%, #94a3b8 50%, #334155 100%)",
+                }}
+                title="Modern Silver Medallion"
+              >
+                <Sparkles className="h-2.5 w-2.5 text-slate-900 fill-slate-900" />
+              </div>
+            </div>
+          )}
+
+          {colorTheme === "modern_gold" && (
+            <div className="relative flex items-center justify-center">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center shadow-md border border-amber-300/70"
+                style={{
+                  background:
+                    "radial-gradient(circle at 35% 30%, #fef08a 0%, #eab308 45%, #854d0e 100%)",
+                }}
+                title="Modern Gold Medallion"
+              >
+                <Sparkles className="h-2.5 w-2.5 text-amber-950 fill-amber-950" />
+              </div>
+            </div>
+          )}
         </div>
 
         <p
           className={`${getLetterFontClass(fontFamily)} leading-relaxed whitespace-pre-wrap ${
-            colorTheme === "scroll" ? "text-[#2a170a] font-medium" : "text-neutral-100"
+            colorTheme === "scroll"
+              ? "text-[#2a170a] font-medium"
+              : colorTheme === "modern_gold"
+              ? "text-amber-50 font-medium"
+              : colorTheme === "modern"
+              ? "text-slate-100 font-medium"
+              : "text-neutral-100"
           }`}
         >
           {letter || "A timeless message crafted with all my heart."}
@@ -750,19 +1068,31 @@ export default function PagePreview({
           className={`mt-6 pt-4 border-t flex items-center justify-between text-xs ${
             colorTheme === "scroll"
               ? "border-[#8c6227]/30 text-[#6d4518]"
+              : colorTheme === "modern_gold"
+              ? "border-amber-500/40 text-amber-200"
+              : colorTheme === "modern"
+              ? "border-slate-700/60 text-slate-300"
               : "border-white/10 text-neutral-400"
           }`}
         >
           <span>
             {colorTheme === "scroll"
               ? "In Everlasting Devotion,"
+              : colorTheme === "modern_gold" || colorTheme === "modern"
+              ? "With Heartfelt Devotion,"
               : isMemorial
               ? "Forever In Our Hearts,"
               : "Warmest Regards,"}
           </span>
           <span
             className={`font-serif italic font-semibold ${
-              colorTheme === "scroll" ? "text-[#3b200b] underline decoration-[#8c6227]/60" : "text-white"
+              colorTheme === "scroll"
+                ? "text-[#3b200b] underline decoration-[#8c6227]/60"
+                : colorTheme === "modern_gold"
+                ? "text-white underline decoration-amber-400"
+                : colorTheme === "modern"
+                ? "text-white underline decoration-slate-400"
+                : "text-white"
             }`}
           >
             {senderName || "Always"}
@@ -779,7 +1109,10 @@ export default function PagePreview({
 
       {/* Event Details, Date, Time & Venue Section */}
       {(venueName || venueAddress || eventDate || eventTime) && (
-        <div className="relative z-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-neutral-900/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl my-8 text-center space-y-4">
+        <div
+          id="preview-section-venue"
+          className="relative z-10 mx-auto max-w-2xl rounded-3xl border border-white/15 bg-neutral-900/80 p-6 sm:p-8 backdrop-blur-xl shadow-2xl my-8 text-center space-y-4 scroll-mt-20"
+        >
           {occasion === "jagrata_kirtan" && (
             <div className="inline-flex items-center space-x-2 rounded-full border border-amber-500/40 bg-amber-500/15 px-3.5 py-1 text-xs font-bold text-amber-300">
               <Flame className="h-4 w-4 text-amber-400 animate-pulse" />
@@ -838,7 +1171,10 @@ export default function PagePreview({
       )}
 
       {/* Floating Interactive Love Counter Button */}
-      <div className="relative z-10 my-8 flex justify-center">
+      <div
+        id={secretNotes.length === 0 ? "preview-section-moments" : undefined}
+        className="relative z-10 my-8 flex justify-center scroll-mt-20"
+      >
         <button
           type="button"
           onClick={handleSendLove}
@@ -996,4 +1332,6 @@ export default function PagePreview({
       </div>
     </div>
   );
-}
+});
+
+export default PagePreview;

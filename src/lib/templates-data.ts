@@ -48,6 +48,7 @@ export type ColorThemeKey =
   | "festive"
   | "scroll"
   | "modern"
+  | "modern_gold"
   | "saffron"
   | "sacred_emerald"
   | "celestial"
@@ -284,13 +285,23 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorTheme> = {
   },
   modern: {
     id: "modern",
-    name: "Modern Minimalist",
+    name: "Modern Manuscript (Silver)",
     bgGradient: "from-neutral-950 via-zinc-900 to-neutral-950",
-    cardBg: "bg-neutral-900/90 border-neutral-700/50 text-neutral-100",
-    textColor: "text-neutral-200",
-    accentColor: "#e2e8f0",
-    borderStyle: "border-neutral-600/40",
-    tagColor: "bg-neutral-800 text-neutral-300 border-neutral-700",
+    cardBg: "bg-neutral-900/95 border-slate-700/60 text-slate-100",
+    textColor: "text-slate-100",
+    accentColor: "#f1f5f9",
+    borderStyle: "border-slate-600/60",
+    tagColor: "bg-slate-800 text-slate-200 border-slate-700",
+  },
+  modern_gold: {
+    id: "modern_gold",
+    name: "Modern Manuscript (Gold)",
+    bgGradient: "from-neutral-950 via-stone-900 to-neutral-950",
+    cardBg: "bg-neutral-900/95 border-amber-500/50 text-amber-50",
+    textColor: "text-amber-100",
+    accentColor: "#f59e0b",
+    borderStyle: "border-amber-500/40",
+    tagColor: "bg-amber-950/60 text-amber-200 border-amber-500/40",
   },
   saffron: {
     id: "saffron",
@@ -384,8 +395,8 @@ export const TEMPLATES: TemplateDefinition[] = [
       "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
       "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80",
     ],
-    sampleSender: "Aarav",
-    sampleRecipient: "Simran",
+    sampleSender: "John",
+    sampleRecipient: "Snow",
     sampleMessage: "From the very first conversation, I knew you were the one. Every sunrise is brighter with you. Will you make me the happiest person and marry me?",
     sampleLocation: "Udaipur, Lake Pichola",
     hasInteractiveDodging: true,

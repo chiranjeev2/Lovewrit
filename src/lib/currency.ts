@@ -184,8 +184,8 @@ export function calculateOrderTotal(
 } {
   const p = PRICING_TIERS[region];
 
-  // 100% Free Digital Card or Free Ad-Supported Interactive Page
-  if (options?.isFreeCard || (productType === "PAGE" && options?.isAdSupported && tier === "SELF_SERVICE" && !isBundle)) {
+  // 100% Free Digital Card or Free Ad-Supported Interactive Page (when NOT bundling)
+  if ((options?.isFreeCard && !isBundle) || (productType === "PAGE" && options?.isAdSupported && tier === "SELF_SERVICE" && !isBundle)) {
     return {
       totalUnit: 0,
       displayPrice: 0,
