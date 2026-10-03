@@ -316,6 +316,8 @@ export async function POST(req: NextRequest) {
                     pageData?.requireGuestbookApproval ?? isMemorial
                   ),
                   language: pageData?.language || cardData?.language || "en",
+                  scenesJson: pageData?.scenesJson || (pageData?.scenes ? JSON.stringify(pageData.scenes) : null),
+                  sceneEngineEnabled: true, // Rule 8: True for new orders
                 },
               },
             }

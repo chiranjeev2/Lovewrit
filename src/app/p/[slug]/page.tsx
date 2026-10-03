@@ -27,6 +27,10 @@ import {
   Copy,
 } from "lucide-react";
 import { FontFamilyKey, AmbientEffectKey } from "@/lib/templates-data";
+import { SceneContainer } from "@/components/scene-engine/SceneContainer";
+import { parseAndValidateScenesJson } from "@/types/scenes";
+import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
+import { sanitizeGuestName } from "@/lib/guest-personalization";
 
 export interface PageCustomData {
   senderName: string;
@@ -34,6 +38,8 @@ export interface PageCustomData {
   occasion: string;
   letter: string;
   photoUrls?: string | string[];
+  scenesJson?: string | null;
+  sceneEngineEnabled?: boolean;
   colorTheme?: ColorThemeKey;
   fontFamily?: FontFamilyKey;
   ambientEffect?: AmbientEffectKey;
@@ -284,6 +290,34 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   const hasMusic = Boolean(musicUrl && musicUrl !== "none");
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
 
+  // Interactive Scene Engine: Full-screen sequential story view
+  if (pageData.sceneEngineEnabled && !isLockedCountdown) {
+    const guestParam = sanitizeGuestName(searchParams.get("guest"), 60);
+    const scenes =
+      parseAndValidateScenesJson(pageData.scenesJson) ||
+      getDefaultScenesForOccasion(pageData.occasion, {
+        senderName: pageData.senderName,
+        recipientName: pageData.recipientName,
+        letter: pageData.letter,
+      });
+
+    return (
+      <div className="w-full h-[100dvh] bg-neutral-950 overflow-hidden">
+        <SceneContainer
+          scenes={scenes}
+          senderName={pageData.senderName}
+          recipientName={pageData.recipientName}
+          letter={pageData.letter}
+          colorTheme={pageData.colorTheme as ColorThemeKey}
+          fontFamily={pageData.fontFamily as FontFamilyKey}
+          audioTrackUrl={musicUrl || undefined}
+          guestName={guestParam || undefined}
+          onSendReply={handleSendReaction}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="relative min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8">
       {/* QR Code Printable Modal */}
@@ -304,7 +338,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         />
       )}
 
-      {/* Heartfelt Opening Moment Reveal */}
+      {/* Heartfelt Opening Moment Reveal for Classic Pages */}
       {showOpeningMoment && !isLockedCountdown && (
         <OpeningMoment
           revealType={template.revealType}

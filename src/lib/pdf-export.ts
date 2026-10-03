@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
-import { toPng } from "html-to-image";
+import { toJpeg } from "html-to-image";
 
 export interface FoldablePdfOptions {
   senderName: string;
@@ -49,6 +49,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
     orientation: "landscape",
     unit: "mm",
     format: [254, 177.8],
+    compress: true,
   });
 
   const pageWidth = 254;
@@ -143,15 +144,16 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
       const rect = cardRef.getBoundingClientRect();
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
-      const pixelRatio = 3;
+      const pixelRatio = 2;
 
-      // Capture the card preview node directly with zeroed margins and exact bounds
-      const frontPng = await toPng(cardRef, {
+      // Capture the card preview node directly with compressed JPEG & capped render scale
+      const frontJpg = await toJpeg(cardRef, {
         width,
         height,
         canvasWidth: Math.round(width * pixelRatio),
         canvasHeight: Math.round(height * pixelRatio),
         pixelRatio,
+        quality: 0.85,
         cacheBust: false,
         style: {
           margin: "0",
@@ -177,7 +179,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
       const frontW = panelWidth - margin * 2; // 107mm
       const frontH = pageHeight - margin * 2; // 157.8mm
 
-      doc.addImage(frontPng, "PNG", frontX, frontY, frontW, frontH);
+      doc.addImage(frontJpg, "JPEG", frontX, frontY, frontW, frontH, undefined, "FAST");
     } catch (err) {
       console.warn("Could not capture cardRef, falling back to vector front", err);
       renderVectorFrontCover(doc, frontCenterX, recipientName, senderName, occasion);

@@ -10,6 +10,10 @@ import PagePreview, { CollageLayoutStyle } from "@/components/editor/PagePreview
 import VoiceRecorder from "@/components/interactive/VoiceRecorder";
 import HindiPunjabiKeyboard from "@/components/editor/HindiPunjabiKeyboard";
 import DesktopEmojiPicker from "@/components/editor/DesktopEmojiPicker";
+import { SceneFlowEditor } from "@/components/scene-engine/customizer/SceneFlowEditor";
+import { SceneContainer } from "@/components/scene-engine/SceneContainer";
+import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
+import { SceneConfig } from "@/types/scenes";
 import { useApp } from "@/context/AppContext";
 import {
   TEMPLATES,
@@ -163,6 +167,17 @@ export default function CreateLovewritPage({
   const [showOmMotif, setShowOmMotif] = useState<boolean>(false);
   const [showBismillah, setShowBismillah] = useState<boolean>(true);
   const [isAdSupported, setIsAdSupported] = useState<boolean>(true);
+
+  // Scene Engine State (Phase 3)
+  const [scenes, setScenes] = useState<SceneConfig[]>(() =>
+    getDefaultScenesForOccasion(template.occasion, {
+      senderName: template.sampleSender,
+      recipientName: template.sampleRecipient,
+      letter: template.sampleMessage,
+    })
+  );
+  const [previewSceneIndex, setPreviewSceneIndex] = useState<number | undefined>(undefined);
+  const [previewMode, setPreviewMode] = useState<"scene" | "page">("scene");
 
   // Founder Master Pass (Free All-Access)
   const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
@@ -752,6 +767,8 @@ export default function CreateLovewritPage({
           showBismillah,
           isAdSupported: isFreeAdPage,
           language: selectedLanguage,
+          scenesJson: JSON.stringify(scenes),
+          scenes,
         },
       };
 
@@ -1229,6 +1246,18 @@ export default function CreateLovewritPage({
                 </div>
               )}
             </div>
+
+            {/* Scene Engine Story Flow Customizer */}
+            {(productType === "PAGE" || isBundle) && (
+              <SceneFlowEditor
+                scenes={scenes}
+                onChange={setScenes}
+                onPreviewSceneIndex={(idx) => {
+                  setPreviewSceneIndex(idx);
+                  setPreviewMode("scene");
+                }}
+              />
+            )}
 
             {/* Step 2: Names, Language & Occasion */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
@@ -2063,7 +2092,7 @@ export default function CreateLovewritPage({
 
               {occasion === "letter_to_dear_one" ? (
                 /* Letter to a Dear One: Exclusive Letter Themes */
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
                     {
                       id: "scroll" as ColorThemeKey,
@@ -2081,17 +2110,10 @@ export default function CreateLovewritPage({
                     },
                     {
                       id: "modern" as ColorThemeKey,
-                      name: "Modern Manuscript (Silver)",
-                      desc: "Contemporary slate manuscript with brushed platinum rails & sleek silver seal",
+                      name: "Modern Manuscript",
+                      desc: "Contemporary slate manuscript with brushed platinum rails & sleek seal",
                       accent: "#94a3b8",
-                      badge: "Silver Lining",
-                    },
-                    {
-                      id: "modern_gold" as ColorThemeKey,
-                      name: "Modern Manuscript (Gold)",
-                      desc: "Contemporary obsidian manuscript with brushed gilded gold rails & gold wax seal",
-                      accent: "#f59e0b",
-                      badge: "Golden Lining",
+                      badge: "Modern Edition",
                     },
                   ].map((thm) => (
                     <button
@@ -2896,34 +2918,77 @@ export default function CreateLovewritPage({
                 showBismillah={showBismillah}
               />
             ) : (
-              <PagePreview
-                senderName={deferredSenderName}
-                recipientName={deferredRecipientName}
-                nickname={deferredNickname}
-                occasion={occasion}
-                letter={deferredMessage}
-                photoUrls={pagePhotos}
-                colorTheme={selectedTheme}
-                collageLayout={collageLayout}
-                fontFamily={pageFontFamily}
-                ambientEffect={ambientEffect}
-                milestoneVenue={deferredMilestoneVenue}
-                tipUpiId={tipUpiId}
-                tipPaypalUsername={tipPaypalUsername}
-                isProposal={isProposal && occasion === "proposal"}
-                proposalQuestion={proposalQuestion}
-                venueName={deferredVenueName}
-                venueAddress={deferredVenueAddress}
-                venueMapUrl={venueMapUrl}
-                eventDate={eventDate}
-                eventTime={eventTime}
-                voiceMessageUrl={voiceMemoUrl}
-                musicTrackName={activeTrackObj?.title}
-                previewOnly={true}
-                showOmMotif={showOmMotif}
-                showBismillah={showBismillah}
-                isAdSupported={isFreeAdPage}
-              />
+              <div className="space-y-3">
+                {/* Scene Flow Preview vs Classic Page Switcher */}
+                <div className="flex items-center space-x-1.5 p-1 rounded-2xl bg-neutral-900 border border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("scene")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold transition ${
+                      previewMode === "scene"
+                        ? "bg-rose-500 text-white shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    ✨ Scene Flow
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("page")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold transition ${
+                      previewMode === "page"
+                        ? "bg-rose-500 text-white shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    📜 Full Page
+                  </button>
+                </div>
+
+                {previewMode === "scene" ? (
+                  <div className="w-full h-[580px] sm:h-[620px] rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl relative bg-neutral-950">
+                    <SceneContainer
+                      scenes={scenes}
+                      senderName={deferredSenderName || "John"}
+                      recipientName={deferredRecipientName || "Snow"}
+                      letter={deferredMessage}
+                      colorTheme={selectedTheme}
+                      fontFamily={pageFontFamily}
+                      audioTrackUrl={activeTrackObj?.url || undefined}
+                      previewActiveIndex={previewSceneIndex}
+                    />
+                  </div>
+                ) : (
+                  <PagePreview
+                    senderName={deferredSenderName}
+                    recipientName={deferredRecipientName}
+                    nickname={deferredNickname}
+                    occasion={occasion}
+                    letter={deferredMessage}
+                    photoUrls={pagePhotos}
+                    colorTheme={selectedTheme}
+                    collageLayout={collageLayout}
+                    fontFamily={pageFontFamily}
+                    ambientEffect={ambientEffect}
+                    milestoneVenue={deferredMilestoneVenue}
+                    tipUpiId={tipUpiId}
+                    tipPaypalUsername={tipPaypalUsername}
+                    isProposal={isProposal && occasion === "proposal"}
+                    proposalQuestion={proposalQuestion}
+                    venueName={deferredVenueName}
+                    venueAddress={deferredVenueAddress}
+                    venueMapUrl={venueMapUrl}
+                    eventDate={eventDate}
+                    eventTime={eventTime}
+                    voiceMessageUrl={voiceMemoUrl}
+                    musicTrackName={activeTrackObj?.title}
+                    previewOnly={true}
+                    showOmMotif={showOmMotif}
+                    showBismillah={showBismillah}
+                    isAdSupported={isFreeAdPage}
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
