@@ -11,6 +11,10 @@ import {
   MemoriesSceneConfig,
   PromisesSceneConfig,
   ArrowHeartSceneConfig,
+  WeddingStorySceneConfig,
+  EventDetailsSceneConfig,
+  PersonalNoteSceneConfig,
+  RsvpSceneConfig,
 } from "@/types/scenes";
 import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
@@ -50,6 +54,18 @@ const PromisesScene = dynamic(() => import("./scenes/PromisesScene"), {
   ssr: false,
 });
 const ArrowHeartScene = dynamic(() => import("./scenes/ArrowHeartScene"), {
+  ssr: false,
+});
+const WeddingStoryScene = dynamic(() => import("./scenes/WeddingStoryScene"), {
+  ssr: false,
+});
+const EventDetailsScene = dynamic(() => import("./scenes/EventDetailsScene"), {
+  ssr: false,
+});
+const PersonalNoteScene = dynamic(() => import("./scenes/PersonalNoteScene"), {
+  ssr: false,
+});
+const RsvpScene = dynamic(() => import("./scenes/RsvpScene"), {
   ssr: false,
 });
 
@@ -362,6 +378,38 @@ export function SceneContainer({
                   onScrolledToEnd={() => {
                     // Automatically signals letter completion
                   }}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "wedding_story" && (
+                <WeddingStoryScene
+                  config={currentScene as WeddingStorySceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "event_details" && (
+                <EventDetailsScene
+                  config={currentScene as EventDetailsSceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "personal_note" && (
+                <PersonalNoteScene
+                  config={currentScene as PersonalNoteSceneConfig}
+                  guestName={guestName}
+                  recipientName={recipientName}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "rsvp" && (
+                <RsvpScene
+                  config={currentScene as RsvpSceneConfig}
+                  guestName={guestName}
+                  recipientName={recipientName}
                   onContinue={handleNext}
                 />
               )}

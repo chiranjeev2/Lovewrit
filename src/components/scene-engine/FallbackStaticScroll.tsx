@@ -10,6 +10,10 @@ import {
   MemoriesSceneConfig,
   PromisesSceneConfig,
   ArrowHeartSceneConfig,
+  WeddingStorySceneConfig,
+  EventDetailsSceneConfig,
+  PersonalNoteSceneConfig,
+  RsvpSceneConfig,
 } from "@/types/scenes";
 import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
@@ -244,6 +248,96 @@ export function FallbackStaticScroll({
                   <span className="text-xs font-serif italic text-neutral-400">With love,</span>
                   <div className="text-base font-serif font-bold text-rose-300 mt-1">{senderName}</div>
                 </div>
+              </div>
+            );
+          }
+
+          if (scene.type === "wedding_story") {
+            const ws = scene as WeddingStorySceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/30 bg-amber-950/20 p-6 sm:p-8 space-y-4">
+                <div className="text-center">
+                  {ws.faithTag && (
+                    <span className="text-xs font-serif text-amber-300 uppercase tracking-widest block mb-1">
+                      {ws.faithTag}
+                    </span>
+                  )}
+                  <h3 className="text-xl font-serif font-bold text-white">{ws.title}</h3>
+                </div>
+                {ws.photoUrl && (
+                  <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden border border-amber-500/20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={ws.photoUrl} alt="Wedding Couple" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <p className="font-serif italic text-sm text-neutral-200 leading-relaxed bg-black/40 p-4 rounded-xl">
+                  {ws.coupleStory}
+                </p>
+                {ws.verseText && (
+                  <p className="text-xs font-serif italic text-amber-200/90 text-center">
+                    &ldquo;{ws.verseText}&rdquo;
+                  </p>
+                )}
+              </div>
+            );
+          }
+
+          if (scene.type === "event_details") {
+            const ed = scene as EventDetailsSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-white/10 bg-white/5 p-6 sm:p-8 space-y-4">
+                <h3 className="text-xl font-serif font-bold text-white text-center">{ed.title}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                  {ed.eventDate && (
+                    <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+                      <span className="text-[10px] text-amber-400 font-semibold uppercase block">Date</span>
+                      <p className="text-sm font-serif font-bold text-white">{ed.eventDate}</p>
+                    </div>
+                  )}
+                  {ed.eventTime && (
+                    <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+                      <span className="text-[10px] text-amber-400 font-semibold uppercase block">Time</span>
+                      <p className="text-sm font-serif font-bold text-white">{ed.eventTime}</p>
+                    </div>
+                  )}
+                </div>
+                {(ed.venueName || ed.venueAddress) && (
+                  <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-1">
+                    <p className="text-sm font-serif font-bold text-white">{ed.venueName}</p>
+                    <p className="text-xs text-neutral-400">{ed.venueAddress}</p>
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          if (scene.type === "personal_note") {
+            const pn = scene as PersonalNoteSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/20 bg-amber-950/10 p-6 sm:p-8 space-y-3">
+                <h3 className="text-xl font-serif font-bold text-white text-center">{pn.title}</h3>
+                <p className="font-serif italic text-sm text-neutral-200 leading-relaxed bg-black/40 p-4 rounded-xl">
+                  {pn.noteText}
+                </p>
+                {pn.warmClosing && (
+                  <p className="text-xs font-serif italic text-amber-300/80 text-right">{pn.warmClosing}</p>
+                )}
+              </div>
+            );
+          }
+
+          if (scene.type === "rsvp") {
+            const rv = scene as RsvpSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/30 bg-black/50 p-6 sm:p-8 text-center space-y-3">
+                <h3 className="text-xl font-serif font-bold text-white">{rv.title}</h3>
+                <p className="text-xs sm:text-sm text-neutral-300">{rv.savedSeatCopy}</p>
+                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl inline-block text-xs font-serif text-amber-300">
+                  Seat Reserved For: {displayRecipient}
+                </div>
+                {rv.showRsvpCount && (
+                  <p className="text-[11px] text-neutral-400">{rv.rsvpCount || 48} guests attending so far</p>
+                )}
               </div>
             );
           }

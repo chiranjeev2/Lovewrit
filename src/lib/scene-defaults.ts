@@ -247,6 +247,85 @@ export function getDefaultScenesForOccasion(
     ];
   }
 
+  const isWedding = [
+    "wedding",
+    "wedding_invite",
+    "invites",
+    "godhbharai",
+    "shubh_vivah",
+    "shubh-vivah",
+  ].includes(occasion) || (options?.templateId && ["godhbharai-blessings", "wedding-invite"].includes(options.templateId));
+
+  if (isWedding) {
+    const samplePhotos = options?.samplePhotos && options.samplePhotos.length > 0
+      ? options.samplePhotos
+      : [
+          "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+          "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80",
+        ];
+
+    return [
+      {
+        id: "wedding-opener",
+        type: "opener",
+        title: `Invited by Name: ${recipient}`,
+        subtitle: `You are cordially invited to celebrate with ${sender}`,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "wedding-story",
+        type: "wedding_story",
+        title: "Our Story",
+        subtitle: "Two souls, two families, one blessed journey",
+        coupleStory: "From our very first conversation to every shared sunrise, our bond has grown into a lifelong devotion. With the love and blessings of our parents, we take this sacred step together.",
+        photoUrl: samplePhotos[0],
+        faithTag: "In Grace & Gratitude",
+        verseText: "May this union be blessed with endless laughter, boundless peace, and eternal love.",
+        enabled: true,
+      },
+      {
+        id: "wedding-details",
+        type: "event_details",
+        title: "Celebration Details",
+        subtitle: "When & Where We Gather",
+        eventDate: "Saturday, 28 November 2026",
+        eventTime: "6:30 PM Onwards",
+        venueName: options?.location || "The Grand Heritage Palace",
+        venueAddress: "Lake Pichola Road, Udaipur, Rajasthan",
+        venueMapUrl: "https://maps.google.com/?q=Lake+Pichola+Udaipur",
+        enabled: true,
+      },
+      {
+        id: "wedding-personal-note",
+        type: "personal_note",
+        title: "Your Presence Means Everything",
+        subtitle: "A personal note from our hearts",
+        noteText: "A celebration is truly meaningful only when surrounded by the people who have shaped our lives. Having you with us on our most cherished day completes our happiness. We cannot wait to celebrate, laugh, and create memories together.",
+        warmClosing: "With our deepest love and respect, The Couple & Families",
+        enabled: true,
+      },
+      {
+        id: "wedding-rsvp",
+        type: "rsvp",
+        title: "We Saved Your Seat",
+        subtitle: "Kindly let us know if you can join our celebration",
+        savedSeatCopy: "A seat at our table and a place in our hearts is warmly reserved for you.",
+        showRsvpCount: true,
+        rsvpCount: 48,
+        enabled: true,
+      },
+      {
+        id: "wedding-finale",
+        type: "finale",
+        title: "We Can't Wait to Celebrate With You",
+        subtitle: `With warmest blessings, ${sender}`,
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
   // Default fallback scene structure for any occasion
   return [
     {

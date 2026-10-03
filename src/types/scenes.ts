@@ -12,6 +12,7 @@ export type SceneType =
   | "letter_unfold"
   | "wedding_story"
   | "event_details"
+  | "personal_note"
   | "rsvp"
   | "forgive_reply"
   | "finale";
@@ -34,6 +35,7 @@ export const BaseSceneSchema = z.object({
     "letter_unfold",
     "wedding_story",
     "event_details",
+    "personal_note",
     "rsvp",
     "forgive_reply",
     "finale",
@@ -137,23 +139,38 @@ export const ForgiveReplySceneSchema = BaseSceneSchema.extend({
   replyPlaceholder: z.string().max(150).default("Write a note back...").transform((v) => sanitizeText(v, 150)),
 });
 
-// 10. Wedding Details & RSVP Scenes (Wedding Pack)
-export const WeddingDetailsSceneSchema = BaseSceneSchema.extend({
+// 10. Wedding Story Scene (Wedding Pack)
+export const WeddingStorySceneSchema = BaseSceneSchema.extend({
+  type: z.literal("wedding_story"),
+  coupleStory: z.string().max(1000).transform((v) => sanitizeText(v, 1000)),
+  photoUrl: z.string().url().max(1000).optional(),
+  faithTag: z.string().max(100).optional().transform((v) => v ? sanitizeText(v, 100) : undefined),
+  verseText: z.string().max(400).optional().transform((v) => v ? sanitizeText(v, 400) : undefined),
+});
+
+// 11. Event Details Scene (Wedding Pack)
+export const EventDetailsSceneSchema = BaseSceneSchema.extend({
   type: z.literal("event_details"),
-  coupleStory: z.string().max(1000).optional().transform((v) => v ? sanitizeText(v, 1000) : undefined),
-  faithBlessing: z.string().max(500).optional().transform((v) => v ? sanitizeText(v, 500) : undefined),
-  personalNote: z.string().max(800).optional().transform((v) => v ? sanitizeText(v, 800) : undefined),
+  eventDate: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
+  eventTime: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
   venueName: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
   venueAddress: z.string().max(300).optional().transform((v) => v ? sanitizeText(v, 300) : undefined),
   venueMapUrl: z.string().max(1000).optional(),
-  eventDate: z.string().max(60).optional(),
-  eventTime: z.string().max(60).optional(),
 });
 
+// 12. Personal Note Scene (Wedding Pack: "Your presence means everything")
+export const PersonalNoteSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("personal_note"),
+  noteText: z.string().max(800).transform((v) => sanitizeText(v, 800)),
+  warmClosing: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
+});
+
+// 13. RSVP Scene (Wedding Pack: "We saved your seat")
 export const RsvpSceneSchema = BaseSceneSchema.extend({
   type: z.literal("rsvp"),
   savedSeatCopy: z.string().max(250).default("We have saved a special seat just for you.").transform((v) => sanitizeText(v, 250)),
   showRsvpCount: z.boolean().default(false),
+  rsvpCount: z.number().int().nonnegative().optional(),
 });
 
 // Union of all Scene Schemas
@@ -167,8 +184,9 @@ export const SceneConfigSchema = z.discriminatedUnion("type", [
   PromisesSceneSchema,
   ArrowHeartSceneSchema,
   LetterUnfoldSceneSchema,
-  BaseSceneSchema.extend({ type: z.literal("wedding_story") }),
-  WeddingDetailsSceneSchema,
+  WeddingStorySceneSchema,
+  EventDetailsSceneSchema,
+  PersonalNoteSceneSchema,
   RsvpSceneSchema,
   ForgiveReplySceneSchema,
   BaseSceneSchema.extend({ type: z.literal("finale") }),
@@ -185,6 +203,7 @@ export const ScenesArraySchema = z
     let totalImages = 0;
     for (const sc of scenes) {
       if (sc.type === "how_we_met" && sc.photoUrl) totalImages++;
+      if (sc.type === "wedding_story" && sc.photoUrl) totalImages++;
       if (sc.type === "timeline") {
         totalImages += sc.events.filter((e) => Boolean(e.photoUrl)).length;
       }
@@ -210,7 +229,9 @@ export type PromisesSceneConfig = z.infer<typeof PromisesSceneSchema>;
 export type ArrowHeartSceneConfig = z.infer<typeof ArrowHeartSceneSchema>;
 export type LetterUnfoldSceneConfig = z.infer<typeof LetterUnfoldSceneSchema>;
 export type ForgiveReplySceneConfig = z.infer<typeof ForgiveReplySceneSchema>;
-export type WeddingDetailsSceneConfig = z.infer<typeof WeddingDetailsSceneSchema>;
+export type WeddingStorySceneConfig = z.infer<typeof WeddingStorySceneSchema>;
+export type EventDetailsSceneConfig = z.infer<typeof EventDetailsSceneSchema>;
+export type PersonalNoteSceneConfig = z.infer<typeof PersonalNoteSceneSchema>;
 export type RsvpSceneConfig = z.infer<typeof RsvpSceneSchema>;
 
 /**
