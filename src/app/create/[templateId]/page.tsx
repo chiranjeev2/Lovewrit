@@ -2063,7 +2063,7 @@ export default function CreateLovewritPage({
 
               {occasion === "letter_to_dear_one" ? (
                 /* Letter to a Dear One: Exclusive Letter Themes */
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {[
                     {
                       id: "scroll" as ColorThemeKey,
@@ -2071,6 +2071,13 @@ export default function CreateLovewritPage({
                       desc: "Authentic aged golden parchment, turned wood end rods & royal crimson wax seal",
                       accent: "#991b1b",
                       badge: "Authentic Scroll",
+                    },
+                    {
+                      id: "vintage_parchment" as ColorThemeKey,
+                      name: "Vintage Parchment",
+                      desc: "Warm deckle-edge antique stationery, deep sepia ink & classic crimson seal",
+                      accent: "#881337",
+                      badge: "Deckle Paper",
                     },
                     {
                       id: "modern" as ColorThemeKey,

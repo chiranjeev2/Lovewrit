@@ -47,6 +47,7 @@ export type ColorThemeKey =
   | "serene"
   | "festive"
   | "scroll"
+  | "vintage_parchment"
   | "modern"
   | "modern_gold"
   | "saffron"
@@ -282,6 +283,16 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorTheme> = {
     accentColor: "#991b1b", // Royal crimson wax seal
     borderStyle: "border-[#8c6227]/80 shadow-md",
     tagColor: "bg-[#8c6227]/20 text-[#6d4518] border-[#8c6227]/40",
+  },
+  vintage_parchment: {
+    id: "vintage_parchment",
+    name: "Vintage Parchment",
+    bgGradient: "from-[#25180f] via-[#382414] to-[#190f08]",
+    cardBg: "bg-[#fdfaf2] border-[#a0743b] text-[#2a170a] shadow-amber-950/40",
+    textColor: "text-[#381f0d]",
+    accentColor: "#881337", // Deep antique rose-crimson wax seal
+    borderStyle: "border-[#a0743b]/80 shadow-md",
+    tagColor: "bg-[#a0743b]/20 text-[#714516] border-[#a0743b]/40",
   },
   modern: {
     id: "modern",

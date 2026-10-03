@@ -913,7 +913,7 @@ const PagePreview = React.memo(function PagePreview({
       <div
         id="preview-section-letter"
         className={`relative z-10 mx-auto max-w-2xl rounded-3xl border p-6 sm:p-10 shadow-2xl my-10 scroll-mt-20 ${
-          colorTheme === "scroll"
+          colorTheme === "scroll" || colorTheme === "vintage_parchment"
             ? "border-2 border-[#8c6227]/90 text-[#2a170a]"
             : colorTheme === "modern_gold"
             ? "border-2 border-amber-500/60 bg-gradient-to-b from-neutral-900/95 via-stone-900/95 to-neutral-950/95 text-amber-50 shadow-[0_25px_50px_-12px_rgba(245,158,11,0.25)]"
@@ -922,7 +922,7 @@ const PagePreview = React.memo(function PagePreview({
             : "border-white/10 bg-white/5 backdrop-blur-xl text-neutral-100"
         }`}
         style={
-          colorTheme === "scroll"
+          colorTheme === "scroll" || colorTheme === "vintage_parchment"
             ? {
                 background:
                   "radial-gradient(ellipse at 50% 45%, #fcf8ee 0%, #f6eacf 45%, #ebd7ab 75%, #cea970 100%)",
@@ -932,15 +932,15 @@ const PagePreview = React.memo(function PagePreview({
             : undefined
         }
       >
-        {colorTheme === "scroll" && (
+        {(colorTheme === "scroll" || colorTheme === "vintage_parchment") && (
           <div className="absolute inset-3 rounded-[24px] border border-[#8c6227]/30 pointer-events-none flex flex-col justify-between p-2">
             <div className="flex justify-between text-[#8c6227]/60 text-xs">
-              <span>❦</span>
-              <span>❦</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
             </div>
             <div className="flex justify-between text-[#8c6227]/60 text-xs">
-              <span>❦</span>
-              <span>❦</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
             </div>
           </div>
         )}
@@ -973,8 +973,8 @@ const PagePreview = React.memo(function PagePreview({
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            {colorTheme === "scroll" ? (
-              <span className="text-base">📜</span>
+            {colorTheme === "scroll" || colorTheme === "vintage_parchment" ? (
+              <span className="text-base">{colorTheme === "vintage_parchment" ? "📜" : "📜"}</span>
             ) : colorTheme === "modern" || colorTheme === "modern_gold" ? (
               <span className="text-base">✉️</span>
             ) : (
@@ -982,7 +982,7 @@ const PagePreview = React.memo(function PagePreview({
             )}
             <span
               className={`text-xs uppercase tracking-widest font-semibold ${
-                colorTheme === "scroll"
+                colorTheme === "scroll" || colorTheme === "vintage_parchment"
                   ? "text-[#7a481c] font-serif"
                   : colorTheme === "modern_gold"
                   ? "text-amber-300 font-sans"
@@ -993,6 +993,8 @@ const PagePreview = React.memo(function PagePreview({
             >
               {colorTheme === "scroll"
                 ? "A Sacred Letter • Hand-Inscribed"
+                : colorTheme === "vintage_parchment"
+                ? "Vintage Parchment • Deckle Paper"
                 : colorTheme === "modern_gold"
                 ? "A Modern Letter • Golden Edition"
                 : colorTheme === "modern"
@@ -1005,13 +1007,15 @@ const PagePreview = React.memo(function PagePreview({
             </span>
           </div>
 
-          {colorTheme === "scroll" && (
+          {(colorTheme === "scroll" || colorTheme === "vintage_parchment") && (
             <div className="relative flex items-center justify-center">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center shadow-md border border-[#f43f5e]/40"
                 style={{
                   background:
-                    "radial-gradient(circle at 35% 30%, #e11d48 0%, #991b1b 50%, #4c0519 100%)",
+                    colorTheme === "vintage_parchment"
+                      ? "radial-gradient(circle at 35% 30%, #be123c 0%, #881337 55%, #4c0519 100%)"
+                      : "radial-gradient(circle at 35% 30%, #e11d48 0%, #991b1b 50%, #4c0519 100%)",
                 }}
               >
                 <Heart className="h-2 w-2 text-amber-200 fill-amber-200" />
@@ -1052,7 +1056,7 @@ const PagePreview = React.memo(function PagePreview({
 
         <p
           className={`${getLetterFontClass(fontFamily)} leading-relaxed whitespace-pre-wrap ${
-            colorTheme === "scroll"
+            colorTheme === "scroll" || colorTheme === "vintage_parchment"
               ? "text-[#2a170a] font-medium"
               : colorTheme === "modern_gold"
               ? "text-amber-50 font-medium"
@@ -1066,7 +1070,7 @@ const PagePreview = React.memo(function PagePreview({
 
         <div
           className={`mt-6 pt-4 border-t flex items-center justify-between text-xs ${
-            colorTheme === "scroll"
+            colorTheme === "scroll" || colorTheme === "vintage_parchment"
               ? "border-[#8c6227]/30 text-[#6d4518]"
               : colorTheme === "modern_gold"
               ? "border-amber-500/40 text-amber-200"
@@ -1076,7 +1080,7 @@ const PagePreview = React.memo(function PagePreview({
           }`}
         >
           <span>
-            {colorTheme === "scroll"
+            {colorTheme === "scroll" || colorTheme === "vintage_parchment"
               ? "In Everlasting Devotion,"
               : colorTheme === "modern_gold" || colorTheme === "modern"
               ? "With Heartfelt Devotion,"
@@ -1086,7 +1090,7 @@ const PagePreview = React.memo(function PagePreview({
           </span>
           <span
             className={`font-serif italic font-semibold ${
-              colorTheme === "scroll"
+              colorTheme === "scroll" || colorTheme === "vintage_parchment"
                 ? "text-[#3b200b] underline decoration-[#8c6227]/60"
                 : colorTheme === "modern_gold"
                 ? "text-white underline decoration-amber-400"

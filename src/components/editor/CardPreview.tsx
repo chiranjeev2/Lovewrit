@@ -161,7 +161,9 @@ const CardPreview = React.memo(function CardPreview({
   const isChristian = occasion === "christening" || occasion === "wedding_blessing";
   const isSecular = occasion === "blessing_ceremony";
   const isLetter = occasion === "letter_to_dear_one";
-  const isScrollTheme = colorTheme === "scroll";
+  const isVintageParchment = colorTheme === "vintage_parchment";
+  const isScrollTheme = colorTheme === "scroll" || isVintageParchment;
+  const hasWoodenRods = colorTheme === "scroll";
   const isModernTheme = colorTheme === "modern";
   const isModernGoldTheme = colorTheme === "modern_gold";
   const isAnyModern = isModernTheme || isModernGoldTheme;
@@ -216,7 +218,7 @@ const CardPreview = React.memo(function CardPreview({
         }
       >
         {/* Medieval Scroll Turned Wood & Gilded End Rods */}
-        {isScrollTheme && (
+        {hasWoodenRods && (
           <>
             {/* Top Rod */}
             <div className="absolute top-0 inset-x-3 h-2.5 bg-gradient-to-r from-[#45270f] via-[#c49b52] to-[#45270f] rounded-b-md shadow-md border-b border-[#2e1706]/70 z-20 flex items-center justify-center">
@@ -240,6 +242,22 @@ const CardPreview = React.memo(function CardPreview({
               </div>
             </div>
           </>
+        )}
+
+        {/* Vintage Parchment Deckle Stationery Margin Frame */}
+        {isVintageParchment && isLetter && (
+          <div className="absolute inset-3 rounded-[24px] border border-[#a0743b]/35 pointer-events-none z-10 flex flex-col justify-between p-2.5">
+            <div className="flex justify-between text-[#a0743b]/70 text-[10px] select-none">
+              <span>✤</span>
+              <span className="tracking-[0.25em] font-serif text-[8px] uppercase text-[#a0743b]/60">VINTAGE PARCHMENT</span>
+              <span>✤</span>
+            </div>
+            <div className="flex justify-between text-[#a0743b]/70 text-[10px] select-none">
+              <span>✤</span>
+              <span className="tracking-[0.25em] font-serif text-[8px] uppercase text-[#a0743b]/60">ANNO MMXXVI</span>
+              <span>✤</span>
+            </div>
+          </div>
         )}
 
         {/* Modern Scroll Brushed Silver / Platinum Rails & Margin Frame */}
