@@ -62,3 +62,4 @@ export function SceneTransitionWrapper({
     </AnimatePresence>
   );
 }
+

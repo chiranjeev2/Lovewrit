@@ -2,7 +2,16 @@
 
 import React, { useState, useEffect, useRef, useTransition, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { SceneConfig, BalloonPopSceneConfig } from "@/types/scenes";
+import {
+  SceneConfig,
+  BalloonPopSceneConfig,
+  HowWeMetSceneConfig,
+  TimelineSceneConfig,
+  ChatStorySceneConfig,
+  MemoriesSceneConfig,
+  PromisesSceneConfig,
+  ArrowHeartSceneConfig,
+} from "@/types/scenes";
 import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
@@ -23,6 +32,24 @@ const ForgiveReplyScene = dynamic(() => import("./scenes/ForgiveReplyScene").the
   ssr: false,
 });
 const FinaleScene = dynamic(() => import("./scenes/FinaleScene").then((m) => m.FinaleScene), {
+  ssr: false,
+});
+const HowWeMetScene = dynamic(() => import("./scenes/HowWeMetScene"), {
+  ssr: false,
+});
+const TimelineScene = dynamic(() => import("./scenes/TimelineScene"), {
+  ssr: false,
+});
+const ChatStoryScene = dynamic(() => import("./scenes/ChatStoryScene"), {
+  ssr: false,
+});
+const MemoriesScene = dynamic(() => import("./scenes/MemoriesScene"), {
+  ssr: false,
+});
+const PromisesScene = dynamic(() => import("./scenes/PromisesScene"), {
+  ssr: false,
+});
+const ArrowHeartScene = dynamic(() => import("./scenes/ArrowHeartScene"), {
   ssr: false,
 });
 
@@ -215,6 +242,10 @@ export function SceneContainer({
     />
   );
 
+  if (prefersReducedMotion) {
+    return fallbackScrollNode;
+  }
+
   return (
     <SceneErrorBoundary fallback={fallbackScrollNode}>
       <main
@@ -274,6 +305,51 @@ export function SceneContainer({
                 />
               )}
 
+              {currentScene.type === "how_we_met" && (
+                <HowWeMetScene
+                  config={currentScene as HowWeMetSceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "timeline" && (
+                <TimelineScene
+                  config={currentScene as TimelineSceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "chat_story" && (
+                <ChatStoryScene
+                  config={currentScene as ChatStorySceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "memories" && (
+                <MemoriesScene
+                  config={currentScene as MemoriesSceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "promises" && (
+                <PromisesScene
+                  config={currentScene as PromisesSceneConfig}
+                  onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "arrow_heart" && (
+                <ArrowHeartScene
+                  config={currentScene as ArrowHeartSceneConfig}
+                  onContinue={() => {
+                    setCompletedInteractions((prev) => ({ ...prev, [currentScene.id]: true }));
+                    handleNext();
+                  }}
+                />
+              )}
+
               {currentScene.type === "letter_unfold" && (
                 <LetterUnfoldScene
                   title={currentScene.title}
@@ -286,6 +362,7 @@ export function SceneContainer({
                   onScrolledToEnd={() => {
                     // Automatically signals letter completion
                   }}
+                  onContinue={handleNext}
                 />
               )}
 
@@ -322,3 +399,4 @@ export function SceneContainer({
     </SceneErrorBoundary>
   );
 }
+

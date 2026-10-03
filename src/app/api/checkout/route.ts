@@ -12,6 +12,7 @@ import {
   detectRegion,
 } from "@/lib/currency";
 import { getTemplateById } from "@/lib/templates-data";
+import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
@@ -316,7 +317,17 @@ export async function POST(req: NextRequest) {
                     pageData?.requireGuestbookApproval ?? isMemorial
                   ),
                   language: pageData?.language || cardData?.language || "en",
-                  scenesJson: pageData?.scenesJson || (pageData?.scenes ? JSON.stringify(pageData.scenes) : null),
+                  scenesJson:
+                    pageData?.scenesJson ||
+                    (pageData?.scenes ? JSON.stringify(pageData.scenes) : null) ||
+                    JSON.stringify(
+                      getDefaultScenesForOccasion(pageData?.occasion || cardData?.occasion || "proposal", {
+                        senderName: pageData?.senderName || cardData?.senderName || customerName,
+                        recipientName: pageData?.recipientName || cardData?.recipientName || "My Love",
+                        letter: pageData?.letter || cardData?.message || "",
+                        templateId,
+                      })
+                    ),
                   sceneEngineEnabled: true, // Rule 8: True for new orders
                 },
               },

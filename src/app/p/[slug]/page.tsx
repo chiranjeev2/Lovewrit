@@ -299,6 +299,9 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         senderName: pageData.senderName,
         recipientName: pageData.recipientName,
         letter: pageData.letter,
+        samplePhotos: parsedPhotos.length > 0 ? parsedPhotos : template.samplePhotos,
+        templateId: template.id,
+        location: pageData.milestoneVenue || template.sampleLocation,
       });
 
     return (

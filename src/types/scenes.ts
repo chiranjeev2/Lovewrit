@@ -3,8 +3,10 @@ import { z } from "zod";
 export type SceneType =
   | "opener"
   | "balloon_pop"
-  | "chat_story"
+  | "how_we_met"
   | "timeline"
+  | "chat_story"
+  | "memories"
   | "promises"
   | "arrow_heart"
   | "letter_unfold"
@@ -23,8 +25,10 @@ export const BaseSceneSchema = z.object({
   type: z.enum([
     "opener",
     "balloon_pop",
-    "chat_story",
+    "how_we_met",
     "timeline",
+    "chat_story",
+    "memories",
     "promises",
     "arrow_heart",
     "letter_unfold",
@@ -51,7 +55,30 @@ export const BalloonPopSceneSchema = BaseSceneSchema.extend({
   completionSubtitle: z.string().max(250).default("Every reason here is why you mean the world to me.").transform((v) => sanitizeText(v, 250)),
 });
 
-// 2. Chat Story Scene (Romantic Pack - buyer text bubbles + screenshot image, NO video)
+// 2. How We Met Scene (Romantic Pack)
+export const HowWeMetSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("how_we_met"),
+  storyText: z.string().max(1000).transform((v) => sanitizeText(v, 1000)),
+  photoUrl: z.string().url().max(1000).optional(),
+  location: z.string().max(120).optional().transform((v) => v ? sanitizeText(v, 120) : undefined),
+  dateLabel: z.string().max(80).optional().transform((v) => v ? sanitizeText(v, 80) : undefined),
+});
+
+// 3. Our Life Together - Timeline Scene (Romantic Pack)
+export const TimelineEventSchema = z.object({
+  id: z.string().max(50),
+  yearOrDate: z.string().max(50).transform((v) => sanitizeText(v, 50)),
+  title: z.string().max(100).transform((v) => sanitizeText(v, 100)),
+  description: z.string().max(350).transform((v) => sanitizeText(v, 350)),
+  photoUrl: z.string().url().max(1000).optional(),
+});
+
+export const TimelineSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("timeline"),
+  events: z.array(TimelineEventSchema).max(8),
+});
+
+// 4. Chat Story Scene (Romantic Pack - buyer text bubbles + screenshot image, NO video)
 export const ChatMessageSchema = z.object({
   id: z.string().max(50),
   sender: z.enum(["buyer", "recipient"]),
@@ -66,27 +93,43 @@ export const ChatStorySceneSchema = BaseSceneSchema.extend({
   messages: z.array(ChatMessageSchema).max(12),
 });
 
-// 3. Promises / Reasons Scene
+// 5. Memories / Nostalgia Scene (Romantic Pack)
+export const MemoryItemSchema = z.object({
+  id: z.string().max(50),
+  title: z.string().max(100).transform((v) => sanitizeText(v, 100)),
+  caption: z.string().max(300).optional().transform((v) => v ? sanitizeText(v, 300) : undefined),
+  photoUrl: z.string().url().max(1000),
+});
+
+export const MemoriesSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("memories"),
+  memories: z.array(MemoryItemSchema).max(6),
+});
+
+// 6. Promises / Reasons Scene
 export const PromisesSceneSchema = BaseSceneSchema.extend({
   type: z.literal("promises"),
   items: z.array(z.string().max(300).transform((v) => sanitizeText(v, 300))).max(10),
 });
 
-// 4. Arrow Heart Scene (Romantic Pack)
+// 7. Arrow Heart Scene (Romantic Pack)
 export const ArrowHeartSceneSchema = BaseSceneSchema.extend({
   type: z.literal("arrow_heart"),
   targetLabel: z.string().max(80).default("My Heart").transform((v) => sanitizeText(v, 80)),
   burstMessage: z.string().max(150).default("You have my whole heart forever ❤️").transform((v) => sanitizeText(v, 150)),
   isProposal: z.boolean().default(false),
+  questionText: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
+  yesText: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
+  noText: z.string().max(40).optional().transform((v) => v ? sanitizeText(v, 40) : undefined),
 });
 
-// 5. Letter Unfold Scene (Universal)
+// 8. Letter Unfold Scene (Universal)
 export const LetterUnfoldSceneSchema = BaseSceneSchema.extend({
   type: z.literal("letter_unfold"),
   sealStyle: z.enum(["wax_crimson", "wax_gold", "silver_slate"]).default("wax_crimson"),
 });
 
-// 6. Forgive / Reply Scene (Apology Pack)
+// 9. Forgive / Reply Scene (Apology Pack)
 export const ForgiveReplySceneSchema = BaseSceneSchema.extend({
   type: z.literal("forgive_reply"),
   promptText: z.string().max(200).default("Can we start fresh?").transform((v) => sanitizeText(v, 200)),
@@ -94,7 +137,7 @@ export const ForgiveReplySceneSchema = BaseSceneSchema.extend({
   replyPlaceholder: z.string().max(150).default("Write a note back...").transform((v) => sanitizeText(v, 150)),
 });
 
-// 7. Wedding Details & RSVP Scenes (Wedding Pack)
+// 10. Wedding Details & RSVP Scenes (Wedding Pack)
 export const WeddingDetailsSceneSchema = BaseSceneSchema.extend({
   type: z.literal("event_details"),
   coupleStory: z.string().max(1000).optional().transform((v) => v ? sanitizeText(v, 1000) : undefined),
@@ -117,7 +160,10 @@ export const RsvpSceneSchema = BaseSceneSchema.extend({
 export const SceneConfigSchema = z.discriminatedUnion("type", [
   BaseSceneSchema.extend({ type: z.literal("opener") }),
   BalloonPopSceneSchema,
+  HowWeMetSceneSchema,
+  TimelineSceneSchema,
   ChatStorySceneSchema,
+  MemoriesSceneSchema,
   PromisesSceneSchema,
   ArrowHeartSceneSchema,
   LetterUnfoldSceneSchema,
@@ -133,11 +179,33 @@ export const ScenesArraySchema = z
   .max(16, "Maximum 16 scenes permitted")
   .refine((scenes) => scenes.length >= 2, {
     message: "A scene flow must include at least an Opener and a Finale",
+  })
+  .refine((scenes) => {
+    // Total image cap per page: max 12 total images across all scenes
+    let totalImages = 0;
+    for (const sc of scenes) {
+      if (sc.type === "how_we_met" && sc.photoUrl) totalImages++;
+      if (sc.type === "timeline") {
+        totalImages += sc.events.filter((e) => Boolean(e.photoUrl)).length;
+      }
+      if (sc.type === "chat_story") {
+        totalImages += sc.messages.filter((m) => Boolean(m.imageUrl)).length;
+      }
+      if (sc.type === "memories") {
+        totalImages += sc.memories.filter((m) => Boolean(m.photoUrl)).length;
+      }
+    }
+    return totalImages <= 12;
+  }, {
+    message: "A page can contain a maximum of 12 images in total across all scenes.",
   });
 
 export type SceneConfig = z.infer<typeof SceneConfigSchema>;
 export type BalloonPopSceneConfig = z.infer<typeof BalloonPopSceneSchema>;
+export type HowWeMetSceneConfig = z.infer<typeof HowWeMetSceneSchema>;
+export type TimelineSceneConfig = z.infer<typeof TimelineSceneSchema>;
 export type ChatStorySceneConfig = z.infer<typeof ChatStorySceneSchema>;
+export type MemoriesSceneConfig = z.infer<typeof MemoriesSceneSchema>;
 export type PromisesSceneConfig = z.infer<typeof PromisesSceneSchema>;
 export type ArrowHeartSceneConfig = z.infer<typeof ArrowHeartSceneSchema>;
 export type LetterUnfoldSceneConfig = z.infer<typeof LetterUnfoldSceneSchema>;
@@ -166,3 +234,4 @@ export function parseAndValidateScenesJson(jsonStr?: string | null): SceneConfig
     return null;
   }
 }
+

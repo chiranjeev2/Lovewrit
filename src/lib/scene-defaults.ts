@@ -1,13 +1,18 @@
 import { SceneConfig } from "@/types/scenes";
 
+export interface SceneDefaultsOptions {
+  senderName?: string;
+  recipientName?: string;
+  letter?: string;
+  sampleReasons?: string[];
+  templateId?: string;
+  samplePhotos?: string[];
+  location?: string;
+}
+
 export function getDefaultScenesForOccasion(
   occasion: string,
-  options?: {
-    senderName?: string;
-    recipientName?: string;
-    letter?: string;
-    sampleReasons?: string[];
-  }
+  options?: SceneDefaultsOptions
 ): SceneConfig[] {
   const sender = options?.senderName || "John";
   const recipient = options?.recipientName || "Snow";
@@ -65,6 +70,177 @@ export function getDefaultScenesForOccasion(
         type: "finale",
         title: "Always In My Heart",
         subtitle: "With deepest sincerity and love",
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
+  const isRomantic = [
+    "proposal",
+    "anniversary",
+    "couples",
+    "reminiscing",
+    "valentine",
+    "forever-proposal",
+    "be-my-girlfriend",
+    "modern-romance",
+    "sweet-reminiscing",
+  ].includes(occasion) || (options?.templateId && ["forever-proposal", "be-my-girlfriend", "modern-romance", "sweet-reminiscing"].includes(options.templateId));
+
+  if (isRomantic) {
+    const isProposal = occasion === "proposal" || options?.templateId === "forever-proposal" || options?.templateId === "be-my-girlfriend";
+    const samplePhotos = options?.samplePhotos && options.samplePhotos.length > 0
+      ? options.samplePhotos
+      : [
+          "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?w=800&q=80",
+          "https://images.unsplash.com/photo-1529636798458-92182e662485?w=800&q=80",
+          "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80",
+        ];
+
+    return [
+      {
+        id: "romantic-opener",
+        type: "opener",
+        title: `For ${recipient}`,
+        subtitle: `A timeless love story written by ${sender}`,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "romantic-how-we-met",
+        type: "how_we_met",
+        title: "How We Met",
+        subtitle: "The moment that changed everything",
+        storyText: "It felt like an ordinary day until you walked in. From that very first glance, time slowed down. What started as a simple conversation quickly became the brightest chapter of my life.",
+        photoUrl: samplePhotos[0],
+        location: options?.location || "Where It All Began",
+        dateLabel: "Our First Day",
+        enabled: true,
+      },
+      {
+        id: "romantic-timeline",
+        type: "timeline",
+        title: "Our Life Together",
+        subtitle: "Every milestone a memory we built hand in hand",
+        events: [
+          {
+            id: "tl-1",
+            yearOrDate: "Chapter One",
+            title: "First Unforgettable Date",
+            description: "Laughing so hard over coffee that the café closed around us.",
+            photoUrl: samplePhotos[0],
+          },
+          {
+            id: "tl-2",
+            yearOrDate: "Chapter Two",
+            title: "Our First Getaway",
+            description: "Getting lost together and finding out anywhere with you is home.",
+            photoUrl: samplePhotos[1],
+          },
+          {
+            id: "tl-3",
+            yearOrDate: "Today & Always",
+            title: "Growing Closer Every Day",
+            description: "Every single morning with you is my favorite chapter yet.",
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "romantic-chat",
+        type: "chat_story",
+        title: "Our Talks",
+        subtitle: "The late-night conversations that stole my heart",
+        contactName: recipient,
+        messages: [
+          {
+            id: "chat-1",
+            sender: "buyer",
+            text: "Are you still awake?",
+            timestamp: "11:42 PM",
+          },
+          {
+            id: "chat-2",
+            sender: "recipient",
+            text: "Always for you. Thinking about our day ❤️",
+            timestamp: "11:43 PM",
+          },
+          {
+            id: "chat-3",
+            sender: "buyer",
+            text: "Just wanted to say you're my favorite person in the entire world.",
+            timestamp: "11:44 PM",
+          },
+          {
+            id: "chat-4",
+            sender: "recipient",
+            text: "You always know how to make me melt 🥰",
+            timestamp: "11:45 PM",
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "romantic-memories",
+        type: "memories",
+        title: "Favorite Memories",
+        subtitle: "Moments I keep tucked away in my heart",
+        memories: [
+          {
+            id: "mem-1",
+            title: "Golden Hour Glow",
+            caption: "Watching the sun dip below the horizon with you.",
+            photoUrl: samplePhotos[1] || samplePhotos[0],
+          },
+          {
+            id: "mem-2",
+            title: "Spontaneous Adventures",
+            caption: "The day we forgot the map and found something even better.",
+            photoUrl: samplePhotos[2] || samplePhotos[0],
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "romantic-promises",
+        type: "promises",
+        title: "Promises to Each Other",
+        subtitle: "Vows I promise to uphold every single day",
+        items: [
+          "To choose you, even on the quiet, hard days.",
+          "To always be your safest place to land.",
+          "To celebrate every small victory and laugh at every mess.",
+          "To never stop making you feel cherished and deeply loved.",
+        ],
+        enabled: true,
+      },
+      {
+        id: "romantic-arrow-heart",
+        type: "arrow_heart",
+        title: isProposal ? "A Question From My Heart" : "Direct Hit",
+        subtitle: isProposal ? "Aim Cupid's bow to unlock what comes next" : "Drag the bow to aim, release to shoot Cupid's arrow!",
+        targetLabel: `${recipient}'s Heart`,
+        burstMessage: isProposal ? "Will You Marry Me? 💍" : "You have my whole heart forever ❤️",
+        isProposal,
+        questionText: isProposal ? "Will you make me the happiest person and marry me?" : undefined,
+        yesText: isProposal ? "YES! A Million Times Yes! 💍" : undefined,
+        noText: isProposal ? "No" : undefined,
+        enabled: true,
+      },
+      {
+        id: "romantic-letter",
+        type: "letter_unfold",
+        title: "From My Deepest Heart",
+        subtitle: "The complete letter I wrote for you",
+        sealStyle: "wax_crimson",
+        enabled: true,
+      },
+      {
+        id: "romantic-finale",
+        type: "finale",
+        title: "Yours Forever",
+        subtitle: `With all my heart, ${sender}`,
         enabled: true,
         required: true,
       },

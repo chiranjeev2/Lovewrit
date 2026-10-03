@@ -174,6 +174,9 @@ export default function CreateLovewritPage({
       senderName: template.sampleSender,
       recipientName: template.sampleRecipient,
       letter: template.sampleMessage,
+      samplePhotos: template.samplePhotos,
+      templateId: template.id,
+      location: template.sampleLocation,
     })
   );
   const [previewSceneIndex, setPreviewSceneIndex] = useState<number | undefined>(undefined);
@@ -474,6 +477,17 @@ export default function CreateLovewritPage({
     } else if (matchingTemplate?.sampleMessage) {
       setMessage(matchingTemplate.sampleMessage);
     }
+
+    setScenes(
+      getDefaultScenesForOccasion(newOccasion, {
+        senderName,
+        recipientName,
+        letter: promptForOccasion || matchingTemplate?.sampleMessage || message,
+        samplePhotos: matchingTemplate?.samplePhotos,
+        templateId: matchingTemplate?.id,
+        location: matchingTemplate?.sampleLocation,
+      })
+    );
   };
 
   // Photo arranging and reordering handlers

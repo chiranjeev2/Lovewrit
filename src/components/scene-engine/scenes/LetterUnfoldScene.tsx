@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Sparkles, Heart } from "lucide-react";
+import { Sparkles, Heart, ArrowRight } from "lucide-react";
 import { ColorThemeKey, COLOR_THEMES } from "@/lib/templates-data";
 
 interface LetterUnfoldSceneProps {
@@ -13,6 +13,7 @@ interface LetterUnfoldSceneProps {
   colorTheme?: ColorThemeKey;
   fontFamily?: string;
   onScrolledToEnd?: () => void;
+  onContinue?: () => void;
 }
 
 export function LetterUnfoldScene({
@@ -24,6 +25,7 @@ export function LetterUnfoldScene({
   colorTheme = "rose",
   fontFamily = "serif",
   onScrolledToEnd,
+  onContinue,
 }: LetterUnfoldSceneProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [hasScrolledEnd, setHasScrolledEnd] = useState(false);
@@ -151,12 +153,23 @@ export function LetterUnfoldScene({
         <div className="absolute bottom-0 inset-x-0 h-6 bg-gradient-to-t from-neutral-950 to-transparent pointer-events-none z-20" />
       </div>
 
-      {/* Bottom Scroll Guide */}
-      <div className="pb-16 sm:pb-20 text-center z-10 shrink-0">
+      {/* Bottom Scroll Guide & Continue Button */}
+      <div className="pb-16 sm:pb-20 text-center z-10 shrink-0 flex flex-col items-center gap-2">
         <span className="text-[11px] text-neutral-400 font-light">
           {hasScrolledEnd ? "✓ Letter read to completion" : "↓ Scroll down to read complete letter"}
         </span>
+        {onContinue && (
+          <button
+            type="button"
+            onClick={onContinue}
+            className="px-6 py-2 rounded-full bg-rose-600/90 hover:bg-rose-500 text-white text-xs font-medium shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            <span>Continue to Finale</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     </div>
   );
 }
+

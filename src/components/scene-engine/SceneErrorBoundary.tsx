@@ -33,3 +33,4 @@ export class SceneErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
