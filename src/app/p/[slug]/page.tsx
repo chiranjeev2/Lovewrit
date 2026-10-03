@@ -13,7 +13,7 @@ import CountdownReveal from "@/components/interactive/CountdownReveal";
 import QRCodeModal from "@/components/interactive/QRCodeModal";
 import GuestbookWall from "@/components/interactive/GuestbookWall";
 import AudioPlayer from "@/components/shared/AudioPlayer";
-import { ColorThemeKey, ProposalQuestionKey, TEMPLATES } from "@/lib/templates-data";
+import { ColorThemeKey, ProposalQuestionKey, TEMPLATES, COLOR_THEMES } from "@/lib/templates-data";
 import { BUILTIN_AUDIO_TRACKS } from "@/lib/audio-tracks";
 import {
   Heart,
@@ -289,6 +289,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   const musicUrl = pageData.musicTrack || null;
   const hasMusic = Boolean(musicUrl && musicUrl !== "none");
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
+  const pageTheme = COLOR_THEMES[pageData.colorTheme as ColorThemeKey] || COLOR_THEMES.rose;
 
   // Interactive Scene Engine: Full-screen sequential story view
   if (pageData.sceneEngineEnabled && !isLockedCountdown) {
@@ -305,7 +306,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
       });
 
     return (
-      <div className="w-full h-[100dvh] bg-neutral-950 overflow-hidden">
+      <div className={`w-full h-[100dvh] bg-gradient-to-b ${pageTheme.bgGradient} overflow-hidden`}>
         <SceneContainer
           scenes={scenes}
           senderName={pageData.senderName}
@@ -322,7 +323,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   }
 
   return (
-    <div className="relative min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8">
+    <div className={`relative min-h-screen bg-gradient-to-b ${pageTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8`}>
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}

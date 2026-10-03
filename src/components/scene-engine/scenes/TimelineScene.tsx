@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { TimelineSceneConfig } from "@/types/scenes";
 import { Sparkles, ArrowRight } from "lucide-react";
+import { ImageLightboxModal, LightboxPhoto } from "@/components/shared/ImageLightboxModal";
 
 interface TimelineSceneProps {
   config: TimelineSceneConfig;
@@ -15,6 +16,18 @@ export default function TimelineScene({
   config,
   onContinue,
 }: TimelineSceneProps) {
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
+  const [lightboxIndex, setLightboxIndex] = React.useState(0);
+
+  const timelinePhotos: LightboxPhoto[] = React.useMemo(() => {
+    return config.events
+      .filter((e) => Boolean(e.photoUrl && e.photoUrl.trim().length > 0))
+      .map((e) => ({
+        src: e.photoUrl!,
+        alt: e.title,
+        caption: `${e.yearOrDate} • ${e.title}`,
+      }));
+  }, [config.events]);
   return (
     <div className="relative w-full max-w-xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh] select-none text-stone-900">
       <motion.div
@@ -72,12 +85,21 @@ export default function TimelineScene({
                 </p>
 
                 {evt.photoUrl && (
-                  <div className="mt-3 aspect-video w-full rounded-xl overflow-hidden shadow-xs border border-white">
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const pIdx = timelinePhotos.findIndex((p) => p.src === evt.photoUrl);
+                      setLightboxIndex(pIdx >= 0 ? pIdx : 0);
+                      setLightboxOpen(true);
+                    }}
+                    title="Click to view full photo"
+                    className="mt-3 aspect-video w-full rounded-xl overflow-hidden shadow-xs border border-white cursor-pointer group"
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={evt.photoUrl}
                       alt={evt.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                     />
                   </div>
                 )}
@@ -97,6 +119,15 @@ export default function TimelineScene({
           <ArrowRight className="w-4 h-4" />
         </motion.button>
       </motion.div>
+
+      {timelinePhotos.length > 0 && (
+        <ImageLightboxModal
+          isOpen={lightboxOpen}
+          photos={timelinePhotos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

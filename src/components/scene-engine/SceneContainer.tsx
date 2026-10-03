@@ -20,7 +20,7 @@ import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { FallbackStaticScroll } from "./FallbackStaticScroll";
-import { ColorThemeKey } from "@/lib/templates-data";
+import { ColorThemeKey, COLOR_THEMES } from "@/lib/templates-data";
 
 // Lazy-loaded scene components for optimized bundle and smooth execution
 const OpenerScene = dynamic(() => import("./scenes/OpenerScene").then((m) => m.OpenerScene), {
@@ -94,6 +94,9 @@ export function SceneContainer({
   onSendReply,
   previewActiveIndex,
 }: SceneContainerProps) {
+  // Active color theme
+  const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
+
   // Filter active enabled scenes
   const enabledScenes = initialScenes.filter((s) => s.enabled);
   const totalScenes = enabledScenes.length;
@@ -265,10 +268,19 @@ export function SceneContainer({
   return (
     <SceneErrorBoundary fallback={fallbackScrollNode}>
       <main
+        id="lovewrit-scene-engine-container"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full h-[100dvh] max-h-[100dvh] bg-neutral-950 overflow-hidden select-none flex flex-col justify-between"
+        className={`relative w-full h-[100dvh] max-h-[100dvh] bg-gradient-to-b ${theme.bgGradient} overflow-hidden select-none flex flex-col justify-between`}
       >
+        {/* Themed Ambient Atmosphere Glow */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-25 blur-3xl transition-all duration-700"
+          style={{
+            background: `radial-gradient(ellipse at 50% 35%, ${theme.accentColor} 0%, transparent 65%)`,
+          }}
+        />
+
         {/* Navigation Overlays */}
         <SceneNavigation
           currentIndex={currentIndex}
@@ -284,6 +296,7 @@ export function SceneContainer({
           isLastScene={isFinale}
           isOpener={isOpener}
           nextButtonLabel={isLetterScene ? "Continue to Response" : "Continue"}
+          colorTheme={colorTheme}
         />
 
         {/* Scene Viewport with Animated Transitions */}
@@ -301,6 +314,7 @@ export function SceneContainer({
                   senderName={senderName}
                   recipientName={recipientName}
                   guestName={guestName}
+                  colorTheme={colorTheme}
                   onOpen={() => {
                     startAudioOnFirstInteraction();
                     handleNext();

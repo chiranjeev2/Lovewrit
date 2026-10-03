@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { MemoriesSceneConfig } from "@/types/scenes";
 import { Camera, ArrowRight } from "lucide-react";
+import { ImageLightboxModal, LightboxPhoto } from "@/components/shared/ImageLightboxModal";
 
 interface MemoriesSceneProps {
   config: MemoriesSceneConfig;
@@ -15,6 +16,18 @@ export default function MemoriesScene({
   config,
   onContinue,
 }: MemoriesSceneProps) {
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
+  const [lightboxIndex, setLightboxIndex] = React.useState(0);
+
+  const memoryPhotos: LightboxPhoto[] = React.useMemo(() => {
+    return config.memories
+      .filter((m) => Boolean(m.photoUrl && m.photoUrl.trim().length > 0))
+      .map((m) => ({
+        src: m.photoUrl,
+        alt: m.title,
+        caption: m.caption ? `${m.title} • ${m.caption}` : m.title,
+      }));
+  }, [config.memories]);
   return (
     <div className="relative w-full max-w-xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh] select-none text-stone-900">
       <motion.div
@@ -51,14 +64,20 @@ export default function MemoriesScene({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.15 * idx }}
                 whileHover={{ scale: 1.02, rotate: 0 }}
-                className={`bg-white p-3 pb-4 rounded-2xl shadow-md border border-stone-200/80 transition-all ${rot}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightboxIndex(idx);
+                  setLightboxOpen(true);
+                }}
+                title="Click to view full photo"
+                className={`bg-white p-3 pb-4 rounded-2xl shadow-md border border-stone-200/80 transition-all ${rot} cursor-pointer group`}
               >
                 <div className="aspect-square w-full rounded-xl overflow-hidden bg-stone-100 mb-2.5">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={mem.photoUrl}
                     alt={mem.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                   />
                 </div>
                 <h4 className="font-serif font-bold text-stone-800 text-sm">
@@ -85,6 +104,15 @@ export default function MemoriesScene({
           <ArrowRight className="w-4 h-4" />
         </motion.button>
       </motion.div>
+
+      {memoryPhotos.length > 0 && (
+        <ImageLightboxModal
+          isOpen={lightboxOpen}
+          photos={memoryPhotos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

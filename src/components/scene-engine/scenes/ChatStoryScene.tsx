@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { ChatStorySceneConfig } from "@/types/scenes";
 import { MessageCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { ImageLightboxModal, LightboxPhoto } from "@/components/shared/ImageLightboxModal";
 
 interface ChatStorySceneProps {
   config: ChatStorySceneConfig;
@@ -16,6 +17,18 @@ export default function ChatStoryScene({
   onContinue,
 }: ChatStorySceneProps) {
   const contactName = config.contactName || "My Favorite Person";
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
+  const [lightboxIndex, setLightboxIndex] = React.useState(0);
+
+  const chatPhotos: LightboxPhoto[] = React.useMemo(() => {
+    return config.messages
+      .filter((m) => Boolean(m.imageUrl && m.imageUrl.trim().length > 0))
+      .map((m) => ({
+        src: m.imageUrl!,
+        alt: "Chat screenshot",
+        caption: m.text || undefined,
+      }));
+  }, [config.messages]);
 
   return (
     <div className="relative w-full max-w-xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh] select-none text-stone-900">
@@ -75,12 +88,21 @@ export default function ChatStoryScene({
 
                   {/* Screenshot Image Attachment (strictly images, NO video) */}
                   {msg.imageUrl && (
-                    <div className="mt-2.5 rounded-xl overflow-hidden border border-black/10 shadow-xs max-h-48">
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const pIdx = chatPhotos.findIndex((p) => p.src === msg.imageUrl);
+                        setLightboxIndex(pIdx >= 0 ? pIdx : 0);
+                        setLightboxOpen(true);
+                      }}
+                      title="Click to view full photo"
+                      className="mt-2.5 rounded-xl overflow-hidden border border-black/10 shadow-xs max-h-48 cursor-pointer group"
+                    >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={msg.imageUrl}
                         alt="Shared moment"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                       />
                     </div>
                   )}
@@ -111,6 +133,15 @@ export default function ChatStoryScene({
           <ArrowRight className="w-4 h-4" />
         </motion.button>
       </motion.div>
+
+      {chatPhotos.length > 0 && (
+        <ImageLightboxModal
+          isOpen={lightboxOpen}
+          photos={chatPhotos}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

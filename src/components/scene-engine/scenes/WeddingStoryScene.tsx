@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { WeddingStorySceneConfig } from "@/types/scenes";
 import { Sparkles, Heart, ArrowRight } from "lucide-react";
+import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 interface WeddingStorySceneProps {
   config: WeddingStorySceneConfig;
@@ -15,6 +16,7 @@ export default function WeddingStoryScene({
   config,
   onContinue,
 }: WeddingStorySceneProps) {
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
   return (
     <div className="relative w-full max-w-xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh] select-none text-stone-900">
       <motion.div
@@ -50,7 +52,12 @@ export default function WeddingStoryScene({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
-            className="w-full max-w-sm aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border-4 border-amber-100/70 mb-5 relative group"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxOpen(true);
+            }}
+            title="Click to view full photo"
+            className="w-full max-w-sm aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border-4 border-amber-100/70 mb-5 relative group cursor-pointer"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -96,6 +103,14 @@ export default function WeddingStoryScene({
           <ArrowRight className="w-4 h-4" />
         </motion.button>
       </motion.div>
+
+      {config.photoUrl && (
+        <ImageLightboxModal
+          isOpen={lightboxOpen}
+          photos={[{ src: config.photoUrl, alt: "The Couple", caption: config.title || undefined }]}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

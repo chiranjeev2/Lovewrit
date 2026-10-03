@@ -32,6 +32,7 @@ import {
 import confetti from "canvas-confetti";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
 import AdBanner from "@/components/shared/AdBanner";
+import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 export type CollageLayoutStyle = "masonry" | "timeline" | "filmstrip";
 
@@ -290,7 +291,13 @@ const PagePreview = React.memo(function PagePreview({
   const [isSendingReaction, setIsSendingReaction] = useState(false);
 
   // Lightbox Zoom State
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handlePhotoClick = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   // Floating Love Button Counter
   const [loveCount, setLoveCount] = useState(0);
@@ -616,11 +623,20 @@ const PagePreview = React.memo(function PagePreview({
             </p>
 
             {timeline[timelineIndex]?.photoUrl && (
-              <div className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+              <div
+                onClick={() => {
+                  const url = timeline[timelineIndex]?.photoUrl;
+                  if (!url) return;
+                  const idx = photos.indexOf(url);
+                  handlePhotoClick(idx >= 0 ? idx : 0);
+                }}
+                title="Click to view full photo"
+                className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group"
+              >
                 <img
                   src={timeline[timelineIndex]?.photoUrl}
                   alt={timeline[timelineIndex]?.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                 />
               </div>
             )}
@@ -679,7 +695,8 @@ const PagePreview = React.memo(function PagePreview({
               return (
                 <div
                   key={i}
-                  onClick={() => setLightboxImage(img)}
+                  onClick={() => handlePhotoClick(i)}
+                  title="Click to view full photo"
                   className={`group relative cursor-pointer overflow-hidden rounded-3xl border ${theme.borderStyle} bg-neutral-900/80 p-2 shadow-2xl transition duration-300 hover:scale-[1.03] hover:z-20 ${rotation} hover:rotate-0`}
                 >
                   <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-950">
@@ -721,7 +738,8 @@ const PagePreview = React.memo(function PagePreview({
                     }`}
                   >
                     <div
-                      onClick={() => setLightboxImage(img)}
+                      onClick={() => handlePhotoClick(i)}
+                      title="Click to view full photo"
                       className="w-full sm:w-1/2 cursor-pointer group relative overflow-hidden rounded-3xl border border-white/20 bg-neutral-900/90 p-2 shadow-xl hover:scale-[1.02] transition"
                     >
                       <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl">
@@ -787,7 +805,8 @@ const PagePreview = React.memo(function PagePreview({
                 {photos.map((img, i) => (
                   <div
                     key={i}
-                    onClick={() => setLightboxImage(img)}
+                    onClick={() => handlePhotoClick(i)}
+                    title="Click to view full photo"
                     className="flex-none w-64 sm:w-72 snap-center cursor-pointer group rounded-xl border border-neutral-800 bg-[#141418] p-2.5 hover:border-amber-500/70 transition duration-300 shadow-2xl relative"
                   >
                     {/* Top frame stencil code */}
@@ -879,35 +898,7 @@ const PagePreview = React.memo(function PagePreview({
         </div>
       )}
 
-      {/* Fullscreen Lightbox Modal */}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md animate-in fade-in"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900/80 text-white backdrop-blur hover:bg-neutral-800 transition"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <img
-              src={lightboxImage}
-              alt="Zoomed Moment"
-              className="max-h-[80vh] w-auto max-w-full rounded-2xl object-contain mx-auto"
-            />
-            <div className="p-3 text-center">
-              <span className="font-serif text-xs text-neutral-300">
-                A moment frozen in time • Lovewrit Keepsake
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Heartfelt Message / Letter Section */}
       <div
@@ -1334,6 +1325,14 @@ const PagePreview = React.memo(function PagePreview({
       <div className="relative z-10 mt-12 text-center text-xs text-neutral-400">
         <p>Lovewrit • Personal Occasion Moments</p>
       </div>
+
+      {/* Lightbox for full-size photo viewing with pinch/double-tap zoom & swipe */}
+      <ImageLightboxModal
+        isOpen={lightboxOpen}
+        photos={photos}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 });

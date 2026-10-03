@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { HowWeMetSceneConfig } from "@/types/scenes";
 import { MapPin, Calendar, Heart, ArrowRight } from "lucide-react";
+import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 interface HowWeMetSceneProps {
   config: HowWeMetSceneConfig;
@@ -15,6 +16,7 @@ export default function HowWeMetScene({
   config,
   onContinue,
 }: HowWeMetSceneProps) {
+  const [lightboxOpen, setLightboxOpen] = React.useState(false);
   return (
     <div className="relative w-full max-w-xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh] select-none text-stone-900">
       <motion.div
@@ -53,7 +55,12 @@ export default function HowWeMetScene({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3 }}
-            className="w-full max-w-sm aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border-4 border-white mb-5 relative group"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxOpen(true);
+            }}
+            title="Click to view full photo"
+            className="w-full max-w-sm aspect-[4/3] rounded-2xl overflow-hidden shadow-lg border-4 border-white mb-5 relative group cursor-pointer"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -91,6 +98,14 @@ export default function HowWeMetScene({
           <ArrowRight className="w-4 h-4" />
         </motion.button>
       </motion.div>
+
+      {config.photoUrl && (
+        <ImageLightboxModal
+          isOpen={lightboxOpen}
+          photos={[{ src: config.photoUrl, alt: config.title || "How We Met", caption: config.location || undefined }]}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </div>
   );
 }

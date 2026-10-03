@@ -19,6 +19,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
+import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 export interface StickerItem {
   id: string;
@@ -83,6 +84,14 @@ const CardPreview = React.memo(function CardPreview({
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
   const [isFlipped, setIsFlipped] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handlePhotoClick = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   // Active photos list (fall back to photoUrl if photoUrls is empty or contains blank values)
   const activePhotos = (photoUrls || [])
@@ -593,7 +602,9 @@ const CardPreview = React.memo(function CardPreview({
                 </div>
               ) : displayPhotos.length === 1 ? (
                 <div
-                  className={`relative w-40 h-40 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
+                  onClick={(e) => handlePhotoClick(0, e)}
+                  title="Click to view full photo"
+                  className={`relative w-40 h-40 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] ${getShapeClass(
                     photoShape
                   )} ${
                     isScrollTheme
@@ -624,7 +635,9 @@ const CardPreview = React.memo(function CardPreview({
               ) : displayPhotos.length === 2 ? (
                 <div className="flex items-center justify-center -space-x-4 sm:-space-x-6 py-2">
                   <div
-                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(0, e)}
+                    title="Click to view full photo"
+                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -636,7 +649,9 @@ const CardPreview = React.memo(function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(1, e)}
+                    title="Click to view full photo"
+                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -651,7 +666,9 @@ const CardPreview = React.memo(function CardPreview({
               ) : (
                 <div className="flex items-center justify-center -space-x-3 sm:-space-x-5 py-2">
                   <div
-                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(0, e)}
+                    title="Click to view full photo"
+                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -663,7 +680,9 @@ const CardPreview = React.memo(function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-26 h-26 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(1, e)}
+                    title="Click to view full photo"
+                    className={`relative w-26 h-26 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -675,7 +694,9 @@ const CardPreview = React.memo(function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(2, e)}
+                    title="Click to view full photo"
+                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -1120,6 +1141,14 @@ const CardPreview = React.memo(function CardPreview({
           </a>
         </div>
       )}
+
+      {/* Lightbox for full-size photo viewing with pinch/double-tap zoom & swipe */}
+      <ImageLightboxModal
+        isOpen={lightboxOpen}
+        photos={displayPhotos}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 });

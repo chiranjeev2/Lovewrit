@@ -6,7 +6,7 @@ import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
 import OpeningMoment from "@/components/shared/OpeningMoment";
 import CountdownReveal from "@/components/interactive/CountdownReveal";
 import QRCodeModal from "@/components/interactive/QRCodeModal";
-import { ColorThemeKey, PhotoShapeKey, TEMPLATES } from "@/lib/templates-data";
+import { ColorThemeKey, PhotoShapeKey, TEMPLATES, COLOR_THEMES } from "@/lib/templates-data";
 import {
   Download,
   Share2,
@@ -363,8 +363,10 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     }
   };
 
+  const cardTheme = COLOR_THEMES[cardData.colorTheme as ColorThemeKey] || COLOR_THEMES.rose;
+
   return (
-    <div className="relative min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8">
+    <div className={`relative min-h-screen bg-gradient-to-b ${cardTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8`}>
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}
