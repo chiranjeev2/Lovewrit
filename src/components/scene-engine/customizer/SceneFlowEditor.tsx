@@ -1283,7 +1283,98 @@ export function SceneFlowEditor({
               {/* Collapsible Config: Closing Prayer */}
               {isExpanded && scene.type === "closing_prayer" && (
                 <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
-                  <span className="text-[11px] font-bold text-amber-300 block">Closing Prayer &amp; Blessing:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-300 block">Closing Prayer &amp; Blessing:</span>
+                    <span className="text-[10px] text-neutral-400 font-serif italic">Faith-neutral default</span>
+                  </div>
+
+                  {/* Faith-neutral & Faith Presets */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-neutral-400 block">Quick Blessing Presets (Editable):</label>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Forever in Our Hearts",
+                            traditionTag: "Forever in Our Hearts",
+                            prayerText: "Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts.\nMay your journey be wrapped in peace, serenity, and boundless grace.",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                      >
+                        🕊️ Faith-Neutral
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Om Shanti • ॐ शान्तिः",
+                            traditionTag: "Om Shanti • Sacred Peace",
+                            prayerText: "ॐ द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः।\nMay their noble Atman attain Moksha and dwell in eternal divine peace. Om Shanti Shanti Shanti.",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                      >
+                        🕉️ Om Shanti
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Waheguru • ਅਕਾਲ ਪੁਰਖ",
+                            traditionTag: "Waheguru • Divine Grace",
+                            prayerText: "ਜਿਨੀ ਨਾਮੁ ਧਿਆਇਆ ਗਏ ਮਸਕਤਿ ਘਾਲਿ ॥ ਨਾਨਕ ਤੇ ਮੁਖ ਉਜਲੇ ਕੇਤੀ ਛੁਟੀ ਨਾਲਿ ॥\nMay the beloved soul merge into the Divine Light of Akal Purakh.",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                      >
+                        ੴ Waheguru
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Inna Lillahi wa Inna Ilayhi Raji'un",
+                            traditionTag: "إِنَّا لِلَّٰهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ",
+                            prayerText: "Surely to Allah we belong, and to Him we shall return.\nMay Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family.",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                      >
+                        🌙 Inna Lillahi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Rest in Peace & Grace",
+                            traditionTag: "Rest in Eternal Peace",
+                            prayerText: "May the Lord bless and keep them in His loving care.\nRest in eternal peace, reunited with the saints in light and heavenly grace.",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                      >
+                        ✝️ Rest in Peace
+                      </button>
+                    </div>
+                  </div>
+
                   <div>
                     <label className="text-[10px] text-neutral-400 block mb-1">Tradition / Blessing Tag</label>
                     <input
@@ -1291,7 +1382,7 @@ export function SceneFlowEditor({
                       value={(scene as ClosingPrayerSceneConfig).traditionTag || ""}
                       maxLength={80}
                       onChange={(e) => updateSceneField(idx, "traditionTag", e.target.value)}
-                      placeholder="e.g. In Sacred Remembrance"
+                      placeholder="e.g. Forever in Our Hearts"
                       className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
                     />
                   </div>
@@ -1313,19 +1404,46 @@ export function SceneFlowEditor({
                 <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold text-amber-300 block">Sacred Verse &amp; Benediction:</span>
-                    <span className="text-[10px] text-neutral-400 font-serif italic">Authentic Curated Library</span>
+                    <span className="text-[10px] text-neutral-400 font-serif italic">Curated &amp; Editable</span>
+                  </div>
+
+                  {/* Scholar Review Guidance Callout */}
+                  <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-500/30 text-[11px] text-amber-200/90 font-serif space-y-1">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-300">
+                      <span>⚠️ Note on Sacred Scripture</span>
+                    </div>
+                    <p>
+                      Please review this text with a family elder or religious scholar before sharing. All verses are editable to honor your personal family traditions.
+                    </p>
                   </div>
 
                   {/* Curated Verse Picker */}
                   <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1.5">
                     <label className="text-[10px] text-amber-300 font-semibold block">
-                      Choose Authentic Curated Scripture
+                      Choose Authentic Scripture or Write Your Own
                     </label>
                     <select
                       className="w-full rounded-lg border border-amber-500/30 bg-neutral-900 px-2 py-1.5 text-xs text-amber-200 focus:outline-none focus:border-amber-400 font-serif"
                       defaultValue=""
                       onChange={(e) => {
-                        const chosen = CURATED_DEVOTIONAL_VERSES.find((v) => v.id === e.target.value);
+                        const val = e.target.value;
+                        if (val === "custom_blank") {
+                          const updated = [...scenes];
+                          const currentDevScene = updated[idx] as DevotionalBlessingSceneConfig;
+                          updated[idx] = {
+                            ...currentDevScene,
+                            type: "devotional_blessing",
+                            verseTitle: "Personal Family Blessing",
+                            sourceCitation: "Family Tradition & Personal Prayer",
+                            sacredText: "",
+                            transliteration: "",
+                            translationOrMeaning: "",
+                          } as SceneConfig;
+                          onChange(updated);
+                          return;
+                        }
+
+                        const chosen = CURATED_DEVOTIONAL_VERSES.find((v) => v.id === val);
                         if (chosen) {
                           const updated = [...scenes];
                           const currentDevScene = updated[idx] as DevotionalBlessingSceneConfig;
@@ -1345,6 +1463,9 @@ export function SceneFlowEditor({
                     >
                       <option value="" disabled>
                         -- Select Curated Verse (or edit below) --
+                      </option>
+                      <option value="custom_blank">
+                        ✍️ [CUSTOM] Write Your Own Blessing / Prayer
                       </option>
                       {CURATED_DEVOTIONAL_VERSES.map((v) => (
                         <option key={v.id} value={v.id}>

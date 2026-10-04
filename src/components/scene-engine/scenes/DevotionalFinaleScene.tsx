@@ -53,7 +53,7 @@ const RITUAL_DETAILS: Record<string, RitualMeta> = {
     title: "Dua & Barakah • Sacred Supplication",
     actionPrompt: "Tap to affirm Dua with Ameen",
     offeredText: "Ameen • May Allah Bless You with Barakah 🌙",
-    symbol: "🤲",
+    symbol: "🌙",
     glowColor: "bg-emerald-500/20",
     ringColor: "border-emerald-500/40 text-emerald-300",
     offeringParticles: ["✨", "🌙", "⭐", "🌿", "✨"],
