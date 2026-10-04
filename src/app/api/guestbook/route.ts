@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { sanitizeGuestName, sanitizeText } from "@/lib/sanitize";
 
 export async function GET(req: NextRequest) {
   try {
@@ -111,11 +112,21 @@ export async function POST(req: NextRequest) {
       ? attendance
       : "ATTENDING";
 
+    const cleanAuthor = sanitizeGuestName(authorName, 60);
+    const cleanMessage = sanitizeText(message, 1500);
+
+    if (!cleanAuthor || !cleanMessage) {
+      return NextResponse.json(
+        { error: "Valid name and message are required" },
+        { status: 400 }
+      );
+    }
+
     const entry = await db.guestbookEntry.create({
       data: {
         pageDataId: order.pageData.id,
-        authorName: authorName.trim(),
-        message: message.trim(),
+        authorName: cleanAuthor,
+        message: cleanMessage,
         attendance: validAttendance,
         headcount: validAttendance === "ATTENDING" ? parsedHeadcount : 1,
         status: initialStatus,

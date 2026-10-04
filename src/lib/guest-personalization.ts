@@ -2,15 +2,8 @@
  * Guest Personalization Helpers for Interactive Pages & Wedding Invites
  */
 
-export function sanitizeGuestName(rawGuest?: string | null, maxLen = 60): string {
-  if (!rawGuest || typeof rawGuest !== "string") return "";
-  // Strip HTML/script chars, normalize spaces, cap length
-  return rawGuest
-    .replace(/[<>{}[\]\\]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, maxLen);
-}
+import { sanitizeGuestName } from "./sanitize";
+export { sanitizeGuestName };
 
 export interface GuestInviteLink {
   guestName: string;
@@ -40,4 +33,3 @@ export function generateGuestLinks(
     };
   });
 }
-

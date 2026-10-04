@@ -145,16 +145,17 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
       const rect = cardRef.getBoundingClientRect();
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
-      const pixelRatio = 2;
+      // pixelRatio 3 produces ~1200-1500px width which gives >= 250 DPI for the 4.2" front cover panel
+      const pixelRatio = 3;
 
-      // Capture the card preview node directly with compressed JPEG & capped render scale
+      // Capture the card preview node directly with high-quality JPEG (balanced for crisp print <10 MB)
       const frontJpg = await toJpeg(cardRef, {
         width,
         height,
         canvasWidth: Math.round(width * pixelRatio),
         canvasHeight: Math.round(height * pixelRatio),
         pixelRatio,
-        quality: 0.85,
+        quality: 0.95,
         cacheBust: false,
         style: {
           margin: "0",
