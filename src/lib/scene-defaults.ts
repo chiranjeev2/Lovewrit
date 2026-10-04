@@ -247,6 +247,113 @@ export function getDefaultScenesForOccasion(
     ];
   }
 
+  const isBirthday = occasion === "birthday" || (options?.templateId && options.templateId.includes("birthday"));
+
+  if (isBirthday) {
+    const samplePhotos = options?.samplePhotos && options.samplePhotos.length > 0
+      ? options.samplePhotos
+      : [
+          "https://images.unsplash.com/photo-1513151233558-d860c5398176?w=800&q=80",
+          "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&q=80",
+        ];
+
+    return [
+      {
+        id: "birthday-opener",
+        type: "opener",
+        title: `For ${recipient}`,
+        subtitle: `A celebration of your life, light, and laughter, from ${sender}`,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "birthday-name-meaning",
+        type: "name_meaning",
+        title: "The Meaning of Your Name",
+        subtitle: "A name chosen with deep love and meaning",
+        personName: recipient,
+        meaningText: "Radiance, warmth, and a gentle strength that makes everyone around you feel cherished and at home.",
+        originOrRoots: "Classical Origins",
+        curatedPills: ["Radiant Light", "Joyful Spirit", "Kind Heart"],
+        culturalNote: "Meanings may vary across traditions and families; chosen with love.",
+        enabled: true,
+      },
+      {
+        id: "birthday-day-arrived",
+        type: "day_arrived",
+        title: "The Day You Arrived",
+        subtitle: "The world became so much brighter",
+        storyText: "From the very first day you arrived, you brought a warmth and laughter that shaped our world. Every year since has been a gift to everyone who knows you.",
+        birthDate: "2000-05-15",
+        birthWeekday: "Monday",
+        birthCity: options?.location || "Bengaluru",
+        photoUrl: samplePhotos[0],
+        enabled: true,
+      },
+      {
+        id: "birthday-memories",
+        type: "memories",
+        title: "Moments of Joy",
+        subtitle: "A few snapshots of memories we cherish forever",
+        memories: [
+          {
+            id: "bm-1",
+            title: "Golden Smiles",
+            caption: "Every ordinary moment turned extraordinary with your laugh.",
+            photoUrl: samplePhotos[0],
+          },
+          {
+            id: "bm-2",
+            title: "Sunlit Days",
+            caption: "Adventures, conversations, and all the joy along the way.",
+            photoUrl: samplePhotos[1],
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "birthday-wishes",
+        type: "wishes",
+        title: "Wishes from Loved Ones",
+        subtitle: "Words sent from the heart for your special day",
+        wishes: [
+          {
+            id: "bw-1",
+            senderName: sender,
+            message: "May this upcoming year bring you boundless happiness, thrilling adventures, and all the peace your heart deserves.",
+            relationship: "With Deep Love",
+          },
+          {
+            id: "bw-2",
+            senderName: "Family & Friends",
+            message: "You are the brightest light in our circle. Never stop smiling, dreaming, and inspiring us all.",
+            relationship: "Always in Your Corner",
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "birthday-candle-finale",
+        type: "birthday_finale",
+        title: "Make a Birthday Wish 🎂",
+        subtitle: "Hold down to blow the candle or use microphone",
+        finaleType: "candle_blow",
+        celebrationWish: "Happy Birthday! May your year be filled with wonder and boundless joy ✨",
+        candleBlownMessage: "Make a wish — may all your dreams take flight! 🎂🎈",
+        micBlowEnabled: false,
+        enabled: true,
+      },
+      {
+        id: "birthday-closing-finale",
+        type: "finale",
+        title: "Happy Birthday!",
+        subtitle: `With all my heart and warmest wishes, ${sender}`,
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
   const isWedding = [
     "wedding",
     "wedding_invite",

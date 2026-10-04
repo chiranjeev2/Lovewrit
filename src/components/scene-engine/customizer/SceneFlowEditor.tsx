@@ -12,6 +12,10 @@ import {
   EventDetailsSceneConfig,
   PersonalNoteSceneConfig,
   RsvpSceneConfig,
+  NameMeaningSceneConfig,
+  DayArrivedSceneConfig,
+  WishesSceneConfig,
+  BirthdayFinaleSceneConfig,
 } from "@/types/scenes";
 import {
   ArrowUp,
@@ -24,6 +28,8 @@ import {
   Users,
   Copy,
   Check,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { generateGuestLinks, GuestInviteLink } from "@/lib/guest-personalization";
 
@@ -116,6 +122,53 @@ export function SceneFlowEditor({
     newScenes[sceneIndex] = {
       ...target,
       messages: newMessages,
+    };
+    onChange(newScenes);
+  };
+
+  const updateWish = (sceneIndex: number, wishIndex: number, field: "senderName" | "message" | "relationship", value: string) => {
+    const newScenes = [...scenes];
+    const target = newScenes[sceneIndex] as WishesSceneConfig;
+    const newWishes = [...target.wishes];
+    newWishes[wishIndex] = {
+      ...newWishes[wishIndex],
+      [field]: value,
+    };
+    newScenes[sceneIndex] = {
+      ...target,
+      wishes: newWishes,
+    };
+    onChange(newScenes);
+  };
+
+  const addWish = (sceneIndex: number) => {
+    const newScenes = [...scenes];
+    const target = newScenes[sceneIndex] as WishesSceneConfig;
+    if (target.wishes.length >= 10) return;
+    const newWishes = [
+      ...target.wishes,
+      {
+        id: `wish-${Date.now()}`,
+        senderName: "Loved One",
+        message: "Wishing you laughter, health, and a year full of wonderful memories!",
+        relationship: "Friend",
+      },
+    ];
+    newScenes[sceneIndex] = {
+      ...target,
+      wishes: newWishes,
+    };
+    onChange(newScenes);
+  };
+
+  const removeWish = (sceneIndex: number, wishIndex: number) => {
+    const newScenes = [...scenes];
+    const target = newScenes[sceneIndex] as WishesSceneConfig;
+    if (target.wishes.length <= 1) return;
+    const newWishes = target.wishes.filter((_, idx) => idx !== wishIndex);
+    newScenes[sceneIndex] = {
+      ...target,
+      wishes: newWishes,
     };
     onChange(newScenes);
   };
@@ -227,6 +280,10 @@ export function SceneFlowEditor({
             "event_details",
             "personal_note",
             "rsvp",
+            "name_meaning",
+            "day_arrived",
+            "wishes",
+            "birthday_finale",
           ].includes(scene.type);
 
           return (
@@ -617,6 +674,220 @@ export function SceneFlowEditor({
                       />
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* Collapsible Config: Name Meaning */}
+              {isExpanded && scene.type === "name_meaning" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Edit Name Meaning:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Person Name</label>
+                      <input
+                        type="text"
+                        value={(scene as NameMeaningSceneConfig).personName || ""}
+                        maxLength={50}
+                        onChange={(e) => updateSceneField(idx, "personName", e.target.value)}
+                        placeholder="e.g. Riya"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Origin / Cultural Roots</label>
+                      <input
+                        type="text"
+                        value={(scene as NameMeaningSceneConfig).originOrRoots || ""}
+                        maxLength={60}
+                        onChange={(e) => updateSceneField(idx, "originOrRoots", e.target.value)}
+                        placeholder="e.g. Sanskrit & Classical Origins"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Meaning &amp; Significance</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as NameMeaningSceneConfig).meaningText || ""}
+                      maxLength={500}
+                      onChange={(e) => updateSceneField(idx, "meaningText", e.target.value)}
+                      placeholder="Write what their name means and symbolizes..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <p className="text-[10px] text-neutral-400 italic">
+                    ℹ️ Note: Lovewrit clearly indicates meanings vary across traditions; chosen with love.
+                  </p>
+                </div>
+              )}
+
+              {/* Collapsible Config: Day Arrived */}
+              {isExpanded && scene.type === "day_arrived" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-purple-300 block">Edit The Day You Arrived:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Birth Date (auto-calculates facts)</label>
+                      <input
+                        type="date"
+                        value={(scene as DayArrivedSceneConfig).birthDate || ""}
+                        onChange={(e) => updateSceneField(idx, "birthDate", e.target.value)}
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Birth City / Location</label>
+                      <input
+                        type="text"
+                        value={(scene as DayArrivedSceneConfig).birthCity || ""}
+                        maxLength={60}
+                        onChange={(e) => updateSceneField(idx, "birthCity", e.target.value)}
+                        placeholder="e.g. Bengaluru"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Story &amp; Memories of That Day</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as DayArrivedSceneConfig).storyText || ""}
+                      maxLength={600}
+                      onChange={(e) => updateSceneField(idx, "storyText", e.target.value)}
+                      placeholder="Share the story of the day they came into this world..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500 font-serif"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Childhood Photo URL (Optional)</label>
+                    <input
+                      type="url"
+                      value={(scene as DayArrivedSceneConfig).photoUrl || ""}
+                      maxLength={500}
+                      onChange={(e) => updateSceneField(idx, "photoUrl", e.target.value)}
+                      placeholder="https://..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500 font-mono"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Wishes */}
+              {isExpanded && scene.type === "wishes" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-rose-300 block">Wishes From Loved Ones:</span>
+                    <button
+                      type="button"
+                      onClick={() => addWish(idx)}
+                      disabled={(scene as WishesSceneConfig).wishes.length >= 10}
+                      className="inline-flex items-center gap-1 text-[10px] text-rose-400 hover:text-rose-300 bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/20 cursor-pointer disabled:opacity-40"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Add Wish</span>
+                    </button>
+                  </div>
+                  <div className="space-y-3">
+                    {(scene as WishesSceneConfig).wishes.map((wish, wIdx) => (
+                      <div key={wish.id || wIdx} className="p-3 bg-neutral-900/80 rounded-xl border border-neutral-800 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <input
+                            type="text"
+                            value={wish.senderName}
+                            maxLength={50}
+                            onChange={(e) => updateWish(idx, wIdx, "senderName", e.target.value)}
+                            placeholder="Sender Name (e.g. Grandma, Rohit)"
+                            className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-2.5 py-1 text-xs text-white focus:outline-none focus:border-rose-500"
+                          />
+                          <input
+                            type="text"
+                            value={wish.relationship || ""}
+                            maxLength={40}
+                            onChange={(e) => updateWish(idx, wIdx, "relationship", e.target.value)}
+                            placeholder="Relation (e.g. Sister, Friend)"
+                            className="w-32 rounded-lg border border-neutral-700 bg-neutral-950 px-2.5 py-1 text-xs text-white focus:outline-none focus:border-rose-500"
+                          />
+                          {(scene as WishesSceneConfig).wishes.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeWish(idx, wIdx)}
+                              className="p-1 text-neutral-400 hover:text-rose-400 transition cursor-pointer"
+                              title="Delete wish"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                        <textarea
+                          rows={2}
+                          value={wish.message}
+                          maxLength={300}
+                          onChange={(e) => updateWish(idx, wIdx, "message", e.target.value)}
+                          placeholder="Heartfelt birthday wish..."
+                          className="w-full rounded-lg border border-neutral-700 bg-neutral-950 px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-rose-500 font-serif"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Birthday Finale */}
+              {isExpanded && scene.type === "birthday_finale" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Birthday Finale Interaction:</span>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Interaction Type</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateSceneField(idx, "finaleType", "candle_blow")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                          (scene as BirthdayFinaleSceneConfig).finaleType === "candle_blow"
+                            ? "bg-amber-500/20 border-amber-500 text-amber-300"
+                            : "border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+                        }`}
+                      >
+                        <span>🎂</span>
+                        <span>Candle Blow</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSceneField(idx, "finaleType", "balloon_release")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                          (scene as BirthdayFinaleSceneConfig).finaleType === "balloon_release"
+                            ? "bg-pink-500/20 border-pink-500 text-pink-300"
+                            : "border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+                        }`}
+                      >
+                        <span>🎈</span>
+                        <span>Balloon Release</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Celebration Wish</label>
+                    <textarea
+                      rows={2}
+                      value={(scene as BirthdayFinaleSceneConfig).celebrationWish || ""}
+                      maxLength={250}
+                      onChange={(e) => updateSceneField(idx, "celebrationWish", e.target.value)}
+                      placeholder="e.g. Happy Birthday! May your year be filled with wonder and joy ✨"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Message After Candle Blown / Balloons Released</label>
+                    <input
+                      type="text"
+                      value={(scene as BirthdayFinaleSceneConfig).candleBlownMessage || ""}
+                      maxLength={150}
+                      onChange={(e) => updateSceneField(idx, "candleBlownMessage", e.target.value)}
+                      placeholder="e.g. Make a wish — may all your dreams come true! 🎂🎈"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
                 </div>
               )}
             </div>

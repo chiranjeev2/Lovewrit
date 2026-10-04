@@ -15,6 +15,10 @@ import {
   EventDetailsSceneConfig,
   PersonalNoteSceneConfig,
   RsvpSceneConfig,
+  NameMeaningSceneConfig,
+  DayArrivedSceneConfig,
+  WishesSceneConfig,
+  BirthdayFinaleSceneConfig,
 } from "@/types/scenes";
 import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
@@ -66,6 +70,18 @@ const PersonalNoteScene = dynamic(() => import("./scenes/PersonalNoteScene"), {
   ssr: false,
 });
 const RsvpScene = dynamic(() => import("./scenes/RsvpScene"), {
+  ssr: false,
+});
+const NameMeaningScene = dynamic(() => import("./scenes/NameMeaningScene"), {
+  ssr: false,
+});
+const DayArrivedScene = dynamic(() => import("./scenes/DayArrivedScene"), {
+  ssr: false,
+});
+const WishesScene = dynamic(() => import("./scenes/WishesScene"), {
+  ssr: false,
+});
+const BirthdayFinaleScene = dynamic(() => import("./scenes/BirthdayFinaleScene"), {
   ssr: false,
 });
 
@@ -163,7 +179,10 @@ export function SceneContainer({
   const currentScene = enabledScenes[currentIndex] || enabledScenes[0];
   const isOpener = currentScene?.type === "opener";
   const isFinale = currentScene?.type === "finale";
-  const isInteractionScene = currentScene?.type === "balloon_pop" || currentScene?.type === "arrow_heart";
+  const isInteractionScene =
+    currentScene?.type === "balloon_pop" ||
+    currentScene?.type === "arrow_heart" ||
+    currentScene?.type === "birthday_finale";
   const isLetterScene = currentScene?.type === "letter_unfold";
 
   // Check if current interaction is completed or skipped
@@ -416,6 +435,45 @@ export function SceneContainer({
                   guestName={guestName}
                   recipientName={recipientName}
                   onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "name_meaning" && (
+                <NameMeaningScene
+                  config={currentScene as NameMeaningSceneConfig}
+                  onContinue={handleNext}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "day_arrived" && (
+                <DayArrivedScene
+                  config={currentScene as DayArrivedSceneConfig}
+                  onContinue={handleNext}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "wishes" && (
+                <WishesScene
+                  config={currentScene as WishesSceneConfig}
+                  onContinue={handleNext}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "birthday_finale" && (
+                <BirthdayFinaleScene
+                  config={currentScene as BirthdayFinaleSceneConfig}
+                  onContinue={() => {
+                    setCompletedInteractions((prev) => ({ ...prev, [currentScene.id]: true }));
+                    handleNext();
+                  }}
+                  onReplay={() => {
+                    setDirection(-1);
+                    setCurrentIndex(0);
+                  }}
+                  theme={colorTheme}
                 />
               )}
 

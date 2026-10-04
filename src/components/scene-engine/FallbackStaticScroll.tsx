@@ -14,8 +14,12 @@ import {
   EventDetailsSceneConfig,
   PersonalNoteSceneConfig,
   RsvpSceneConfig,
+  NameMeaningSceneConfig,
+  DayArrivedSceneConfig,
+  WishesSceneConfig,
+  BirthdayFinaleSceneConfig,
 } from "@/types/scenes";
-import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake } from "lucide-react";
+import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun, Compass } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
 
 interface FallbackStaticScrollProps {
@@ -322,6 +326,75 @@ export function FallbackStaticScroll({
                 {pn.warmClosing && (
                   <p className="text-xs font-serif italic text-amber-300/80 text-right">{pn.warmClosing}</p>
                 )}
+              </div>
+            );
+          }
+
+          if (scene.type === "name_meaning") {
+            const nm = scene as NameMeaningSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/20 bg-amber-950/15 p-6 sm:p-8 space-y-3 text-center">
+                <div className="inline-flex items-center gap-1.5 text-xs text-amber-400">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>The Meaning of Your Name</span>
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-white">{nm.personName}</h3>
+                {nm.originOrRoots && <p className="text-xs text-neutral-400 font-mono">{nm.originOrRoots}</p>}
+                <p className="font-serif italic text-base text-neutral-200 bg-black/40 p-4 rounded-2xl border border-white/5">
+                  &ldquo;{nm.meaningText}&rdquo;
+                </p>
+                {nm.culturalNote && <p className="text-[11px] text-neutral-500 italic">{nm.culturalNote}</p>}
+              </div>
+            );
+          }
+
+          if (scene.type === "day_arrived") {
+            const da = scene as DayArrivedSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-purple-500/20 bg-purple-950/15 p-6 sm:p-8 space-y-4 text-center">
+                <div className="inline-flex items-center gap-1.5 text-xs text-purple-400">
+                  <Sun className="w-3.5 h-3.5" />
+                  <span>The Day You Arrived</span>
+                </div>
+                <h3 className="text-xl font-serif font-bold text-white">{da.title}</h3>
+                {da.birthDate && <p className="text-xs font-mono text-neutral-400">{da.birthDate} {da.birthWeekday ? `• ${da.birthWeekday}` : ""}</p>}
+                {da.photoUrl && (
+                  <div className="w-full max-w-sm mx-auto h-48 rounded-2xl overflow-hidden border border-white/10">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={da.photoUrl} alt="Day you arrived" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <p className="font-serif italic text-sm text-neutral-200 leading-relaxed bg-black/40 p-4 rounded-xl">
+                  &ldquo;{da.storyText}&rdquo;
+                </p>
+              </div>
+            );
+          }
+
+          if (scene.type === "wishes") {
+            const ws = scene as WishesSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-rose-500/20 bg-rose-950/15 p-6 sm:p-8 space-y-4">
+                <h3 className="text-xl font-serif font-bold text-white text-center">{ws.title}</h3>
+                <div className="space-y-3">
+                  {ws.wishes.map((w) => (
+                    <div key={w.id} className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-1">
+                      <p className="font-serif italic text-sm text-neutral-200">&ldquo;{w.message}&rdquo;</p>
+                      <span className="text-xs font-bold text-rose-300 block text-right">— {w.senderName} {w.relationship ? `(${w.relationship})` : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+
+          if (scene.type === "birthday_finale") {
+            const bf = scene as BirthdayFinaleSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/30 bg-black/50 p-6 sm:p-8 text-center space-y-3">
+                <span className="text-3xl">🎂</span>
+                <h3 className="text-xl font-serif font-bold text-white">{bf.title}</h3>
+                <p className="font-serif italic text-base text-amber-300">&ldquo;{bf.celebrationWish}&rdquo;</p>
               </div>
             );
           }
