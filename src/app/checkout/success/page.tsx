@@ -506,6 +506,29 @@ function SuccessContent() {
             </div>
           </div>
         </div>
+
+        {/* Beta Tester Feedback Box */}
+        <div className="mt-8 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-5 text-left flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-base">🧪</span>
+              <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
+                Beta Feedback &amp; Suggestions
+              </h4>
+            </div>
+            <p className="text-xs text-neutral-300 mt-1 leading-relaxed font-serif">
+              Found a bug or have a suggestion to make this keepsake even more memorable? We would love to hear your feedback!
+            </p>
+          </div>
+          <a
+            href={process.env.NEXT_PUBLIC_FEEDBACK_URL || "mailto:founder@lovewrit.com?subject=Lovewrit%20Beta%20Feedback"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 px-4 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 text-xs font-semibold transition"
+          >
+            Send Feedback ↗
+          </a>
+        </div>
       </div>
     </div>
   );
