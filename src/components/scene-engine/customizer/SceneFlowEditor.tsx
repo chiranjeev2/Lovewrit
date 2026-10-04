@@ -18,6 +18,10 @@ import {
   BirthdayFinaleSceneConfig,
   GodhbharaiBlessingsSceneConfig,
   BabyRevealSceneConfig,
+  TributeCandleSceneConfig,
+  WhatTheyTaughtUsSceneConfig,
+  TributeWallSceneConfig,
+  ClosingPrayerSceneConfig,
 } from "@/types/scenes";
 import {
   ArrowUp,
@@ -288,6 +292,10 @@ export function SceneFlowEditor({
             "birthday_finale",
             "godhbharai_blessings",
             "baby_reveal",
+            "tribute_candle",
+            "what_they_taught_us",
+            "tribute_wall",
+            "closing_prayer",
           ].includes(scene.type);
 
           return (
@@ -994,6 +1002,176 @@ export function SceneFlowEditor({
                   </div>
                   <div className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-2.5 text-[10px] text-amber-300/80">
                     ⚖️ Strict Legal Compliance: Under India&apos;s PCPNDT Act, sex determination/reveal is strictly prohibited. Lovewrit only permits name clues and due-date countdowns.
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Tribute Candle */}
+              {isExpanded && scene.type === "tribute_candle" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Sacred Flame &amp; Memorial Candle:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Tribute Name</label>
+                      <input
+                        type="text"
+                        value={(scene as TributeCandleSceneConfig).tributeName || ""}
+                        maxLength={100}
+                        onChange={(e) => updateSceneField(idx, "tributeName", e.target.value)}
+                        placeholder="Honored Person's Name"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Years Span (Optional)</label>
+                      <input
+                        type="text"
+                        value={(scene as TributeCandleSceneConfig).yearsSpan || ""}
+                        maxLength={50}
+                        onChange={(e) => updateSceneField(idx, "yearsSpan", e.target.value)}
+                        placeholder="e.g. 1948 – 2024"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Memorial Message</label>
+                    <textarea
+                      rows={2}
+                      value={(scene as TributeCandleSceneConfig).candleMessage || ""}
+                      maxLength={300}
+                      onChange={(e) => updateSceneField(idx, "candleMessage", e.target.value)}
+                      placeholder="In loving memory, an eternal flame burns warmly in our hearts..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Photo URL (Optional)</label>
+                    <input
+                      type="url"
+                      value={(scene as TributeCandleSceneConfig).photoUrl || ""}
+                      maxLength={1000}
+                      onChange={(e) => updateSceneField(idx, "photoUrl", e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: What They Taught Us */}
+              {isExpanded && scene.type === "what_they_taught_us" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Values &amp; Life Lessons:</span>
+                  <div className="space-y-2">
+                    {((scene as WhatTheyTaughtUsSceneConfig).lessons || []).map((lesson, lessonIdx) => (
+                      <div key={lessonIdx} className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono text-neutral-500 w-4">{lessonIdx + 1}.</span>
+                        <input
+                          type="text"
+                          value={lesson}
+                          maxLength={300}
+                          onChange={(e) => {
+                            const updated = [...((scene as WhatTheyTaughtUsSceneConfig).lessons || [])];
+                            updated[lessonIdx] = e.target.value;
+                            updateSceneField(idx, "lessons", updated);
+                          }}
+                          className="flex-1 rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = ((scene as WhatTheyTaughtUsSceneConfig).lessons || []).filter((_, i) => i !== lessonIdx);
+                            updateSceneField(idx, "lessons", updated);
+                          }}
+                          className="p-1 rounded text-neutral-500 hover:text-rose-400 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {((scene as WhatTheyTaughtUsSceneConfig).lessons || []).length < 8 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...((scene as WhatTheyTaughtUsSceneConfig).lessons || []), "New life lesson..."];
+                          updateSceneField(idx, "lessons", updated);
+                        }}
+                        className="text-[10px] text-amber-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
+                      >
+                        <Plus className="w-3 h-3" />
+                        <span>Add Lesson</span>
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Closing Thought</label>
+                    <input
+                      type="text"
+                      value={(scene as WhatTheyTaughtUsSceneConfig).closingThought || ""}
+                      maxLength={400}
+                      onChange={(e) => updateSceneField(idx, "closingThought", e.target.value)}
+                      placeholder="These timeless lessons live on in every choice we make..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Tribute Wall */}
+              {isExpanded && scene.type === "tribute_wall" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Pre-Moderated Tribute Wall:</span>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Wall Title</label>
+                    <input
+                      type="text"
+                      value={(scene as TributeWallSceneConfig).wallTitle || ""}
+                      maxLength={100}
+                      onChange={(e) => updateSceneField(idx, "wallTitle", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Wall Subtitle</label>
+                    <input
+                      type="text"
+                      value={(scene as TributeWallSceneConfig).wallSubtitle || ""}
+                      maxLength={250}
+                      onChange={(e) => updateSceneField(idx, "wallSubtitle", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-stone-900 border border-stone-800 text-[10px] text-stone-400 font-serif">
+                    🛡️ Pre-moderation active: All condolence messages require family approval before appearing publicly.
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Closing Prayer */}
+              {isExpanded && scene.type === "closing_prayer" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Closing Prayer &amp; Blessing:</span>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Tradition / Blessing Tag</label>
+                    <input
+                      type="text"
+                      value={(scene as ClosingPrayerSceneConfig).traditionTag || ""}
+                      maxLength={80}
+                      onChange={(e) => updateSceneField(idx, "traditionTag", e.target.value)}
+                      placeholder="e.g. In Sacred Remembrance"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Prayer / Blessing Text</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as ClosingPrayerSceneConfig).prayerText || ""}
+                      maxLength={800}
+                      onChange={(e) => updateSceneField(idx, "prayerText", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
                   </div>
                 </div>
               )}

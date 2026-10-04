@@ -116,6 +116,17 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         const data = await res.json();
         if (res.ok && data.order) {
           setOrder(data.order);
+          // Set respectful document title (ZERO Lovewrit branding for memorial/tribute pages)
+          const isMem =
+            data.order.pageData?.occasion === "memorial" ||
+            data.order.pageData?.occasion === "tribute" ||
+            data.order.templateId === "in-loving-memory";
+          if (isMem && data.order.pageData?.recipientName) {
+            document.title = `In Loving Memory of ${data.order.pageData.recipientName}`;
+          } else if (data.order.pageData?.recipientName) {
+            document.title = `${data.order.pageData.recipientName} • A Special Story`;
+          }
+
           // If no PIN set, automatically unlocked
           if (!data.order.pinCode) {
             setIsPinUnlocked(true);
@@ -136,6 +147,20 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     }
     loadPage();
   }, [slug]);
+
+  useEffect(() => {
+    if (!order) return;
+    const isMem =
+      order.pageData?.occasion === "memorial" ||
+      order.pageData?.occasion === "tribute" ||
+      order.templateId === "in-loving-memory";
+    const name = order.pageData?.recipientName || order.recipientName;
+    if (name) {
+      document.title = isMem
+        ? `In Loving Memory of ${name}`
+        : `${name} • A Special Story`;
+    }
+  }, [order]);
 
   const handleUnlockPin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -290,6 +315,11 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   const hasMusic = Boolean(musicUrl && musicUrl !== "none");
   const currentUrl = typeof window !== "undefined" ? window.location.href : "";
   const pageTheme = COLOR_THEMES[pageData.colorTheme as ColorThemeKey] || COLOR_THEMES.rose;
+  const isMemorial =
+    pageData.occasion === "memorial" ||
+    pageData.occasion === "tribute" ||
+    template.occasion === "memorial" ||
+    template.id === "in-loving-memory";
 
   // Interactive Scene Engine: Full-screen sequential story view
   if (pageData.sceneEngineEnabled && !isLockedCountdown) {
@@ -316,6 +346,9 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           fontFamily={pageData.fontFamily as FontFamilyKey}
           audioTrackUrl={musicUrl || undefined}
           guestName={guestParam || undefined}
+          slug={slug}
+          token={token || order?.adminToken}
+          isTribute={isMemorial}
           onSendReply={handleSendReaction}
         />
       </div>
@@ -372,15 +405,21 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
 
       {/* Top Header Bar */}
       <header className="w-full max-w-4xl flex items-center justify-between py-2">
-        <Link
-          href="/"
-          className="flex items-center space-x-2 text-xs font-serif text-neutral-400 hover:text-white transition"
-        >
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500 text-white">
-            <Heart className="h-3.5 w-3.5 fill-white" />
+        {isMemorial ? (
+          <div className="flex items-center space-x-2 text-xs font-serif text-neutral-400">
+            <span className="font-serif italic text-amber-200/80">In Sacred Remembrance</span>
           </div>
-          <span className="font-bold">Lovewrit</span>
-        </Link>
+        ) : (
+          <Link
+            href="/"
+            className="flex items-center space-x-2 text-xs font-serif text-neutral-400 hover:text-white transition"
+          >
+            <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500 text-white">
+              <Heart className="h-3.5 w-3.5 fill-white" />
+            </div>
+            <span className="font-bold">Lovewrit</span>
+          </Link>
+        )}
 
         <div className="flex items-center space-x-2">
           <button
@@ -453,8 +492,8 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           requireApproval={pageData.requireGuestbookApproval}
         />
 
-        {/* Referral Perk Card */}
-        {order?.myReferralCode && (
+        {/* Referral Perk Card (Never on memorial pages) */}
+        {!isMemorial && order?.myReferralCode && (
           <div className="mt-8 rounded-2xl border border-neutral-800 bg-neutral-900/60 p-5 text-center backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center space-x-3 text-left">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -486,32 +525,38 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           </div>
         )}
 
-        {/* 50% OFF Reply / Regift Call To Action */}
-        <div className="mt-8 rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 mb-4">
-            <Sparkles className="h-7 w-7" />
+        {/* 50% OFF Reply / Regift Call To Action (Never on memorial pages) */}
+        {!isMemorial && (
+          <div className="mt-8 rounded-3xl border border-rose-500/30 bg-gradient-to-br from-rose-950/40 via-neutral-900 to-amber-950/30 p-6 sm:p-8 text-center backdrop-blur-xl shadow-2xl relative overflow-hidden">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-rose-500 to-pink-500 text-white shadow-lg shadow-rose-500/30 mb-4">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <span className="inline-block rounded-full bg-rose-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rose-300 border border-rose-500/30 mb-2">
+              Emotional Reply Perk
+            </span>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mb-2">
+              Touched by {pageData.senderName || "this moment"}?
+            </h3>
+            <p className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto mb-6 leading-relaxed">
+              Reply back to {pageData.senderName || "them"} with your own custom digital card or interactive keepsake page and claim <span className="text-amber-400 font-bold">50% OFF</span>!
+            </p>
+            <Link
+              href={`/create/be-my-girlfriend?to=${encodeURIComponent(pageData.senderName || "")}&replyTo=${slug}&discount=REGIFT50`}
+              className="inline-flex items-center justify-center space-x-2 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-xl shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
+            >
+              <Heart className="h-4 w-4 fill-white" />
+              <span>Reply to {pageData.senderName || "Them"} (50% OFF)</span>
+            </Link>
           </div>
-          <span className="inline-block rounded-full bg-rose-500/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rose-300 border border-rose-500/30 mb-2">
-            Emotional Reply Perk
-          </span>
-          <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mb-2">
-            Touched by {pageData.senderName || "this moment"}?
-          </h3>
-          <p className="text-xs sm:text-sm text-neutral-300 max-w-md mx-auto mb-6 leading-relaxed">
-            Reply back to {pageData.senderName || "them"} with your own custom digital card or interactive keepsake page and claim <span className="text-amber-400 font-bold">50% OFF</span>!
-          </p>
-          <Link
-            href={`/create/be-my-girlfriend?to=${encodeURIComponent(pageData.senderName || "")}&replyTo=${slug}&discount=REGIFT50`}
-            className="inline-flex items-center justify-center space-x-2 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 px-7 py-3.5 text-xs sm:text-sm font-bold text-white shadow-xl shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
-          >
-            <Heart className="h-4 w-4 fill-white" />
-            <span>Reply to {pageData.senderName || "Them"} (50% OFF)</span>
-          </Link>
-        </div>
+        )}
       </main>
 
-      <footer className="py-6 text-center text-xs text-neutral-500">
-        <p>Created with Lovewrit • Personalized Occasion Moments</p>
+      <footer className="py-6 text-center text-xs text-neutral-500 font-serif">
+        {isMemorial ? (
+          <p>Forever preserved in quiet remembrance</p>
+        ) : (
+          <p>Created with Lovewrit • Personalized Occasion Moments</p>
+        )}
       </footer>
     </div>
   );

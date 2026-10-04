@@ -277,6 +277,14 @@ export const ClosingPrayerSceneSchema = BaseSceneSchema.extend({
   traditionTag: z.string().max(100).optional().transform((v) => v ? sanitizeText(v, 100) : undefined),
 });
 
+// 22b. Pre-moderated Tribute Wall Scene
+export const TributeWallSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("tribute_wall"),
+  wallTitle: z.string().max(100).default("Tribute Wall & Remembrances").transform((v) => sanitizeText(v, 100)),
+  wallSubtitle: z.string().max(250).default("Leave a gentle message of condolence and cherished memory").transform((v) => sanitizeText(v, 250)),
+  requireApproval: z.boolean().default(true),
+});
+
 // 23. Devotional Blessing Scene
 export const DevotionalBlessingSceneSchema = BaseSceneSchema.extend({
   type: z.literal("devotional_blessing"),
@@ -317,6 +325,7 @@ export const SceneConfigSchema = z.discriminatedUnion("type", [
   BabyRevealSceneSchema,
   TributeCandleSceneSchema,
   WhatTheyTaughtUsSceneSchema,
+  TributeWallSceneSchema,
   ClosingPrayerSceneSchema,
   DevotionalBlessingSceneSchema,
   DevotionalFinaleSceneSchema,
@@ -374,6 +383,7 @@ export type GodhbharaiBlessingsSceneConfig = z.infer<typeof GodhbharaiBlessingsS
 export type BabyRevealSceneConfig = z.infer<typeof BabyRevealSceneSchema>;
 export type TributeCandleSceneConfig = z.infer<typeof TributeCandleSceneSchema>;
 export type WhatTheyTaughtUsSceneConfig = z.infer<typeof WhatTheyTaughtUsSceneSchema>;
+export type TributeWallSceneConfig = z.infer<typeof TributeWallSceneSchema>;
 export type ClosingPrayerSceneConfig = z.infer<typeof ClosingPrayerSceneSchema>;
 export type DevotionalBlessingSceneConfig = z.infer<typeof DevotionalBlessingSceneSchema>;
 export type DevotionalFinaleSceneConfig = z.infer<typeof DevotionalFinaleSceneSchema>;

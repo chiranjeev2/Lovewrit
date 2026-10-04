@@ -20,6 +20,10 @@ import {
   BirthdayFinaleSceneConfig,
   GodhbharaiBlessingsSceneConfig,
   BabyRevealSceneConfig,
+  TributeCandleSceneConfig,
+  WhatTheyTaughtUsSceneConfig,
+  TributeWallSceneConfig,
+  ClosingPrayerSceneConfig,
 } from "@/types/scenes";
 import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun, Compass } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
@@ -456,12 +460,86 @@ export function FallbackStaticScroll({
             );
           }
 
+          if (scene.type === "tribute_candle") {
+            const tc = scene as TributeCandleSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/25 bg-stone-900/60 p-6 sm:p-8 text-center space-y-4 shadow-xl">
+                <span className="text-xs font-serif tracking-widest text-amber-300 uppercase block">Eternal Flame</span>
+                {tc.photoUrl && (
+                  <div className="w-24 h-24 mx-auto rounded-full overflow-hidden border border-amber-400/40 p-1 bg-stone-950">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={tc.photoUrl} alt={tc.tributeName} className="w-full h-full object-cover rounded-full" />
+                  </div>
+                )}
+                <h3 className="text-2xl font-serif font-bold text-stone-100">{tc.tributeName}</h3>
+                {tc.yearsSpan && <p className="text-xs font-serif text-amber-300/80">{tc.yearsSpan}</p>}
+                <p className="text-xs sm:text-sm font-serif italic text-stone-300 leading-relaxed bg-black/40 p-4 rounded-2xl">
+                  &ldquo;{tc.candleMessage}&rdquo;
+                </p>
+                <div className="text-[11px] font-serif text-amber-200">
+                  🕯️ {tc.candleLitCount || 1} candles lit in loving tribute
+                </div>
+              </div>
+            );
+          }
+
+          if (scene.type === "what_they_taught_us") {
+            const wt = scene as WhatTheyTaughtUsSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-stone-800 bg-stone-900/60 p-6 sm:p-8 space-y-4">
+                <h3 className="text-xl font-serif font-bold text-stone-100 text-center">{wt.title}</h3>
+                <div className="space-y-2 pt-2">
+                  {wt.lessons?.map((lesson, idx) => (
+                    <div key={idx} className="p-3 rounded-xl bg-black/40 border border-white/5 text-xs sm:text-sm font-serif text-stone-200">
+                      • {lesson}
+                    </div>
+                  ))}
+                </div>
+                {wt.closingThought && (
+                  <p className="text-xs font-serif italic text-amber-200/90 text-center bg-amber-950/20 p-3 rounded-xl border border-amber-500/20">
+                    &ldquo;{wt.closingThought}&rdquo;
+                  </p>
+                )}
+              </div>
+            );
+          }
+
+          if (scene.type === "tribute_wall") {
+            const tw = scene as TributeWallSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-stone-800 bg-stone-900/60 p-6 sm:p-8 text-center space-y-3">
+                <h3 className="text-xl font-serif font-bold text-stone-100">{tw.wallTitle}</h3>
+                <p className="text-xs font-serif text-stone-400 italic">{tw.wallSubtitle}</p>
+                <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-xs font-serif text-stone-300">
+                  🕊️ Pre-moderated sacred tribute wall for family &amp; friends.
+                </div>
+              </div>
+            );
+          }
+
+          if (scene.type === "closing_prayer") {
+            const cp = scene as ClosingPrayerSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/20 bg-stone-900/70 p-6 sm:p-8 text-center space-y-4">
+                <span className="text-xs font-serif tracking-widest text-amber-300 uppercase block">
+                  {cp.traditionTag || "Quiet Blessing"}
+                </span>
+                <h3 className="text-2xl font-serif font-bold text-stone-100">{cp.title}</h3>
+                <p className="text-xs sm:text-sm font-serif italic text-stone-200 leading-relaxed bg-black/40 p-5 rounded-2xl whitespace-pre-line">
+                  &ldquo;{cp.prayerText}&rdquo;
+                </p>
+              </div>
+            );
+          }
+
           return null;
         })}
 
         {/* Finale signoff */}
-        <div className="text-center pt-8 border-t border-white/10 text-xs text-neutral-500">
-          Crafted with love on Lovewrit • Preserved forever
+        <div className="text-center pt-8 border-t border-white/10 text-xs text-neutral-500 font-serif">
+          {scenes.some((s) => s.type === "tribute_candle" || s.type === "closing_prayer")
+            ? "Forever remembered • Forever cherished in our hearts"
+            : "Crafted with love on Lovewrit • Preserved forever"}
         </div>
       </div>
     </div>

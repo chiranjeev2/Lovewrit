@@ -21,6 +21,10 @@ import {
   BirthdayFinaleSceneConfig,
   GodhbharaiBlessingsSceneConfig,
   BabyRevealSceneConfig,
+  TributeCandleSceneConfig,
+  WhatTheyTaughtUsSceneConfig,
+  TributeWallSceneConfig,
+  ClosingPrayerSceneConfig,
 } from "@/types/scenes";
 import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
@@ -92,6 +96,18 @@ const GodhbharaiBlessingsScene = dynamic(() => import("./scenes/GodhbharaiBlessi
 const BabyRevealScene = dynamic(() => import("./scenes/BabyRevealScene"), {
   ssr: false,
 });
+const TributeCandleScene = dynamic(() => import("./scenes/TributeCandleScene"), {
+  ssr: false,
+});
+const WhatTheyTaughtUsScene = dynamic(() => import("./scenes/WhatTheyTaughtUsScene"), {
+  ssr: false,
+});
+const TributeWallScene = dynamic(() => import("./scenes/TributeWallScene"), {
+  ssr: false,
+});
+const ClosingPrayerScene = dynamic(() => import("./scenes/ClosingPrayerScene"), {
+  ssr: false,
+});
 
 interface SceneContainerProps {
   scenes: SceneConfig[];
@@ -102,6 +118,9 @@ interface SceneContainerProps {
   fontFamily?: string;
   audioTrackUrl?: string | null;
   guestName?: string | null;
+  slug?: string;
+  token?: string | null;
+  isTribute?: boolean;
   onSendReply?: (text: string) => Promise<void>;
   previewActiveIndex?: number; // Studio preview control
 }
@@ -115,9 +134,23 @@ export function SceneContainer({
   fontFamily = "serif",
   audioTrackUrl,
   guestName,
+  slug,
+  token,
+  isTribute: isTributeProp,
   onSendReply,
   previewActiveIndex,
 }: SceneContainerProps) {
+  // Check if this experience is a Sacred Tribute
+  const isTribute = Boolean(
+    isTributeProp ||
+    initialScenes.some(
+      (s) =>
+        s.type === "tribute_candle" ||
+        s.type === "what_they_taught_us" ||
+        s.type === "closing_prayer"
+    )
+  );
+
   // Active color theme
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
 
@@ -127,7 +160,8 @@ export function SceneContainer({
 
   const [currentIndex, setCurrentIndex] = useState(previewActiveIndex ?? 0);
   const [direction, setDirection] = useState(1);
-  const [isMuted, setIsMuted] = useState(false);
+  // Music is OFF by default for Sacred Tribute per prompt specification
+  const [isMuted, setIsMuted] = useState(isTribute);
   const [hasStartedAudio, setHasStartedAudio] = useState(false);
   const [completedInteractions, setCompletedInteractions] = useState<Record<string, boolean>>({});
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -186,12 +220,13 @@ export function SceneContainer({
 
   const currentScene = enabledScenes[currentIndex] || enabledScenes[0];
   const isOpener = currentScene?.type === "opener";
-  const isFinale = currentScene?.type === "finale";
+  const isFinale = currentScene?.type === "finale" || currentScene?.type === "closing_prayer";
   const isInteractionScene =
     currentScene?.type === "balloon_pop" ||
     currentScene?.type === "arrow_heart" ||
     currentScene?.type === "birthday_finale" ||
-    currentScene?.type === "baby_reveal";
+    currentScene?.type === "baby_reveal" ||
+    currentScene?.type === "tribute_candle";
   const isLetterScene = currentScene?.type === "letter_unfold";
 
   // Check if current interaction is completed or skipped
@@ -530,6 +565,49 @@ export function SceneContainer({
                 />
               )}
 
+              {currentScene.type === "tribute_candle" && (
+                <TributeCandleScene
+                  config={currentScene as TributeCandleSceneConfig}
+                  onComplete={() => {
+                    setCompletedInteractions((prev) => ({ ...prev, [currentScene.id]: true }));
+                  }}
+                  onContinue={() => {
+                    setCompletedInteractions((prev) => ({ ...prev, [currentScene.id]: true }));
+                    handleNext();
+                  }}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "what_they_taught_us" && (
+                <WhatTheyTaughtUsScene
+                  config={currentScene as WhatTheyTaughtUsSceneConfig}
+                  onContinue={handleNext}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "tribute_wall" && (
+                <TributeWallScene
+                  config={currentScene as TributeWallSceneConfig}
+                  onContinue={handleNext}
+                  slug={slug}
+                  token={token}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "closing_prayer" && (
+                <ClosingPrayerScene
+                  config={currentScene as ClosingPrayerSceneConfig}
+                  onReplay={() => {
+                    setDirection(-1);
+                    setCurrentIndex(0);
+                  }}
+                  theme={colorTheme}
+                />
+              )}
+
               {currentScene.type === "finale" && (
                 <FinaleScene
                   title={currentScene.title}
@@ -537,6 +615,7 @@ export function SceneContainer({
                   senderName={senderName}
                   recipientName={recipientName}
                   guestName={guestName}
+                  isTribute={isTribute}
                   onReplay={() => {
                     setDirection(-1);
                     setCurrentIndex(0);

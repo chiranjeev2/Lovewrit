@@ -442,6 +442,128 @@ export function getDefaultScenesForOccasion(
     ];
   }
 
+  const isMemorial =
+    occasion === "memorial" ||
+    occasion === "tribute" ||
+    (options?.templateId && ["in-loving-memory", "sacred-tribute"].includes(options.templateId));
+
+  if (isMemorial) {
+    const samplePhotos = options?.samplePhotos && options.samplePhotos.length > 0
+      ? options.samplePhotos
+      : [
+          "https://images.unsplash.com/photo-1518495973542-4542c06a5843?w=800&q=80",
+          "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?w=800&q=80",
+        ];
+
+    return [
+      {
+        id: "memorial-opener",
+        type: "opener",
+        title: `In Loving Memory of ${recipient}`,
+        subtitle: `A sacred tribute to a beautiful soul, honoring their timeless journey • Remembered with love by ${sender}`,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "memorial-candle",
+        type: "tribute_candle",
+        title: "Eternal Flame of Remembrance",
+        subtitle: "A light that never dims in our hearts",
+        tributeName: recipient,
+        yearsSpan: "1948 – 2024",
+        candleLitCount: 42,
+        candleMessage: "In loving memory, an eternal flame burns warmly in our hearts. Your wisdom, gentle laughter, and unconditional kindness continue to light our path.",
+        photoUrl: samplePhotos[0],
+        enabled: true,
+      },
+      {
+        id: "memorial-life-photos",
+        type: "timeline",
+        title: "Life in Photos",
+        subtitle: "A journey of warmth, devotion, and gentle moments",
+        events: [
+          {
+            id: "tl-1",
+            yearOrDate: "1968",
+            title: "Early Beginnings & Youth",
+            description: "A bright smile and a heart filled with curiosity and boundless dreams.",
+            photoUrl: samplePhotos[0],
+          },
+          {
+            id: "tl-2",
+            yearOrDate: "1994",
+            title: "Devotion to Family & Home",
+            description: "Building a home rooted in kindness, patient guidance, and unshakeable love.",
+            photoUrl: samplePhotos[1] || samplePhotos[0],
+          },
+          {
+            id: "tl-3",
+            yearOrDate: "2018",
+            title: "Years of Wisdom & Blessing",
+            description: "Surrounded by grandchildren and generations inspired by their quiet strength.",
+            photoUrl: samplePhotos[0],
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "memorial-cherished-memories",
+        type: "memories",
+        title: "Cherished Memories",
+        subtitle: "The precious moments that will forever stay with us",
+        memories: [
+          {
+            id: "mem-1",
+            title: "Warmth Around the Table",
+            caption: "Every gathering was brighter with their stories, warm tea, and gentle laughter.",
+            photoUrl: samplePhotos[1] || samplePhotos[0],
+          },
+          {
+            id: "mem-2",
+            title: "Quiet Evenings & Sage Advice",
+            caption: "Always listening with patience, offering kindness and reassurance before judgment.",
+            photoUrl: samplePhotos[0],
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "memorial-what-they-taught-us",
+        type: "what_they_taught_us",
+        title: "What They Taught Us",
+        subtitle: "The virtues, life lessons, and quiet wisdom left behind",
+        lessons: [
+          "To treat every soul with quiet dignity and unconditional kindness.",
+          "That true wealth lies in simple honesty, good deeds, and loving family.",
+          "To remain calm through life's storms and never lose faith in tomorrow.",
+          "To give freely without ever expecting anything in return.",
+        ],
+        closingThought: "These timeless lessons live on in every choice we make and every kindness we share.",
+        enabled: true,
+      },
+      {
+        id: "memorial-tribute-wall",
+        type: "tribute_wall",
+        title: "Tribute Wall & Condolences",
+        subtitle: "Leave a gentle message of love, memory, and prayer for the family",
+        wallTitle: "Words of Remembrance",
+        wallSubtitle: "Condolences and fond memories from loved ones and friends",
+        requireApproval: true,
+        enabled: true,
+      },
+      {
+        id: "memorial-closing-prayer",
+        type: "closing_prayer",
+        title: "Rest in Eternal Peace",
+        subtitle: "May divine peace and grace wrap their soul in eternal light",
+        prayerText: "May their noble soul find eternal peace, wrapped in divine grace and boundless light.\nThough physically parted, their gentle warmth and timeless love remain forever etched into our spirits.",
+        traditionTag: "In Sacred Remembrance",
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
   const isWedding = [
     "wedding",
     "wedding_invite",

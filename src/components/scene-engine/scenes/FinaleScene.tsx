@@ -10,6 +10,7 @@ interface FinaleSceneProps {
   recipientName: string;
   onReplay: () => void;
   guestName?: string | null;
+  isTribute?: boolean;
 }
 
 export function FinaleScene({
@@ -19,6 +20,7 @@ export function FinaleScene({
   recipientName,
   onReplay,
   guestName,
+  isTribute = false,
 }: FinaleSceneProps) {
   const displayRecipient = guestName || recipientName;
 
@@ -68,8 +70,8 @@ export function FinaleScene({
       </div>
 
       {/* Bottom Footer */}
-      <div className="pb-16 sm:pb-20 text-[10px] text-neutral-500 z-10">
-        Lovewrit Keepsakes • Forever preserved
+      <div className="pb-16 sm:pb-20 text-[10px] text-neutral-500 z-10 font-serif">
+        {isTribute ? "Forever preserved in quiet remembrance" : "Lovewrit Keepsakes • Forever preserved"}
       </div>
     </div>
   );
