@@ -30,16 +30,46 @@ export async function GET(req: NextRequest) {
     }
 
     // Helper to credit referrer if a referral code was used
-    const creditReferrerIfNeeded = async (usedCode?: string | null) => {
-      if (!usedCode) return;
+    const creditReferrerIfNeeded = async (currentOrder: {
+      referralCodeUsed?: string | null;
+      customerEmail?: string;
+      ipAddress?: string | null;
+      currency?: string;
+    }) => {
+      const code = currentOrder.referralCodeUsed;
+      if (!code) return;
       try {
+        const refRecord = await db.referralRecord.findUnique({
+          where: { code: code.toUpperCase() },
+        });
+        if (!refRecord) return;
+
+        // Abuse Protection: Disallow self-referral
+        if (
+          currentOrder.customerEmail &&
+          refRecord.ownerEmail.toLowerCase() === currentOrder.customerEmail.toLowerCase().trim()
+        ) {
+          console.warn(`[Referral Abuse] Self-referral attempt blocked for code ${code} by ${currentOrder.customerEmail}`);
+          return;
+        }
+
+        // Fixed currency reward: ₹49 / $2 / €2 / £2
+        const creditAmounts: Record<string, number> = {
+          INR: 49,
+          USD: 2,
+          EUR: 2,
+          GBP: 2,
+        };
+        const reward = creditAmounts[currentOrder.currency || "INR"] || 49;
+
         await db.referralRecord.update({
-          where: { code: usedCode },
+          where: { code: refRecord.code },
           data: {
             timesUsed: { increment: 1 },
-            creditBalance: { increment: 49 }, // Fixed cash reward ₹49 / $2 / €2 / £2
+            creditBalance: { increment: reward },
           },
         });
+        console.log(`[Referral Credited] Added ${reward} credit to code ${code} for completed order`);
       } catch (err) {
         console.error("Failed to credit referrer:", err);
       }
@@ -55,7 +85,7 @@ export async function GET(req: NextRequest) {
           pageData: true,
         },
       });
-      await creditReferrerIfNeeded(order.referralCodeUsed);
+      await creditReferrerIfNeeded(order);
       return NextResponse.json({ success: true, order });
     }
 
@@ -71,7 +101,7 @@ export async function GET(req: NextRequest) {
             pageData: true,
           },
         });
-        await creditReferrerIfNeeded(order.referralCodeUsed);
+        await creditReferrerIfNeeded(order);
         return NextResponse.json({ success: true, order });
       }
     }

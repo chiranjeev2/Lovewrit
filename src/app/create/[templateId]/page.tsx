@@ -36,6 +36,7 @@ import {
 } from "@/lib/currency";
 import { BUILTIN_AUDIO_TRACKS } from "@/lib/audio-tracks";
 import { LanguageCode, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
+import { trackFunnelStep } from "@/lib/consent";
 import {
   Heart,
   Sparkles,
@@ -97,6 +98,7 @@ export default function CreateLovewritPage({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { currency, setCurrency, region, language, setLanguage, t } = useApp();
 
   const templateId = resolvedParams.templateId;
@@ -282,6 +284,32 @@ export default function CreateLovewritPage({
               setIsFounderFree(true);
             }
           } catch {}
+        }
+
+        // Track customizer funnel step
+        trackFunnelStep({
+          step: "customizer",
+          templateId: template.id,
+        });
+
+        // Auto-detect referral code from query param or 30-day attribution cookie
+        const refParam = searchParams.get("ref");
+        const cookieRef = typeof document !== "undefined"
+          ? document.cookie.split("; ").find((row) => row.startsWith("lovewrit_referral_code="))?.split("=")[1]
+          : null;
+        const activeRef = refParam || cookieRef;
+        if (activeRef) {
+          const cleanCode = activeRef.trim().toUpperCase();
+          setReferralCodeInput(cleanCode);
+          fetch(`/api/referral?code=${encodeURIComponent(cleanCode)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.valid) {
+                setAppliedReferralCode(cleanCode);
+                setReferralMessage(data.message || `Referral code ${cleanCode} applied!`);
+              }
+            })
+            .catch(() => {});
         }
       });
     }
@@ -699,6 +727,13 @@ export default function CreateLovewritPage({
     }
 
     setIsSubmitting(true);
+
+    trackFunnelStep({
+      step: "checkout",
+      templateId: template.id,
+      productType,
+      tier,
+    });
 
     try {
       const currentTrack =

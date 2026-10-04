@@ -43,6 +43,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { generateGuestLinks, GuestInviteLink } from "@/lib/guest-personalization";
+import { getBaseUrl } from "@/lib/base-url";
 
 interface SceneFlowEditorProps {
   scenes: SceneConfig[];
@@ -56,9 +57,10 @@ export function SceneFlowEditor({
   scenes,
   onChange,
   onPreviewSceneIndex,
-  baseUrl = "https://lovewrit.com",
+  baseUrl,
   slug = "preview",
 }: SceneFlowEditorProps) {
+  const effectiveBaseUrl = baseUrl || getBaseUrl();
   const [expandedSceneId, setExpandedSceneId] = useState<string | null>(null);
   const [guestListInput, setGuestListInput] = useState<string>("");
   const [generatedGuestLinks, setGeneratedGuestLinks] = useState<GuestInviteLink[]>([]);
@@ -189,7 +191,7 @@ export function SceneFlowEditor({
       .split(/[,\n]/)
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
-    const links = generateGuestLinks(baseUrl, slug, names);
+    const links = generateGuestLinks(effectiveBaseUrl, slug, names);
     setGeneratedGuestLinks(links);
   };
 

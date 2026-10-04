@@ -34,6 +34,10 @@ export const metadata: Metadata = {
       "Handcrafted digital greeting cards & emotional multimedia keepsake mini-websites for life's sacred moments.",
     siteName: "Lovewrit",
   },
+  robots: {
+    index: false,
+    follow: false,
+  },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

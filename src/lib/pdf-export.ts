@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
 import { toJpeg } from "html-to-image";
+import { getBaseUrl } from "@/lib/base-url";
 
 export interface FoldablePdfOptions {
   senderName: string;
@@ -93,7 +94,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
 
   // Generate QR Code for back panel
   try {
-    const qrDataUrl = await QRCode.toDataURL(shareUrl || "https://lovewrit.com", {
+    const qrDataUrl = await QRCode.toDataURL(shareUrl || getBaseUrl(), {
       width: 300,
       margin: 1,
       color: { dark: "#1a1a1a", light: "#ffffff" },
@@ -128,7 +129,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(160, 160, 160);
-  doc.text("Crafted with love • www.lovewrit.com", backCenterX, pageHeight - 12, { align: "center" });
+  doc.text("Crafted with love • Lovewrit Keepsakes", backCenterX, pageHeight - 12, { align: "center" });
 
   // Draw Center Fold Guide on Page 1
   drawFoldGuide();

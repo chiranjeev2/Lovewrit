@@ -18,6 +18,8 @@ import {
   Users,
 } from "lucide-react";
 import { isEventInviteOccasion } from "@/lib/templates-data";
+import { trackFunnelStep } from "@/lib/consent";
+import { getBaseUrl } from "@/lib/base-url";
 
 interface SuccessOrderRecord {
   id: string;
@@ -65,6 +67,14 @@ function SuccessContent() {
         }
         setOrder(data.order);
 
+        // Record paid funnel conversion
+        trackFunnelStep({
+          step: "paid",
+          templateId: data.order.templateId,
+          productType: data.order.productType as "CARD" | "PAGE",
+          tier: data.order.tier,
+        });
+
         // Trigger victory celebration confetti
         confetti({
           particleCount: 120,
@@ -81,8 +91,7 @@ function SuccessContent() {
     verify();
   }, [sessionId, slug]);
 
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
+  const origin = typeof window !== "undefined" ? window.location.origin : getBaseUrl();
 
   const targetSlug = order?.slug || slug;
   const isBundle = Boolean(order?.isBundle || (order?.cardData && order?.pageData));
