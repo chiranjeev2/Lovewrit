@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "prisma db push",
+    "qa": "node scripts/run-all-qa.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
