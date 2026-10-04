@@ -111,17 +111,17 @@ export function SceneNavigation({
             <button
               type="button"
               onClick={onPrev}
-              className="flex items-center space-x-1.5 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md px-3.5 py-1.5 text-xs font-medium text-white/90 border border-white/10 transition shadow-lg active:scale-95"
+              className="flex items-center space-x-1.5 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md px-3.5 py-2 min-h-[44px] text-xs font-medium text-white/90 border border-white/10 transition shadow-lg active:scale-95"
               aria-label="Previous scene"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
               <span className="hidden sm:inline">Back</span>
             </button>
           )}
         </div>
 
         {/* Center: Stepped Dots & Scene Counter */}
-        <div className="pointer-events-auto flex items-center space-x-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+        <div className="pointer-events-auto flex items-center space-x-2 bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg min-h-[36px]">
           <div className="flex items-center space-x-1.5">
             {Array.from({ length: totalScenes }).map((_, idx) => (
               <span
@@ -147,10 +147,10 @@ export function SceneNavigation({
             <button
               type="button"
               onClick={onSkipToEnd}
-              className="flex items-center space-x-1 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md px-3 py-1.5 text-xs text-white/75 hover:text-white border border-white/10 transition shadow-lg"
+              className="flex items-center space-x-1 rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md px-3 py-2 min-h-[44px] text-xs text-white/75 hover:text-white border border-white/10 transition shadow-lg"
               title="Skip to finale"
             >
-              <FastForward className="h-3 w-3" />
+              <FastForward className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Skip</span>
             </button>
           )}
@@ -158,7 +158,7 @@ export function SceneNavigation({
           <button
             type="button"
             onClick={onToggleMute}
-            className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white/90 border border-white/10 transition shadow-lg active:scale-95"
+            className="flex h-11 w-11 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white/90 border border-white/10 transition shadow-lg active:scale-95"
             title={isMuted ? "Unmute music" : "Mute music"}
             aria-label={isMuted ? "Unmute music" : "Mute music"}
           >
@@ -179,7 +179,7 @@ export function SceneNavigation({
               <button
                 type="button"
                 onClick={onSkipInteraction}
-                className="text-[11px] font-medium text-white/60 hover:text-white/90 underline decoration-white/30 transition pb-1"
+                className="text-[11px] font-medium text-white/60 hover:text-white/90 underline decoration-white/30 transition pb-1 min-h-[44px] flex items-center justify-center px-4"
               >
                 Skip interaction →
               </button>
@@ -189,7 +189,7 @@ export function SceneNavigation({
               type="button"
               disabled={!canAdvance}
               onClick={onNext}
-              className={`inline-flex items-center space-x-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all shadow-xl active:scale-95 ${
+              className={`inline-flex items-center space-x-2 rounded-full px-6 py-2.5 min-h-[44px] text-sm font-semibold transition-all shadow-xl active:scale-95 ${
                 canAdvance
                   ? `${navStyles.button} text-white`
                   : "bg-white/10 text-white/40 cursor-not-allowed border border-white/5"

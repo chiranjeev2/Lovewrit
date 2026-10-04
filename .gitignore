@@ -50,3 +50,5 @@ next-env.d.ts
 # local test scratch artifacts
 /scripts/*.png
 /scripts/*_downloads/
+/qa-screenshots/
+/qa-pdf-pages/

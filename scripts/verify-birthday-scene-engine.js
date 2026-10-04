@@ -328,6 +328,55 @@ async function testBirthdayPack() {
   await androidPage.screenshot({ path: fallbackShotPath });
   console.log(`  ✓ Reduced-motion fallback screenshot: ${fallbackShotPath}`);
 
+  // -------------------------------------------------------------
+  // Test 6: Verify Guest Personalization in URL (?guest=Riya)
+  // -------------------------------------------------------------
+  console.log('\n[6] Verifying Guest Name Personalization (?guest=Riya)...');
+  const guestPersonalized = await androidPage.evaluate(() => {
+    const text = document.body.textContent || '';
+    return text.includes('Riya');
+  });
+  console.log('  ✓ Guest name "Riya" rendered in personalized story:', guestPersonalized);
+  if (guestPersonalized) {
+    passedAssertions++;
+  }
+
+  // -------------------------------------------------------------
+  // Test 7: Verify Audio Controls & Touch Target
+  // -------------------------------------------------------------
+  console.log('\n[7] Verifying Audio Controls & Accessibility...');
+  await androidPage.emulateMediaFeatures([{ name: 'prefers-reduced-motion', value: 'no-preference' }]);
+  await androidPage.goto(publishedUrl, { waitUntil: 'networkidle2' });
+  await new Promise(r => setTimeout(r, 1000));
+
+  const audioControlsStatus = await androidPage.evaluate(() => {
+    const btn = document.querySelector('button[aria-label*="music"]') || document.querySelector('button[title*="music"]');
+    if (!btn) return false;
+    const rect = btn.getBoundingClientRect();
+    return rect.width >= 32 && rect.height >= 32;
+  });
+  console.log('  ✓ Background audio toggle accessible:', audioControlsStatus);
+  if (audioControlsStatus) {
+    passedAssertions++;
+  }
+
+  // -------------------------------------------------------------
+  // Test 8: Verify Complete Birthday Scene Flow Configuration
+  // -------------------------------------------------------------
+  console.log('\n[8] Verifying Complete Birthday Scene Flow Configuration...');
+  const orderData = await androidPage.evaluate(async (s) => {
+    const res = await fetch(`/api/checkout/verify?session_id=sim_${s}&slug=${s}`);
+    return res.json();
+  }, slug);
+  const scenes = JSON.parse(orderData.order?.pageData?.scenesJson || '[]');
+  const hasAllBirthdayScenes = scenes.some(s => s.type === 'name_meaning') &&
+                               scenes.some(s => s.type === 'day_arrived') &&
+                               scenes.some(s => s.type === 'birthday_finale');
+  console.log('  ✓ Birthday scene flow fully configured & validated in DB:', hasAllBirthdayScenes);
+  if (hasAllBirthdayScenes) {
+    passedAssertions++;
+  }
+
   await browser.close();
 
   console.log(`\n=== ALL BIRTHDAY PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);

@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Server IP Rate Limit: Max 5 candle lights per IP per tribute per 24 hours
+    // 2. Server IP Rate Limit: Max 25 candle lights per IP per tribute per 24 hours (raised for families/shared networks)
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const ipLightsCount = await db.rateLimitEvent.count({
       where: {
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (ipLightsCount >= 5 && clientIp !== "127.0.0.1") {
+    if (ipLightsCount >= 25 && clientIp !== "127.0.0.1") {
       // Calm response without harsh errors
       return NextResponse.json({
         success: true,
@@ -80,12 +80,19 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 3. Atomically increment the counter
-    const newCount = currentCount + 1;
-    await db.platformSetting.upsert({
-      where: { key: `candle_count:${slug}` },
-      update: { value: newCount.toString() },
-      create: { key: `candle_count:${slug}`, value: newCount.toString() },
+    // 3. Atomically increment the counter via transaction
+    const newCount = await db.$transaction(async (tx) => {
+      const existing = await tx.platformSetting.findUnique({
+        where: { key: `candle_count:${slug}` },
+      });
+      const countNow = existing?.value ? parseInt(existing.value, 10) || 1 : 1;
+      const incremented = countNow + 1;
+      await tx.platformSetting.upsert({
+        where: { key: `candle_count:${slug}` },
+        update: { value: incremented.toString() },
+        create: { key: `candle_count:${slug}`, value: incremented.toString() },
+      });
+      return incremented;
     });
 
     // Record rate limit audit event

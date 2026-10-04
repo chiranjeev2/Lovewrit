@@ -198,3 +198,21 @@
 - **Source Reference:** *Universal Contemplation*
 - **Text:** Let us walk with gentle steps upon this earth, speaking words that heal, holding hearts that need solace, and creating memories of unconditional kindness.
 - **Verified:** `false` (Pending confirmation)
+
+---
+
+## 6. Jain Tradition
+
+### 6.1 Navkar (Namokar) Mantra • Universal Veneration
+- **ID:** `jain-navkar-mantra`
+- **Faith:** Jain
+- **Language / Script:** Prakrit (Ardhamagadhi)
+- **Source Reference:** *Foundational Canonical Jain Prayer*
+- **Original Scripture:**
+  ```text
+  णमो अरिहंताणं। णमो सिद्धाणं। णमो आयरियाणं। णमो उवज्झायाणं। णमो लोए सव्वसाहूणं।
+  एसोपंचणमुक्कारो, सव्वपावप्पणासणो। मंगला णं च सव्वेसिं, पढमं हवई मंगलं॥
+  ```
+- **Transliteration:** `Ṇamō Arihantāṇaṁ | Ṇamō Siddhāṇaṁ | Ṇamō Āyariyāṇaṁ | Ṇamō Uvajjhāyāṇaṁ | Ṇamō Lōē Savva Sāhūṇaṁ | Ēsō Pañcha Ṇamukkārō Savva Pāvappaṇāsaṇō | Maṅgalāṇaṁ Cha Savvēsiṁ Paḍhamaṁ Havaī Maṅgalaṁ ||`
+- **Translation / Meaning:** I bow to the Arihantas (the enlightened ones); I bow to the Siddhas (the liberated souls); I bow to the Acharyas (spiritual masters); I bow to the Upadhyayas (teachers); I bow to all the Sadhus (monks/seekers) in the world. This five-fold obeisance destroys all sins and is the foremost among all auspicious blessings.
+- **Verified:** `false` (Pending confirmation by Jain religious elder or scholar)

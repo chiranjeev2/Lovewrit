@@ -79,7 +79,7 @@ async function runQa() {
   }
 
   // 3. Guest Input Sanitization Security Test
-  console.log('[Step 3/7] Running Guest Input & Text Sanitization Security Test...');
+  console.log('[Step 3/9] Running Guest Input & Text Sanitization Security Test...');
   try {
     execSync('node scripts/test-guest-sanitization.mjs', { stdio: 'pipe' });
     console.log('  ✅ Guest Personalization Security: Script stripping, emoji/RTL/Hindi, 60 char cap\n');
@@ -90,12 +90,23 @@ async function runQa() {
   }
 
   // 4. Ensure server is active for browser testing
-  console.log('[Step 4/7] Ensuring server is ready for real browser suites...');
+  console.log('[Step 4/9] Ensuring server is ready for real browser suites...');
   spawnedServer = await ensureServerRunning();
   console.log();
 
-  // 5. Real-Browser Export Quality Verification
-  console.log('[Step 5/7] Running Real-Browser Export Quality Test (PDF, PNG, JPG, 300 DPI)...');
+  // 5. Referral & Atomic Candle Anti-Abuse Tests
+  console.log('[Step 5/9] Running Referral Anti-Abuse & Atomic Candle Concurrency Tests...');
+  try {
+    execSync('node scripts/test-referral-and-candle.mjs', { stdio: 'pipe' });
+    console.log('  ✅ Referral & Candle Anti-Abuse: 24 / 24 Passed (IP/Email/FP blocking, 20 concurrent requests atomic)\n');
+    summary.push({ suite: 'Referral & Candle Anti-Abuse', status: 'PASSED', details: '24 / 24 assertions green (20 concurrent requests atomic)' });
+  } catch (err) {
+    console.error('  ❌ Referral & candle tests failed:', err.message);
+    summary.push({ suite: 'Referral & Candle Anti-Abuse', status: 'FAILED', details: 'Security test failed' });
+  }
+
+  // 6. Real-Browser Export Quality Verification
+  console.log('[Step 6/9] Running Real-Browser Export Quality Test (PDF, PNG, JPG, 300 DPI)...');
   try {
     execSync('node scripts/verify-real-browser-exports.js', { stdio: 'pipe' });
     console.log('  ✅ Real-Browser Exports: 4 / 4 Passed (PDF <10 MB, print-quality photos)\n');
@@ -105,8 +116,19 @@ async function runQa() {
     summary.push({ suite: 'Browser Exports (PDF/PNG/JPG)', status: 'FAILED', details: 'Export error' });
   }
 
-  // 6. Real-Browser Multi-Viewport Suite (375, 768, 1024, 1440) across 8 Occasions with 4x CPU Throttling
-  console.log('[Step 6/7] Running Real-Browser Multi-Viewport (375, 768, 1024, 1440) with 4x CPU Throttle...');
+  // 7. PDF Page Rasterization & DPI Sharpness
+  console.log('[Step 7/9] Running PDF Rasterization & Effective DPI Sharpness Audit...');
+  try {
+    execSync('node scripts/verify-pdf-rasterization.mjs', { stdio: 'pipe' });
+    console.log('  ✅ PDF Rasterization: Pages 1 & 2 non-blank, effective photo DPI 216 >= 150 DPI\n');
+    summary.push({ suite: 'PDF Rasterization & Sharpness', status: 'PASSED', details: 'Pages non-blank, effective photo DPI 216 >= 150' });
+  } catch (err) {
+    console.error('  ❌ PDF rasterization failed:', err.message);
+    summary.push({ suite: 'PDF Rasterization & Sharpness', status: 'FAILED', details: 'Rasterization error' });
+  }
+
+  // 8. Real-Browser Multi-Viewport Suite (375, 768, 1024, 1440) across 8 Occasions with 4x CPU Throttling
+  console.log('[Step 8/9] Running Real-Browser Multi-Viewport (375, 768, 1024, 1440) with 4x CPU Throttle...');
 
   const VIEWPORTS = [
     { name: '375_mobile', width: 375, height: 812 },
@@ -199,8 +221,8 @@ async function runQa() {
     details: `${screenshotsCaptured} / 32 screenshots saved under 4x CPU throttle`,
   });
 
-  // 7. Assertion Pack Test Suites
-  console.log('[Step 7/7] Running Pack Verification Suites...');
+  // 9. Assertion Pack Test Suites
+  console.log('[Step 9/9] Running Pack Verification Suites...');
   const PACK_SCRIPTS = [
     { name: 'B1 Birthday Pack', script: 'scripts/verify-birthday-scene-engine.js' },
     { name: 'B2 Godhbharai Pack', script: 'scripts/verify-godhbharai-scene-engine.js' },

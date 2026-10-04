@@ -1290,7 +1290,10 @@ export function SceneFlowEditor({
 
                   {/* Faith-neutral & Faith Presets */}
                   <div className="space-y-1.5">
-                    <label className="text-[10px] text-neutral-400 block">Quick Blessing Presets (Editable):</label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] text-neutral-400 block">Quick Blessing Presets (Editable):</label>
+                      <span className="text-[9px] text-amber-400 font-medium">Faith closings require review by member of that faith</span>
+                    </div>
                     <div className="flex flex-wrap gap-1.5">
                       <button
                         type="button"
@@ -1299,7 +1302,7 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Forever in Our Hearts",
-                            traditionTag: "Forever in Our Hearts",
+                            traditionTag: "Forever in Our Hearts (Faith-Neutral)",
                             prayerText: "Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts.\nMay your journey be wrapped in peace, serenity, and boundless grace.",
                           } as SceneConfig;
                           onChange(updated);
@@ -1315,14 +1318,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Om Shanti • ॐ शान्तिः",
-                            traditionTag: "Om Shanti • Sacred Peace",
+                            traditionTag: "Om Shanti • Sacred Peace (Review by member of faith)",
                             prayerText: "ॐ द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः।\nMay their noble Atman attain Moksha and dwell in eternal divine peace. Om Shanti Shanti Shanti.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        title="Hindu • Review by member of that faith"
                       >
-                        🕉️ Om Shanti
+                        🕉️ Om Shanti (Review by faith)
                       </button>
                       <button
                         type="button"
@@ -1331,14 +1335,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Waheguru • ਅਕਾਲ ਪੁਰਖ",
-                            traditionTag: "Waheguru • Divine Grace",
+                            traditionTag: "Waheguru • Divine Grace (Review by member of faith)",
                             prayerText: "ਜਿਨੀ ਨਾਮੁ ਧਿਆਇਆ ਗਏ ਮਸਕਤਿ ਘਾਲਿ ॥ ਨਾਨਕ ਤੇ ਮੁਖ ਉਜਲੇ ਕੇਤੀ ਛੁਟੀ ਨਾਲਿ ॥\nMay the beloved soul merge into the Divine Light of Akal Purakh.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        title="Sikh (Neutral Waheguru • Not victory greeting) • Review by member of that faith"
                       >
-                        ੴ Waheguru
+                        ੴ Waheguru (Review by faith)
                       </button>
                       <button
                         type="button"
@@ -1347,14 +1352,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Inna Lillahi wa Inna Ilayhi Raji'un",
-                            traditionTag: "إِنَّا لِلَّٰهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ",
+                            traditionTag: "إِنَّا لِلَّٰهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ (Review by member of faith)",
                             prayerText: "Surely to Allah we belong, and to Him we shall return.\nMay Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        title="Muslim • Review by member of that faith"
                       >
-                        🌙 Inna Lillahi
+                        🌙 Inna Lillahi (Review by faith)
                       </button>
                       <button
                         type="button"
@@ -1363,14 +1369,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Rest in Peace & Grace",
-                            traditionTag: "Rest in Eternal Peace",
+                            traditionTag: "Rest in Eternal Peace (Review by member of faith)",
                             prayerText: "May the Lord bless and keep them in His loving care.\nRest in eternal peace, reunited with the saints in light and heavenly grace.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        title="Christian • Review by member of that faith"
                       >
-                        ✝️ Rest in Peace
+                        ✝️ Rest in Peace (Review by faith)
                       </button>
                     </div>
                   </div>

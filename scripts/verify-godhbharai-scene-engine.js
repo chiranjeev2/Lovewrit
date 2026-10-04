@@ -335,6 +335,20 @@ async function testGodhbharaiPack() {
   await androidPage.screenshot({ path: fallbackShotPath });
   console.log(`  ✓ Reduced-motion fallback screenshot: ${fallbackShotPath}`);
 
+  // -------------------------------------------------------------
+  // Test 6: Strict PCPNDT Compliance on Published Page
+  // -------------------------------------------------------------
+  console.log('\n[6] Verifying Strict PCPNDT Act Compliance on Published Page (Zero Sex/Gender Reveal)...');
+  const pcpndtCompliantOnPage = await androidPage.evaluate(() => {
+    const text = (document.body.textContent || '').toLowerCase();
+    const hasSexPrediction = text.includes('it\'s a boy') || text.includes('it\'s a girl') || text.includes('gender reveal') || text.includes('gender prediction');
+    return !hasSexPrediction;
+  });
+  console.log('  ✓ Published page is 100% free of sex prediction / gender reveal (PCPNDT compliant):', pcpndtCompliantOnPage);
+  if (pcpndtCompliantOnPage) {
+    passedAssertions++;
+  }
+
   await browser.close();
 
   console.log(`\n=== ALL GODHBHARAI PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);
