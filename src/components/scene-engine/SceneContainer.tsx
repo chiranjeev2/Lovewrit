@@ -12,6 +12,7 @@ import {
   PromisesSceneConfig,
   ArrowHeartSceneConfig,
   WeddingStorySceneConfig,
+  PartyThemeSceneConfig,
   EventDetailsSceneConfig,
   PersonalNoteSceneConfig,
   RsvpSceneConfig,
@@ -67,6 +68,9 @@ const ArrowHeartScene = dynamic(() => import("./scenes/ArrowHeartScene"), {
   ssr: false,
 });
 const WeddingStoryScene = dynamic(() => import("./scenes/WeddingStoryScene"), {
+  ssr: false,
+});
+const PartyThemeScene = dynamic(() => import("./scenes/PartyThemeScene"), {
   ssr: false,
 });
 const EventDetailsScene = dynamic(() => import("./scenes/EventDetailsScene"), {
@@ -463,6 +467,14 @@ export function SceneContainer({
                 <WeddingStoryScene
                   config={currentScene as WeddingStorySceneConfig}
                   onContinue={handleNext}
+                />
+              )}
+
+              {currentScene.type === "party_theme" && (
+                <PartyThemeScene
+                  config={currentScene as PartyThemeSceneConfig}
+                  onContinue={handleNext}
+                  theme={colorTheme}
                 />
               )}
 

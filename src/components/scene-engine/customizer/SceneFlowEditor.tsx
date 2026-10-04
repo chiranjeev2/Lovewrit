@@ -9,6 +9,7 @@ import {
   ArrowHeartSceneConfig,
   ChatStorySceneConfig,
   WeddingStorySceneConfig,
+  PartyThemeSceneConfig,
   EventDetailsSceneConfig,
   PersonalNoteSceneConfig,
   RsvpSceneConfig,
@@ -283,6 +284,7 @@ export function SceneFlowEditor({
             "arrow_heart",
             "chat_story",
             "wedding_story",
+            "party_theme",
             "event_details",
             "personal_note",
             "rsvp",
@@ -503,6 +505,103 @@ export function SceneFlowEditor({
                 </div>
               )}
 
+              {/* Collapsible Config: Party Theme & Dress Code */}
+              {isExpanded && scene.type === "party_theme" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-pink-300 block">Party Vibe, Theme &amp; Dress Code:</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-neutral-400">Party Theme</label>
+                      <input
+                        type="text"
+                        value={(scene as PartyThemeSceneConfig).partyTheme || ""}
+                        maxLength={100}
+                        onChange={(e) => updateSceneField(idx, "partyTheme", e.target.value)}
+                        placeholder="e.g. Pastel Chic & High Tea Glam"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400">Dress Code</label>
+                      <input
+                        type="text"
+                        value={(scene as PartyThemeSceneConfig).dressCode || ""}
+                        maxLength={150}
+                        onChange={(e) => updateSceneField(idx, "dressCode", e.target.value)}
+                        placeholder="e.g. Pastel hues & stylish hats 👒"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400">Party Host Note / Vibe</label>
+                    <textarea
+                      rows={2}
+                      value={(scene as PartyThemeSceneConfig).storyText || ""}
+                      maxLength={600}
+                      onChange={(e) => updateSceneField(idx, "storyText", e.target.value)}
+                      placeholder="Get ready for an afternoon of fabulous bites, sparkling drinks & non-stop laughter!"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-pink-500 font-sans"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Party Highlights Checklist</label>
+                    <div className="space-y-1.5">
+                      {((scene as PartyThemeSceneConfig).highlights || []).map((highlight, hIdx) => (
+                        <div key={hIdx} className="flex items-center gap-2">
+                          <span className="text-[10px] text-pink-400 font-mono">✦</span>
+                          <input
+                            type="text"
+                            value={highlight}
+                            maxLength={150}
+                            onChange={(e) => {
+                              const updated = [...((scene as PartyThemeSceneConfig).highlights || [])];
+                              updated[hIdx] = e.target.value;
+                              updateSceneField(idx, "highlights", updated);
+                            }}
+                            className="flex-1 rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = ((scene as PartyThemeSceneConfig).highlights || []).filter((_, i) => i !== hIdx);
+                              updateSceneField(idx, "highlights", updated);
+                            }}
+                            className="p-1 rounded text-neutral-500 hover:text-rose-400 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                      {((scene as PartyThemeSceneConfig).highlights || []).length < 6 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = [...((scene as PartyThemeSceneConfig).highlights || []), "New fun activity..."];
+                            updateSceneField(idx, "highlights", updated);
+                          }}
+                          className="text-[10px] text-pink-400 hover:underline flex items-center gap-1 cursor-pointer pt-1"
+                        >
+                          <Plus className="w-3 h-3" />
+                          <span>Add Activity</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400">Moodboard Image URL (Optional)</label>
+                    <input
+                      type="url"
+                      value={(scene as PartyThemeSceneConfig).photoUrl || ""}
+                      maxLength={1000}
+                      onChange={(e) => updateSceneField(idx, "photoUrl", e.target.value)}
+                      placeholder="https://images.unsplash.com/..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Collapsible Config: Event Details */}
               {isExpanded && scene.type === "event_details" && (
                 <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
@@ -527,6 +626,30 @@ export function SceneFlowEditor({
                         maxLength={40}
                         onChange={(e) => updateSceneField(idx, "eventTime", e.target.value)}
                         placeholder="6:30 PM Onwards"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-neutral-400">Theme (Optional)</label>
+                      <input
+                        type="text"
+                        value={(scene as EventDetailsSceneConfig).themeName || ""}
+                        maxLength={60}
+                        onChange={(e) => updateSceneField(idx, "themeName", e.target.value)}
+                        placeholder="e.g. High Tea Glam"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400">Dress Code (Optional)</label>
+                      <input
+                        type="text"
+                        value={(scene as EventDetailsSceneConfig).dressCode || ""}
+                        maxLength={100}
+                        onChange={(e) => updateSceneField(idx, "dressCode", e.target.value)}
+                        placeholder="e.g. Pastel Chic & Hats 👒"
                         className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
                       />
                     </div>

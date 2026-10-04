@@ -642,6 +642,93 @@ export function getDefaultScenesForOccasion(
     ];
   }
 
+  const isCelebration = [
+    "kitty_party",
+    "kitty",
+    "celebration",
+    "party",
+    "high_tea",
+    "social_gathering",
+  ].includes(occasion) || (options?.templateId && ["chic-kitty-party", "kitty-party"].includes(options.templateId));
+
+  if (isCelebration) {
+    const samplePhotos = options?.samplePhotos && options.samplePhotos.length > 0
+      ? options.samplePhotos
+      : [
+          "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&q=80",
+          "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800&q=80",
+        ];
+
+    return [
+      {
+        id: "kitty-opener",
+        type: "opener",
+        title: `Invited by Name: ${recipient}`,
+        subtitle: `You are cordially invited to an afternoon of laughter, treats & chic vibes with ${sender}`,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "kitty-theme",
+        type: "party_theme",
+        title: "The Vibe & Dress Code",
+        subtitle: "Fabulous bites, sparkling drinks & non-stop laughter",
+        partyTheme: "Pastel Chic & High Tea Glam",
+        dressCode: "Pastel hues, stylish hats & chic sunglasses 👒🕶️",
+        storyText: "It's time for our favorite friends and tribe to gather! Leave the daily rush behind and join us for an afternoon filled with mouth-watering treats, playful party games, bubbly conversations, and unforgettable memories.",
+        highlights: [
+          "Curated High-Tea spread & artisanal cocktails",
+          "Exciting kitty party games & surprise prize hampers",
+          "Polaroid photo station with fun accessories",
+          "Non-stop music, chit-chat & gossip session",
+        ],
+        photoUrl: samplePhotos[0],
+        enabled: true,
+      },
+      {
+        id: "kitty-details",
+        type: "event_details",
+        title: "Party Venue & Schedule",
+        subtitle: "Where the celebration begins • Mark your calendars!",
+        eventDate: "Saturday, 21 November 2026",
+        eventTime: "3:30 PM – 7:00 PM",
+        venueName: options?.location || "Olive Bistro & Terrace Lounge",
+        venueAddress: "Road 46, Jubilee Hills, Hyderabad",
+        venueMapUrl: "https://maps.google.com/?q=Olive+Bistro+Hyderabad",
+        dressCode: "Pastel Chic & Hats 👒",
+        themeName: "High Tea Glam",
+        enabled: true,
+      },
+      {
+        id: "kitty-personal-note",
+        type: "personal_note",
+        title: "Can't Wait to See You!",
+        subtitle: `A personal note from ${sender}`,
+        noteText: "Our gathering wouldn't be the same without your fabulous energy, warm smile, and infectious laughter. Come ready to feast, play, and make memories that will have us smiling for months to come!",
+        warmClosing: `With so much excitement and love, ${sender} 💕`,
+        enabled: true,
+      },
+      {
+        id: "kitty-rsvp",
+        type: "rsvp",
+        title: "We Saved Your Seat!",
+        subtitle: "Kindly let us know if you can join the fun",
+        savedSeatCopy: "A spot at our table, a welcome cocktail, and a personalized party hamper are waiting for you!",
+        showRsvpCount: true,
+        rsvpCount: 16,
+        enabled: true,
+      },
+      {
+        id: "kitty-finale",
+        type: "finale",
+        title: "See You on the Party Floor! 🥂",
+        subtitle: `Get ready for an unforgettable celebration with ${sender}`,
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
   // Default fallback scene structure for any occasion
   return [
     {

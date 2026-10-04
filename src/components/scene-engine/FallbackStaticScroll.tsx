@@ -11,6 +11,7 @@ import {
   PromisesSceneConfig,
   ArrowHeartSceneConfig,
   WeddingStorySceneConfig,
+  PartyThemeSceneConfig,
   EventDetailsSceneConfig,
   PersonalNoteSceneConfig,
   RsvpSceneConfig,
@@ -292,6 +293,55 @@ export function FallbackStaticScroll({
             );
           }
 
+          if (scene.type === "party_theme") {
+            const pt = scene as PartyThemeSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-pink-500/30 bg-pink-950/20 p-6 sm:p-8 space-y-4">
+                <div className="flex items-center justify-center gap-1.5 text-xs text-pink-400">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Party Theme &amp; Highlights</span>
+                </div>
+                <h3 className="text-xl font-serif font-bold text-white text-center">{pt.title}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  {pt.partyTheme && (
+                    <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+                      <span className="text-[10px] text-pink-400 font-semibold uppercase block">Theme</span>
+                      <p className="text-sm font-serif font-bold text-white">{pt.partyTheme}</p>
+                    </div>
+                  )}
+                  {pt.dressCode && (
+                    <div className="bg-black/40 p-3.5 rounded-xl border border-white/5">
+                      <span className="text-[10px] text-purple-400 font-semibold uppercase block">Dress Code</span>
+                      <p className="text-xs text-neutral-200">{pt.dressCode}</p>
+                    </div>
+                  )}
+                </div>
+                {pt.photoUrl && (
+                  <div className="aspect-[16/9] w-full rounded-2xl overflow-hidden border border-pink-500/20">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={pt.photoUrl} alt="Party Moodboard" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {pt.storyText && (
+                  <p className="font-sans text-xs sm:text-sm text-neutral-200 leading-relaxed bg-black/40 p-4 rounded-xl">
+                    {pt.storyText}
+                  </p>
+                )}
+                {pt.highlights && pt.highlights.length > 0 && (
+                  <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-1.5">
+                    <span className="text-[10px] font-bold text-pink-300 uppercase tracking-wider block">Planned Activities</span>
+                    {pt.highlights.map((h, i) => (
+                      <p key={i} className="text-xs text-neutral-300 flex items-center gap-2">
+                        <span className="text-pink-400">✦</span>
+                        <span>{h}</span>
+                      </p>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
           if (scene.type === "event_details") {
             const ed = scene as EventDetailsSceneConfig;
             return (
@@ -311,6 +361,17 @@ export function FallbackStaticScroll({
                     </div>
                   )}
                 </div>
+                {(ed.dressCode || ed.themeName) && (
+                  <div className="bg-pink-950/30 p-3.5 rounded-xl border border-pink-500/20 flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-pink-400 shrink-0" />
+                    <div>
+                      <span className="text-[10px] text-pink-400 font-semibold uppercase block">
+                        {ed.themeName ? `Theme: ${ed.themeName}` : "Theme & Dress Code"}
+                      </span>
+                      {ed.dressCode && <p className="text-xs text-white">{ed.dressCode}</p>}
+                    </div>
+                  </div>
+                )}
                 {(ed.venueName || ed.venueAddress) && (
                   <div className="bg-black/40 p-4 rounded-xl border border-white/5 space-y-1">
                     <p className="text-sm font-serif font-bold text-white">{ed.venueName}</p>

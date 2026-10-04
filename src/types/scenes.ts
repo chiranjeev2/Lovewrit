@@ -23,6 +23,8 @@ export type SceneType =
   | "baby_reveal"
   | "tribute_candle"
   | "what_they_taught_us"
+  | "tribute_wall"
+  | "party_theme"
   | "closing_prayer"
   | "devotional_blessing"
   | "devotional_finale"
@@ -57,6 +59,8 @@ export const BaseSceneSchema = z.object({
     "baby_reveal",
     "tribute_candle",
     "what_they_taught_us",
+    "tribute_wall",
+    "party_theme",
     "closing_prayer",
     "devotional_blessing",
     "devotional_finale",
@@ -170,14 +174,31 @@ export const WeddingStorySceneSchema = BaseSceneSchema.extend({
   verseText: z.string().max(400).optional().transform((v) => v ? sanitizeText(v, 400) : undefined),
 });
 
-// 11. Event Details Scene (Wedding Pack)
+// 11. Party Theme & Dress Code Scene (Celebration & Kitty Party Pack - 100% secular, upbeat)
+export const PartyThemeSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("party_theme"),
+  partyTheme: z.string().max(100).default("Pastel Chic & High Tea Glam").transform((v) => sanitizeText(v, 100)),
+  dressCode: z.string().max(150).default("Pastel hues, stylish hats & chic sunglasses 👒🕶️").transform((v) => sanitizeText(v, 150)),
+  storyText: z.string().max(1000).default("Get ready for an afternoon of fabulous bites, sparkling drinks, hilarious games, and non-stop laughter with the gang!").transform((v) => sanitizeText(v, 1000)),
+  highlights: z.array(z.string().max(200).transform((v) => sanitizeText(v, 200))).max(6).default([
+    "Curated High-Tea spread & artisanal cocktails",
+    "Exciting kitty party games & surprise prize hampers",
+    "Polaroid photo station with fun accessories",
+    "Unfiltered chit-chat, music & gossip session",
+  ]),
+  photoUrl: z.string().url().max(1000).optional(),
+});
+
+// 12. Event Details Scene (Wedding & Celebration Packs)
 export const EventDetailsSceneSchema = BaseSceneSchema.extend({
   type: z.literal("event_details"),
-  eventDate: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
-  eventTime: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
-  venueName: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
-  venueAddress: z.string().max(300).optional().transform((v) => v ? sanitizeText(v, 300) : undefined),
+  eventDate: z.string().max(60).transform((v) => sanitizeText(v, 60)).optional(),
+  eventTime: z.string().max(60).transform((v) => sanitizeText(v, 60)).optional(),
+  venueName: z.string().max(150).transform((v) => sanitizeText(v, 150)).optional(),
+  venueAddress: z.string().max(300).transform((v) => sanitizeText(v, 300)).optional(),
   venueMapUrl: z.string().max(1000).optional(),
+  dressCode: z.string().max(150).transform((v) => sanitizeText(v, 150)).optional(),
+  themeName: z.string().max(150).transform((v) => sanitizeText(v, 150)).optional(),
 });
 
 // 12. Personal Note Scene (Wedding Pack: "Your presence means everything")
@@ -313,6 +334,7 @@ export const SceneConfigSchema = z.discriminatedUnion("type", [
   ArrowHeartSceneSchema,
   LetterUnfoldSceneSchema,
   WeddingStorySceneSchema,
+  PartyThemeSceneSchema,
   EventDetailsSceneSchema,
   PersonalNoteSceneSchema,
   RsvpSceneSchema,
@@ -344,6 +366,7 @@ export const ScenesArraySchema = z
     for (const sc of scenes) {
       if (sc.type === "how_we_met" && sc.photoUrl) totalImages++;
       if (sc.type === "wedding_story" && sc.photoUrl) totalImages++;
+      if (sc.type === "party_theme" && sc.photoUrl) totalImages++;
       if (sc.type === "day_arrived" && sc.photoUrl) totalImages++;
       if (sc.type === "tribute_candle" && sc.photoUrl) totalImages++;
       if (sc.type === "timeline") {
@@ -372,6 +395,7 @@ export type ArrowHeartSceneConfig = z.infer<typeof ArrowHeartSceneSchema>;
 export type LetterUnfoldSceneConfig = z.infer<typeof LetterUnfoldSceneSchema>;
 export type ForgiveReplySceneConfig = z.infer<typeof ForgiveReplySceneSchema>;
 export type WeddingStorySceneConfig = z.infer<typeof WeddingStorySceneSchema>;
+export type PartyThemeSceneConfig = z.infer<typeof PartyThemeSceneSchema>;
 export type EventDetailsSceneConfig = z.infer<typeof EventDetailsSceneSchema>;
 export type PersonalNoteSceneConfig = z.infer<typeof PersonalNoteSceneSchema>;
 export type RsvpSceneConfig = z.infer<typeof RsvpSceneSchema>;

@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { EventDetailsSceneConfig } from "@/types/scenes";
-import { Calendar, Clock, MapPin, Navigation, ArrowRight } from "lucide-react";
+import { Calendar, Clock, MapPin, Navigation, ArrowRight, Sparkles } from "lucide-react";
 
 interface EventDetailsSceneProps {
   config: EventDetailsSceneConfig;
@@ -49,7 +49,7 @@ export default function EventDetailsScene({
         )}
 
         {/* Date & Time Highlight Cards */}
-        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+        <div className="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           {config.eventDate && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
@@ -92,6 +92,30 @@ export default function EventDetailsScene({
             </motion.div>
           )}
         </div>
+
+        {/* Dress Code & Theme Card if present */}
+        {(config.dressCode || config.themeName) && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.22 }}
+            className="w-full bg-pink-50/80 border border-pink-200/70 rounded-2xl p-3.5 mb-3 flex items-center gap-3 text-left shadow-xs"
+          >
+            <div className="w-9 h-9 rounded-xl bg-pink-100 text-pink-700 flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <span className="text-[10px] font-bold text-pink-700 uppercase tracking-wider block">
+                {config.themeName ? `Theme: ${config.themeName}` : "Theme & Dress Code"}
+              </span>
+              {config.dressCode && (
+                <p className="font-sans font-medium text-stone-800 text-xs truncate">
+                  {config.dressCode}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
 
         {/* Venue & Location Card */}
         {(config.venueName || config.venueAddress) && (
