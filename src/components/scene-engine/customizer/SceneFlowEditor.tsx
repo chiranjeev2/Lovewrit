@@ -23,7 +23,11 @@ import {
   WhatTheyTaughtUsSceneConfig,
   TributeWallSceneConfig,
   ClosingPrayerSceneConfig,
+  DevotionalBlessingSceneConfig,
+  DevotionalSignificanceSceneConfig,
+  DevotionalFinaleSceneConfig,
 } from "@/types/scenes";
+import { CURATED_DEVOTIONAL_VERSES, getVersesByFaith } from "@/lib/devotional-verses";
 import {
   ArrowUp,
   ArrowDown,
@@ -298,6 +302,9 @@ export function SceneFlowEditor({
             "what_they_taught_us",
             "tribute_wall",
             "closing_prayer",
+            "devotional_blessing",
+            "devotional_significance",
+            "devotional_finale",
           ].includes(scene.type);
 
           return (
@@ -1293,6 +1300,320 @@ export function SceneFlowEditor({
                       value={(scene as ClosingPrayerSceneConfig).prayerText || ""}
                       maxLength={800}
                       onChange={(e) => updateSceneField(idx, "prayerText", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Devotional Blessing */}
+              {isExpanded && scene.type === "devotional_blessing" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-amber-300 block">Sacred Verse &amp; Benediction:</span>
+                    <span className="text-[10px] text-neutral-400 font-serif italic">Authentic Curated Library</span>
+                  </div>
+
+                  {/* Curated Verse Picker */}
+                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-1.5">
+                    <label className="text-[10px] text-amber-300 font-semibold block">
+                      Choose Authentic Curated Scripture
+                    </label>
+                    <select
+                      className="w-full rounded-lg border border-amber-500/30 bg-neutral-900 px-2 py-1.5 text-xs text-amber-200 focus:outline-none focus:border-amber-400 font-serif"
+                      defaultValue=""
+                      onChange={(e) => {
+                        const chosen = CURATED_DEVOTIONAL_VERSES.find((v) => v.id === e.target.value);
+                        if (chosen) {
+                          const updated = [...scenes];
+                          const currentDevScene = updated[idx] as DevotionalBlessingSceneConfig;
+                          updated[idx] = {
+                            ...currentDevScene,
+                            type: "devotional_blessing",
+                            faith: chosen.faith,
+                            verseTitle: chosen.title,
+                            sourceCitation: chosen.source,
+                            sacredText: chosen.scriptureText,
+                            transliteration: chosen.transliteration || "",
+                            translationOrMeaning: chosen.meaning,
+                          } as SceneConfig;
+                          onChange(updated);
+                        }
+                      }}
+                    >
+                      <option value="" disabled>
+                        -- Select Curated Verse (or edit below) --
+                      </option>
+                      {CURATED_DEVOTIONAL_VERSES.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          [{v.faith.toUpperCase()}] {v.title}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[9px] text-amber-200/80 font-serif italic">
+                      Zero invented scripture. Authentic sacred texts with book/chapter citations.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Faith / Tradition</label>
+                    <select
+                      value={(scene as DevotionalBlessingSceneConfig).faith || "general"}
+                      onChange={(e) => updateSceneField(idx, "faith", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    >
+                      <option value="hindu">Hindu (Sanatana Dharma • ॐ)</option>
+                      <option value="sikh">Sikh (Gurmat • ੴ)</option>
+                      <option value="muslim">Muslim (Islamic • 🌙)</option>
+                      <option value="christian">Christian (Holy Scripture • 🕊️)</option>
+                      <option value="secular">Secular / Non-Religious (Universal • ✨)</option>
+                      <option value="general">General Sacred (🕊️)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Verse Title / Heading</label>
+                    <input
+                      type="text"
+                      value={(scene as DevotionalBlessingSceneConfig).verseTitle || ""}
+                      maxLength={120}
+                      onChange={(e) => updateSceneField(idx, "verseTitle", e.target.value)}
+                      placeholder="e.g. Rigveda • Gayatri Mantra"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Scriptural Source / Citation</label>
+                    <input
+                      type="text"
+                      value={(scene as DevotionalBlessingSceneConfig).sourceCitation || ""}
+                      maxLength={150}
+                      onChange={(e) => updateSceneField(idx, "sourceCitation", e.target.value)}
+                      placeholder="e.g. Brihadaranyaka Upanishad (1.4.14)"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Sacred Scripture Text</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as DevotionalBlessingSceneConfig).sacredText || ""}
+                      maxLength={800}
+                      onChange={(e) => updateSceneField(idx, "sacredText", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif leading-relaxed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Transliteration (Optional)</label>
+                    <textarea
+                      rows={2}
+                      value={(scene as DevotionalBlessingSceneConfig).transliteration || ""}
+                      maxLength={600}
+                      onChange={(e) => updateSceneField(idx, "transliteration", e.target.value)}
+                      placeholder="Romanized pronunciation..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-sans italic"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Translation &amp; Sacred Meaning</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as DevotionalBlessingSceneConfig).translationOrMeaning || ""}
+                      maxLength={800}
+                      onChange={(e) => updateSceneField(idx, "translationOrMeaning", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Devotional Significance */}
+              {isExpanded && scene.type === "devotional_significance" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">
+                    Spiritual Significance &amp; Schedule:
+                  </span>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Significance Title</label>
+                    <input
+                      type="text"
+                      value={(scene as DevotionalSignificanceSceneConfig).significanceTitle || ""}
+                      maxLength={120}
+                      onChange={(e) => updateSceneField(idx, "significanceTitle", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Occasion Story &amp; Meaning</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as DevotionalSignificanceSceneConfig).storyText || ""}
+                      maxLength={1000}
+                      onChange={(e) => updateSceneField(idx, "storyText", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+
+                  {/* Traditions Checklist */}
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-neutral-400 block">Traditions &amp; Rituals Observed</label>
+                    {((scene as DevotionalSignificanceSceneConfig).traditions || []).map((t, tIdx) => (
+                      <div key={tIdx} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={t}
+                          maxLength={200}
+                          onChange={(e) => {
+                            const updatedTraditions = [...((scene as DevotionalSignificanceSceneConfig).traditions || [])];
+                            updatedTraditions[tIdx] = e.target.value;
+                            updateSceneField(idx, "traditions", updatedTraditions);
+                          }}
+                          className="flex-1 rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updatedTraditions = ((scene as DevotionalSignificanceSceneConfig).traditions || []).filter((_, i) => i !== tIdx);
+                            updateSceneField(idx, "traditions", updatedTraditions);
+                          }}
+                          className="p-1.5 text-neutral-500 hover:text-red-400 transition"
+                          title="Remove tradition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))}
+                    {((scene as DevotionalSignificanceSceneConfig).traditions || []).length < 6 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updatedTraditions = [...((scene as DevotionalSignificanceSceneConfig).traditions || []), "New sacred ritual / tradition"];
+                          updateSceneField(idx, "traditions", updatedTraditions);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1 text-xs text-amber-400 hover:text-amber-300 font-serif"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Add Tradition</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">
+                      Respectful Etiquette Note (Head covering, footwear, attire)
+                    </label>
+                    <input
+                      type="text"
+                      value={(scene as DevotionalSignificanceSceneConfig).etiquetteNote || ""}
+                      maxLength={250}
+                      onChange={(e) => updateSceneField(idx, "etiquetteNote", e.target.value)}
+                      placeholder="e.g. Kindly cover your head and remove footwear before entering the Darbar Hall."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Date</label>
+                      <input
+                        type="text"
+                        value={(scene as DevotionalSignificanceSceneConfig).eventDate || ""}
+                        maxLength={60}
+                        onChange={(e) => updateSceneField(idx, "eventDate", e.target.value)}
+                        placeholder="e.g. Saturday, 24 October 2026"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Time</label>
+                      <input
+                        type="text"
+                        value={(scene as DevotionalSignificanceSceneConfig).eventTime || ""}
+                        maxLength={60}
+                        onChange={(e) => updateSceneField(idx, "eventTime", e.target.value)}
+                        placeholder="e.g. 7:30 PM Onwards"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Venue Name</label>
+                      <input
+                        type="text"
+                        value={(scene as DevotionalSignificanceSceneConfig).venueName || ""}
+                        maxLength={150}
+                        onChange={(e) => updateSceneField(idx, "venueName", e.target.value)}
+                        placeholder="e.g. Mandir / Gurdwara / Hall"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Address</label>
+                      <input
+                        type="text"
+                        value={(scene as DevotionalSignificanceSceneConfig).venueAddress || ""}
+                        maxLength={300}
+                        onChange={(e) => updateSceneField(idx, "venueAddress", e.target.value)}
+                        placeholder="e.g. Model Town Road"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Google Maps Link</label>
+                    <input
+                      type="url"
+                      value={(scene as DevotionalSignificanceSceneConfig).venueMapUrl || ""}
+                      maxLength={1000}
+                      onChange={(e) => updateSceneField(idx, "venueMapUrl", e.target.value)}
+                      placeholder="https://maps.google.com/..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-sans"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Devotional Finale */}
+              {isExpanded && scene.type === "devotional_finale" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">
+                    Devotional Finale &amp; Ritual Offering:
+                  </span>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Ritual Offering Type</label>
+                    <select
+                      value={(scene as DevotionalFinaleSceneConfig).ritualType || "diya_aarti"}
+                      onChange={(e) => updateSceneField(idx, "ritualType", e.target.value)}
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    >
+                      <option value="diya_aarti">Hindu: Maha Aarti &amp; Diya Flame 🪔</option>
+                      <option value="flower_offering">Pushpanjali • Floral Petal Offering 🌸</option>
+                      <option value="shabad_ardas">Sikh: Shabad &amp; Ardas Supplication ੴ</option>
+                      <option value="dua_blessing">Muslim: Dua Supplication &amp; Barakah 🌙</option>
+                      <option value="choral_benediction">Christian: Choral Benediction &amp; Peace Candle 🕊️</option>
+                      <option value="gratitude_reflection">Secular: Universal Reflection of Gratitude ✨</option>
+                      <option value="peace_candle">Universal: Sacred Flame of Peace 🕯️</option>
+                      <option value="sacred_prayer">Universal: Heartfelt Sacred Prayer 🕊️</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Closing Blessing Wish</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as DevotionalFinaleSceneConfig).blessingWish || ""}
+                      maxLength={300}
+                      onChange={(e) => updateSceneField(idx, "blessingWish", e.target.value)}
                       className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
                     />
                   </div>

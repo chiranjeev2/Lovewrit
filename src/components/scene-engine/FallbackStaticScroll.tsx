@@ -25,6 +25,9 @@ import {
   WhatTheyTaughtUsSceneConfig,
   TributeWallSceneConfig,
   ClosingPrayerSceneConfig,
+  DevotionalBlessingSceneConfig,
+  DevotionalSignificanceSceneConfig,
+  DevotionalFinaleSceneConfig,
 } from "@/types/scenes";
 import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun, Compass } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
@@ -588,6 +591,89 @@ export function FallbackStaticScroll({
                 <h3 className="text-2xl font-serif font-bold text-stone-100">{cp.title}</h3>
                 <p className="text-xs sm:text-sm font-serif italic text-stone-200 leading-relaxed bg-black/40 p-5 rounded-2xl whitespace-pre-line">
                   &ldquo;{cp.prayerText}&rdquo;
+                </p>
+              </div>
+            );
+          }
+
+          if (scene.type === "devotional_blessing") {
+            const db = scene as DevotionalBlessingSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/30 bg-stone-900/80 p-6 sm:p-8 text-center space-y-4">
+                <span className="text-xs font-serif tracking-widest text-amber-300 uppercase block">
+                  {db.verseTitle || "Sacred Scripture & Blessing"}
+                </span>
+                <div className="p-5 rounded-2xl bg-black/40 border border-white/5 space-y-3">
+                  <p className="text-base sm:text-lg font-serif font-medium text-stone-100 whitespace-pre-line leading-relaxed">
+                    {db.sacredText}
+                  </p>
+                  {db.transliteration && (
+                    <p className="text-xs italic text-stone-400 font-sans">{db.transliteration}</p>
+                  )}
+                  {db.translationOrMeaning && (
+                    <p className="text-xs sm:text-sm font-serif italic text-amber-200/90 pt-2 border-t border-stone-800">
+                      &ldquo;{db.translationOrMeaning}&rdquo;
+                    </p>
+                  )}
+                  {db.sourceCitation && (
+                    <p className="text-[11px] text-stone-400 font-serif italic">— {db.sourceCitation}</p>
+                  )}
+                </div>
+              </div>
+            );
+          }
+
+          if (scene.type === "devotional_significance") {
+            const ds = scene as DevotionalSignificanceSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/25 bg-stone-900/80 p-6 sm:p-8 space-y-4 text-left">
+                <h3 className="text-xl font-serif font-bold text-stone-100 text-center">
+                  {ds.significanceTitle || "Spiritual Significance & Schedule"}
+                </h3>
+                <p className="text-xs sm:text-sm font-serif text-stone-200 leading-relaxed whitespace-pre-line">
+                  {ds.storyText}
+                </p>
+                {ds.traditions && ds.traditions.length > 0 && (
+                  <div className="pt-2">
+                    <span className="text-[10px] tracking-wider uppercase font-sans font-semibold text-stone-400 block mb-1.5">
+                      Order of Sacred Observances
+                    </span>
+                    <ul className="space-y-1">
+                      {ds.traditions.map((t, idx) => (
+                        <li key={idx} className="text-xs text-stone-300 font-serif flex items-start gap-1.5">
+                          <span className="text-amber-400">✦</span>
+                          <span>{t}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {ds.etiquetteNote && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs font-serif text-amber-200">
+                    <span className="font-semibold block font-sans text-[10px] uppercase text-amber-300">
+                      Respectful Etiquette:
+                    </span>
+                    {ds.etiquetteNote}
+                  </div>
+                )}
+                {(ds.eventDate || ds.venueName) && (
+                  <div className="p-3 bg-black/40 rounded-xl text-xs text-stone-300 space-y-1 font-serif">
+                    {ds.eventDate && <div>📅 {ds.eventDate} {ds.eventTime && `• ${ds.eventTime}`}</div>}
+                    {ds.venueName && <div>📍 {ds.venueName} {ds.venueAddress && `(${ds.venueAddress})`}</div>}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          if (scene.type === "devotional_finale") {
+            const df = scene as DevotionalFinaleSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/30 bg-stone-900/80 p-6 sm:p-8 text-center space-y-4">
+                <span className="text-3xl block">🪔</span>
+                <h3 className="text-xl font-serif font-bold text-stone-100">Sacred Blessing & Dedication</h3>
+                <p className="text-sm font-serif italic text-amber-200/90 leading-relaxed bg-black/40 p-4 rounded-2xl">
+                  &ldquo;{df.blessingWish}&rdquo;
                 </p>
               </div>
             );

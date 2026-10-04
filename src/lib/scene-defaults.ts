@@ -1,4 +1,5 @@
 import { SceneConfig } from "@/types/scenes";
+import { getDefaultVerseForFaith } from "@/lib/devotional-verses";
 
 export interface SceneDefaultsOptions {
   senderName?: string;
@@ -723,6 +724,210 @@ export function getDefaultScenesForOccasion(
         type: "finale",
         title: "See You on the Party Floor! 🥂",
         subtitle: `Get ready for an unforgettable celebration with ${sender}`,
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
+  const isDevotional = [
+    "devotional",
+    "religious",
+    "jagrata_kirtan",
+    "akhand_path",
+    "gurpurab",
+    "aqeeqah",
+    "nikah",
+    "iftar",
+    "christening",
+    "wedding_blessing",
+    "blessing_ceremony",
+    "pooja",
+    "katha",
+    "satsang",
+  ].includes(occasion) || (options?.templateId && [
+    "jagrata-kirtan-invitation",
+    "sikh-akhand-path",
+    "sikh-gurpurab",
+    "muslim-aqeeqah",
+    "muslim-nikah",
+    "muslim-iftar",
+    "christian-christening",
+    "christian-wedding-blessing",
+    "secular-blessing-ceremony",
+  ].includes(options.templateId));
+
+  if (isDevotional) {
+    let faith: "hindu" | "sikh" | "muslim" | "christian" | "secular" = "hindu";
+    if (
+      occasion === "akhand_path" ||
+      occasion === "gurpurab" ||
+      options?.templateId === "sikh-akhand-path" ||
+      options?.templateId === "sikh-gurpurab"
+    ) {
+      faith = "sikh";
+    } else if (
+      occasion === "aqeeqah" ||
+      occasion === "nikah" ||
+      occasion === "iftar" ||
+      options?.templateId === "muslim-aqeeqah" ||
+      options?.templateId === "muslim-nikah" ||
+      options?.templateId === "muslim-iftar"
+    ) {
+      faith = "muslim";
+    } else if (
+      occasion === "christening" ||
+      occasion === "wedding_blessing" ||
+      options?.templateId === "christian-christening" ||
+      options?.templateId === "christian-wedding-blessing"
+    ) {
+      faith = "christian";
+    } else if (
+      occasion === "blessing_ceremony" ||
+      options?.templateId === "secular-blessing-ceremony"
+    ) {
+      faith = "secular";
+    }
+
+    const verse = getDefaultVerseForFaith(faith);
+
+    // Faith-specific text configurations
+    let openerTitle = `ॐ Sadar Nimantran for ${recipient}`;
+    let openerSub = `With the divine grace and blessings of the Almighty, invited by ${sender}`;
+    let significanceTitle = "Mata Ki Chowki, Jagrata & Aarti Mahotsav";
+    let storyText = "We warmly invite you and your family to gather in prayer and devotion. Let us sing bhajans, seek divine blessings for health and prosperity, and celebrate the sacred presence among us.";
+    let traditions = [
+      "Shri Ganesha Vandana & Deep Prajwalan",
+      "Akhand Jyoti & Devotional Bhajan Kirtan",
+      "Maha Aarti, Bhog & Pavitra Prasad",
+    ];
+    let etiquetteNote = "Devotees are requested to remove footwear before entering the prayer hall. Modest attire appreciated.";
+    let venueName = options?.location || "Shri Sanatan Dharam Mandir Hall";
+    let eventDate = "Saturday, 24 October 2026";
+    let eventTime = "7:30 PM Onwards";
+    let venueAddress = "Civil Lines, Near Model Town";
+    let venueMapUrl = "https://maps.google.com";
+    let ritualType: "diya_aarti" | "shabad_ardas" | "dua_blessing" | "choral_benediction" | "gratitude_reflection" = "diya_aarti";
+    let blessingWish = "May the divine flame illuminate your life with infinite joy, good health, and peace.";
+
+    if (faith === "sikh") {
+      openerTitle = `ੴ Sat Sri Akaal, ${recipient}`;
+      openerSub = `Sadar Nimantran with the divine blessings of Sri Guru Granth Sahib Ji, from ${sender}`;
+      significanceTitle = "Akhand Path Sahib & Kirtan Samagam";
+      storyText = "With humble hearts and boundless gratitude, we invite you to join our family for the sacred Akhand Path Sahib. Come sit in the divine presence of the Guru and partake in Sangat and Pangat.";
+      traditions = [
+        "Arambh of Sri Akhand Path Sahib",
+        "Gurbani Kirtan by Ragi Jatha",
+        "Samapti, Anand Sahib, Ardas & Hukamnama",
+        "Guru Ka Langar served continuously",
+      ];
+      etiquetteNote = "Kindly cover your head with a rumal/dupatta and remove shoes before entering the Darbar Hall.";
+      venueName = options?.location || "Gurdwara Sri Guru Singh Sabha";
+      eventDate = "Sunday, 15 November 2026";
+      eventTime = "10:00 AM Onwards";
+      venueAddress = "Grand Trunk Road, Model Town";
+      ritualType = "shabad_ardas";
+      blessingWish = "Nanak Naam Chardi Kala, Tere Bhane Sarbat Da Bhala ੴ May Waheguru bless you and your family with peace and abundance.";
+    } else if (faith === "muslim") {
+      openerTitle = `Assalamu Alaikum, ${recipient}`;
+      openerSub = `With prayers for peace, barakah & joy from ${sender}`;
+      significanceTitle = "Auspicious Celebration & Mubarak Gathering";
+      storyText = "All praise belongs to Allah (SWT). We warmly request the honor of your presence and heartfelt duas to celebrate this blessed milestone with our family.";
+      traditions = [
+        "Recitation of Holy Quran & Duas",
+        "Khatam & Family Supplications",
+        "Festive Feast & Warm Hospitality",
+      ];
+      etiquetteNote = "Modest attire requested. Separate seating arrangements available for family comfort.";
+      venueName = options?.location || "Al-Noor Banquet & Community Hall";
+      eventDate = "Saturday, 12 December 2026";
+      eventTime = "7:30 PM";
+      venueAddress = "Jubilee Hills, Road 36";
+      ritualType = "dua_blessing";
+      blessingWish = "May Allah (SWT) grant your home endless barakah, guidance, and peace. Ameen 🌙";
+    } else if (faith === "christian") {
+      openerTitle = `Grace & Peace to You, ${recipient}`;
+      openerSub = `A blessed invitation to celebrate God's grace together with ${sender}`;
+      significanceTitle = "Sacred Service & Celebration of Grace";
+      storyText = "We warmly welcome you to witness and celebrate this holy milestone. Together in fellowship and thanksgiving, we praise God for His unending kindness and guidance.";
+      traditions = [
+        "Opening Hymn & Scripture Reading",
+        "Sacred Blessing & Dedication Prayer",
+        "Choral Benediction & Fellowship Luncheon",
+      ];
+      etiquetteNote = "All are warmly welcome in modest attire. The church doors open 30 minutes prior to service.";
+      venueName = options?.location || "Grace Cathedral Fellowship Chapel";
+      eventDate = "Sunday, 22 November 2026";
+      eventTime = "11:00 AM";
+      venueAddress = "Cathedral Road, Richmond Town";
+      ritualType = "choral_benediction";
+      blessingWish = "The Lord bless you and keep you; may His light and love guide your steps always 🕊️";
+    } else if (faith === "secular") {
+      openerTitle = `Warm Greetings, ${recipient}`;
+      openerSub = `You are cordially invited to celebrate a milestone of unity with ${sender}`;
+      significanceTitle = "A Gathering of Gratitude & Unity";
+      storyText = "Good food, dear friends, and warm memories. We cordially invite you to join us in marking this meaningful life milestone. Your presence and good wishes are our greatest gift.";
+      traditions = [
+        "Welcome Toast & Story of Milestone",
+        "Words of Gratitude & Reflection",
+        "Celebration Meal & Music",
+      ];
+      etiquetteNote = "Casual or semi-formal attire. Comfortable footwear recommended for garden walk.";
+      venueName = options?.location || "The Glass House Gardens";
+      eventDate = "Sunday, 20 December 2026";
+      eventTime = "12:30 PM";
+      venueAddress = "Valley View Estate, North Ridge";
+      ritualType = "gratitude_reflection";
+      blessingWish = "May warmth, laughter, and compassionate understanding fill all your days ✨";
+    }
+
+    return [
+      {
+        id: "devotional-opener",
+        type: "opener",
+        title: openerTitle,
+        subtitle: openerSub,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "devotional-blessing",
+        type: "devotional_blessing",
+        title: "Sacred Scripture & Blessing",
+        subtitle: "Timeless wisdom and benediction",
+        faith,
+        verseTitle: verse.title,
+        sourceCitation: verse.source,
+        sacredText: verse.scriptureText,
+        transliteration: verse.transliteration,
+        translationOrMeaning: verse.meaning,
+        enabled: true,
+      },
+      {
+        id: "devotional-significance",
+        type: "devotional_significance",
+        title: "Spiritual Significance & Schedule",
+        subtitle: "Why this sacred occasion is celebrated",
+        faith,
+        significanceTitle,
+        storyText,
+        traditions,
+        etiquetteNote,
+        venueName,
+        eventDate,
+        eventTime,
+        venueAddress,
+        venueMapUrl,
+        enabled: true,
+      },
+      {
+        id: "devotional-finale",
+        type: "devotional_finale",
+        title: "Sacred Offering & Benediction",
+        subtitle: "Closing blessing for all present",
+        faith,
+        ritualType,
+        blessingWish,
         enabled: true,
         required: true,
       },

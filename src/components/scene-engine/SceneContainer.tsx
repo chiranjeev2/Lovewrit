@@ -26,6 +26,9 @@ import {
   WhatTheyTaughtUsSceneConfig,
   TributeWallSceneConfig,
   ClosingPrayerSceneConfig,
+  DevotionalBlessingSceneConfig,
+  DevotionalSignificanceSceneConfig,
+  DevotionalFinaleSceneConfig,
 } from "@/types/scenes";
 import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
@@ -110,6 +113,15 @@ const TributeWallScene = dynamic(() => import("./scenes/TributeWallScene"), {
   ssr: false,
 });
 const ClosingPrayerScene = dynamic(() => import("./scenes/ClosingPrayerScene"), {
+  ssr: false,
+});
+const DevotionalBlessingScene = dynamic(() => import("./scenes/DevotionalBlessingScene"), {
+  ssr: false,
+});
+const DevotionalSignificanceScene = dynamic(() => import("./scenes/DevotionalSignificanceScene"), {
+  ssr: false,
+});
+const DevotionalFinaleScene = dynamic(() => import("./scenes/DevotionalFinaleScene"), {
   ssr: false,
 });
 
@@ -224,7 +236,10 @@ export function SceneContainer({
 
   const currentScene = enabledScenes[currentIndex] || enabledScenes[0];
   const isOpener = currentScene?.type === "opener";
-  const isFinale = currentScene?.type === "finale" || currentScene?.type === "closing_prayer";
+  const isFinale =
+    currentScene?.type === "finale" ||
+    currentScene?.type === "closing_prayer" ||
+    currentScene?.type === "devotional_finale";
   const isInteractionScene =
     currentScene?.type === "balloon_pop" ||
     currentScene?.type === "arrow_heart" ||
@@ -612,6 +627,35 @@ export function SceneContainer({
               {currentScene.type === "closing_prayer" && (
                 <ClosingPrayerScene
                   config={currentScene as ClosingPrayerSceneConfig}
+                  onReplay={() => {
+                    setDirection(-1);
+                    setCurrentIndex(0);
+                  }}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "devotional_blessing" && (
+                <DevotionalBlessingScene
+                  config={currentScene as DevotionalBlessingSceneConfig}
+                  onNext={handleNext}
+                  onPrev={handlePrev}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "devotional_significance" && (
+                <DevotionalSignificanceScene
+                  config={currentScene as DevotionalSignificanceSceneConfig}
+                  onNext={handleNext}
+                  onPrev={handlePrev}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "devotional_finale" && (
+                <DevotionalFinaleScene
+                  config={currentScene as DevotionalFinaleSceneConfig}
                   onReplay={() => {
                     setDirection(-1);
                     setCurrentIndex(0);

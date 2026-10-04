@@ -27,6 +27,7 @@ export type SceneType =
   | "party_theme"
   | "closing_prayer"
   | "devotional_blessing"
+  | "devotional_significance"
   | "devotional_finale"
   | "finale";
 
@@ -47,6 +48,7 @@ export const BaseSceneSchema = z.object({
     "arrow_heart",
     "letter_unfold",
     "wedding_story",
+    "party_theme",
     "event_details",
     "personal_note",
     "rsvp",
@@ -60,9 +62,9 @@ export const BaseSceneSchema = z.object({
     "tribute_candle",
     "what_they_taught_us",
     "tribute_wall",
-    "party_theme",
     "closing_prayer",
     "devotional_blessing",
+    "devotional_significance",
     "devotional_finale",
     "finale",
   ]),
@@ -311,14 +313,45 @@ export const DevotionalBlessingSceneSchema = BaseSceneSchema.extend({
   type: z.literal("devotional_blessing"),
   faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general"]).default("general"),
   verseTitle: z.string().max(120).optional().transform((v) => v ? sanitizeText(v, 120) : undefined),
+  sourceCitation: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
   sacredText: z.string().max(800).transform((v) => sanitizeText(v, 800)),
+  transliteration: z.string().max(600).optional().transform((v) => v ? sanitizeText(v, 600) : undefined),
   translationOrMeaning: z.string().max(800).optional().transform((v) => v ? sanitizeText(v, 800) : undefined),
+});
+
+// 23b. Devotional Event Significance & Schedule Scene
+export const DevotionalSignificanceSceneSchema = BaseSceneSchema.extend({
+  type: z.literal("devotional_significance"),
+  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general"]).default("general"),
+  significanceTitle: z.string().max(120).default("Sacred Significance & Rituals").transform((v) => sanitizeText(v, 120)),
+  storyText: z.string().max(1000).transform((v) => sanitizeText(v, 1000)),
+  traditions: z.array(z.string().max(200).transform((v) => sanitizeText(v, 200))).max(6).default([
+    "Sacred prayer & congregational recitation",
+    "Devotional music & shanti recitation",
+    "Prasad & community feast celebration",
+  ]),
+  etiquetteNote: z.string().max(250).optional().transform((v) => v ? sanitizeText(v, 250) : undefined),
+  eventDate: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
+  eventTime: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
+  venueName: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
+  venueAddress: z.string().max(300).optional().transform((v) => v ? sanitizeText(v, 300) : undefined),
+  venueMapUrl: z.string().max(1000).optional(),
 });
 
 // 24. Devotional Finale Scene
 export const DevotionalFinaleSceneSchema = BaseSceneSchema.extend({
   type: z.literal("devotional_finale"),
-  ritualType: z.enum(["diya_aarti", "flower_offering", "peace_candle", "sacred_prayer"]).default("peace_candle"),
+  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general"]).default("general"),
+  ritualType: z.enum([
+    "diya_aarti",
+    "flower_offering",
+    "peace_candle",
+    "sacred_prayer",
+    "shabad_ardas",
+    "dua_blessing",
+    "choral_benediction",
+    "gratitude_reflection",
+  ]).default("peace_candle"),
   blessingWish: z.string().max(300).default("May divine grace and peace surround you always.").transform((v) => sanitizeText(v, 300)),
 });
 
@@ -350,6 +383,7 @@ export const SceneConfigSchema = z.discriminatedUnion("type", [
   TributeWallSceneSchema,
   ClosingPrayerSceneSchema,
   DevotionalBlessingSceneSchema,
+  DevotionalSignificanceSceneSchema,
   DevotionalFinaleSceneSchema,
   BaseSceneSchema.extend({ type: z.literal("finale") }),
 ]);
@@ -410,6 +444,7 @@ export type WhatTheyTaughtUsSceneConfig = z.infer<typeof WhatTheyTaughtUsSceneSc
 export type TributeWallSceneConfig = z.infer<typeof TributeWallSceneSchema>;
 export type ClosingPrayerSceneConfig = z.infer<typeof ClosingPrayerSceneSchema>;
 export type DevotionalBlessingSceneConfig = z.infer<typeof DevotionalBlessingSceneSchema>;
+export type DevotionalSignificanceSceneConfig = z.infer<typeof DevotionalSignificanceSceneSchema>;
 export type DevotionalFinaleSceneConfig = z.infer<typeof DevotionalFinaleSceneSchema>;
 
 
