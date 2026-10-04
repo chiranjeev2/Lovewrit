@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getClientIp, getDeviceFingerprintLite } from "@/lib/security";
 
 export async function GET(req: NextRequest) {
   try {
@@ -117,6 +118,34 @@ export async function POST(req: NextRequest) {
         timesUsed: 0,
       },
     });
+
+    // Record creator IP and fingerprint-lite for abuse detection
+    const creatorIp = getClientIp(req);
+    const creatorFingerprint = getDeviceFingerprintLite(req);
+    try {
+      await db.platformSetting.upsert({
+        where: { key: `referral_owner:${finalCode}` },
+        update: {
+          value: JSON.stringify({
+            ownerEmail: cleanEmail,
+            creatorIp,
+            creatorFingerprint,
+            updatedAt: new Date().toISOString(),
+          }),
+        },
+        create: {
+          key: `referral_owner:${finalCode}`,
+          value: JSON.stringify({
+            ownerEmail: cleanEmail,
+            creatorIp,
+            creatorFingerprint,
+            createdAt: new Date().toISOString(),
+          }),
+        },
+      });
+    } catch (err) {
+      console.warn("Could not save referral owner audit metadata:", err);
+    }
 
     return NextResponse.json({
       success: true,

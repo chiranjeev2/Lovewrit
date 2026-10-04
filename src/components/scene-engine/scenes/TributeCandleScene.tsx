@@ -21,13 +21,67 @@ export default function TributeCandleScene({
 }: TributeCandleSceneProps) {
   const [isLit, setIsLit] = useState(false);
   const [litCount, setLitCount] = useState(config.candleLitCount || 1);
+  const [isAlreadyLit, setIsAlreadyLit] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  const handleLightCandle = () => {
-    if (!isLit) {
-      setIsLit(true);
-      setLitCount((c) => c + 1);
-      onComplete?.();
+  // Extract slug from path or window
+  const effectiveSlug = typeof window !== "undefined"
+    ? window.location.pathname.split("/").pop() || "preview"
+    : "preview";
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Check localStorage 24h cache first
+    const storedTime = localStorage.getItem(`lovewrit_candle_${effectiveSlug}`);
+    if (storedTime) {
+      const diffHours = (Date.now() - parseInt(storedTime, 10)) / (1000 * 60 * 60);
+      if (diffHours < 24) {
+        setIsLit(true);
+        setIsAlreadyLit(true);
+      }
+    }
+
+    // Fetch server atomic count and cookie state
+    fetch(`/api/tribute/candle?slug=${encodeURIComponent(effectiveSlug)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.count) setLitCount(data.count);
+        if (data.alreadyLit) {
+          setIsLit(true);
+          setIsAlreadyLit(true);
+        }
+      })
+      .catch(() => {});
+  }, [effectiveSlug]);
+
+  const handleLightCandle = async () => {
+    if (isLit) return;
+
+    // Optimistic light
+    setIsLit(true);
+    setLitCount((c) => c + 1);
+    onComplete?.();
+
+    if (typeof window !== "undefined") {
+      localStorage.setItem(`lovewrit_candle_${effectiveSlug}`, String(Date.now()));
+    }
+
+    try {
+      const res = await fetch("/api/tribute/candle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug: effectiveSlug }),
+      });
+      const data = await res.json();
+      if (data.count) {
+        setLitCount(data.count);
+      }
+      if (data.alreadyLit) {
+        setIsAlreadyLit(true);
+      }
+    } catch (e) {
+      console.debug("Silent candle fallback:", e);
     }
   };
 
@@ -134,6 +188,11 @@ export default function TributeCandleScene({
             {!isLit ? (
               <span className="text-xs font-medium text-amber-300 group-hover:text-amber-200 transition">
                 Tap to Light a Candle 🕯️
+              </span>
+            ) : isAlreadyLit ? (
+              <span className="text-xs font-medium text-amber-200/90 flex items-center gap-1.5 justify-center font-serif italic">
+                <span>🕯️</span>
+                <span>A candle glows in their memory • You kindled a flame today</span>
               </span>
             ) : (
               <span className="text-xs font-medium text-emerald-300 flex items-center gap-1.5 justify-center">
