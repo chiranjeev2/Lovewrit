@@ -18,6 +18,8 @@ import {
   DayArrivedSceneConfig,
   WishesSceneConfig,
   BirthdayFinaleSceneConfig,
+  GodhbharaiBlessingsSceneConfig,
+  BabyRevealSceneConfig,
 } from "@/types/scenes";
 import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun, Compass } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
@@ -395,6 +397,45 @@ export function FallbackStaticScroll({
                 <span className="text-3xl">🎂</span>
                 <h3 className="text-xl font-serif font-bold text-white">{bf.title}</h3>
                 <p className="font-serif italic text-base text-amber-300">&ldquo;{bf.celebrationWish}&rdquo;</p>
+              </div>
+            );
+          }
+
+          if (scene.type === "godhbharai_blessings") {
+            const gb = scene as GodhbharaiBlessingsSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/20 bg-amber-950/15 p-6 sm:p-8 space-y-3 text-center">
+                <div className="inline-flex items-center gap-1.5 text-xs text-amber-400">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Shubh Godhbharai Blessings</span>
+                </div>
+                <h3 className="text-xl font-serif font-bold text-white">{gb.title}</h3>
+                {gb.traditionalVerse && (
+                  <p className="font-serif italic text-xs text-amber-300/80 bg-black/40 p-3 rounded-xl border border-amber-500/10">
+                    &ldquo;{gb.traditionalVerse}&rdquo;
+                  </p>
+                )}
+                <p className="font-serif italic text-sm text-neutral-200 leading-relaxed bg-black/40 p-4 rounded-xl">
+                  &ldquo;{gb.blessingText}&rdquo;
+                </p>
+              </div>
+            );
+          }
+
+          if (scene.type === "baby_reveal") {
+            const br = scene as BabyRevealSceneConfig;
+            return (
+              <div key={scene.id} className="rounded-3xl border border-amber-500/30 bg-black/50 p-6 sm:p-8 text-center space-y-3">
+                <h3 className="text-xl font-serif font-bold text-white">{br.title}</h3>
+                {br.nameHint && (
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl inline-block text-xs font-serif text-amber-300">
+                    Name Hint: {br.nameHint}
+                  </div>
+                )}
+                {br.dueDate && (
+                  <p className="text-xs text-neutral-300">Expected Arrival: {br.dueDate}</p>
+                )}
+                <p className="font-serif italic text-sm text-amber-300/90">&ldquo;{br.revealMessage}&rdquo;</p>
               </div>
             );
           }

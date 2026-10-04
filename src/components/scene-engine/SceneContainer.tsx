@@ -19,6 +19,8 @@ import {
   DayArrivedSceneConfig,
   WishesSceneConfig,
   BirthdayFinaleSceneConfig,
+  GodhbharaiBlessingsSceneConfig,
+  BabyRevealSceneConfig,
 } from "@/types/scenes";
 import { SceneNavigation } from "./SceneNavigation";
 import { SceneTransitionWrapper } from "./SceneTransitionWrapper";
@@ -82,6 +84,12 @@ const WishesScene = dynamic(() => import("./scenes/WishesScene"), {
   ssr: false,
 });
 const BirthdayFinaleScene = dynamic(() => import("./scenes/BirthdayFinaleScene"), {
+  ssr: false,
+});
+const GodhbharaiBlessingsScene = dynamic(() => import("./scenes/GodhbharaiBlessingsScene"), {
+  ssr: false,
+});
+const BabyRevealScene = dynamic(() => import("./scenes/BabyRevealScene"), {
   ssr: false,
 });
 
@@ -182,7 +190,8 @@ export function SceneContainer({
   const isInteractionScene =
     currentScene?.type === "balloon_pop" ||
     currentScene?.type === "arrow_heart" ||
-    currentScene?.type === "birthday_finale";
+    currentScene?.type === "birthday_finale" ||
+    currentScene?.type === "baby_reveal";
   const isLetterScene = currentScene?.type === "letter_unfold";
 
   // Check if current interaction is completed or skipped
@@ -472,6 +481,28 @@ export function SceneContainer({
                   onReplay={() => {
                     setDirection(-1);
                     setCurrentIndex(0);
+                  }}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "godhbharai_blessings" && (
+                <GodhbharaiBlessingsScene
+                  config={currentScene as GodhbharaiBlessingsSceneConfig}
+                  onContinue={handleNext}
+                  theme={colorTheme}
+                />
+              )}
+
+              {currentScene.type === "baby_reveal" && (
+                <BabyRevealScene
+                  config={currentScene as BabyRevealSceneConfig}
+                  onComplete={() => {
+                    setCompletedInteractions((prev) => ({ ...prev, [currentScene.id]: true }));
+                  }}
+                  onContinue={() => {
+                    setCompletedInteractions((prev) => ({ ...prev, [currentScene.id]: true }));
+                    handleNext();
                   }}
                   theme={colorTheme}
                 />

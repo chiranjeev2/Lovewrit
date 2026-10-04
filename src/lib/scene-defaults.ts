@@ -354,14 +354,101 @@ export function getDefaultScenesForOccasion(
     ];
   }
 
+  const isGodhbharai =
+    occasion === "godhbharai" ||
+    (options?.templateId && options.templateId.includes("godhbharai"));
+
+  if (isGodhbharai) {
+    return [
+      {
+        id: "godhbharai-opener",
+        type: "opener",
+        title: `For ${recipient}`,
+        subtitle: `An auspicious celebration of new life, motherhood, and blessings, from ${sender}`,
+        enabled: true,
+        required: true,
+      },
+      {
+        id: "godhbharai-blessings",
+        type: "godhbharai_blessings",
+        title: "Sacred Ashirwad & Blessings",
+        subtitle: "May divine grace protect and nurture both mother and child",
+        traditionalVerse: "ॐ सर्वे भवन्तु सुखिनः सर्वे सन्तु निरामयाः • May all beings be blessed with peace, health, and radiant grace.",
+        blessingText: "As we gather to celebrate this sacred milestone, we invoke the timeless blessings of elders and loved ones for radiant health, joy, and peace for the mother and the arrival of our little miracle.",
+        enabled: true,
+      },
+      {
+        id: "godhbharai-baby-reveal",
+        type: "baby_reveal",
+        title: "A Sweet Reveal",
+        subtitle: "Scratch the card to reveal our little secret ✨",
+        revealType: "scratch_card",
+        dueDate: "Autumn 2026",
+        nameHint: "Starts with the letter 'A' • Symbolizing dawn & new beginnings",
+        revealMessage: "A tiny soul is on their way to fill our lives with boundless laughter, love, and wonder.",
+        enabled: true,
+      },
+      {
+        id: "godhbharai-wishes",
+        type: "wishes",
+        title: "Blessings from Elders & Family",
+        subtitle: "Warm notes of love and prayer from near and far",
+        wishes: [
+          {
+            id: "gw-1",
+            senderName: "Dadi & Nani",
+            message: "May mother and child always be blessed with good health, prosperity, and endless joy.",
+            relationship: "Grandmothers",
+          },
+          {
+            id: "gw-2",
+            senderName: sender,
+            message: "We cannot wait to shower our little angel with infinite hugs, bedtime stories, and unconditional love.",
+            relationship: "Family",
+          },
+        ],
+        enabled: true,
+      },
+      {
+        id: "godhbharai-details",
+        type: "event_details",
+        title: "Ceremony Schedule & Venue",
+        subtitle: "Join us in performing the auspicious rituals",
+        eventDate: "Sunday, November 8, 2026",
+        eventTime: "Rituals: 10:30 AM • Mahaprasad & Lunch: 12:30 PM",
+        venueName: options?.location || "Grand Imperial Banquet Hall",
+        venueAddress: "Sector 17, Chandigarh",
+        venueMapUrl: "https://maps.google.com",
+        enabled: true,
+      },
+      {
+        id: "godhbharai-rsvp",
+        type: "rsvp",
+        title: "We Saved Your Seat",
+        subtitle: "Please let us know if you will grace us with your presence",
+        savedSeatCopy: "A seat of honor and a place in our hearts is warmly reserved for you.",
+        showRsvpCount: true,
+        rsvpCount: 36,
+        enabled: true,
+      },
+      {
+        id: "godhbharai-finale",
+        type: "finale",
+        title: "With All Our Gratitude & Love",
+        subtitle: `Your blessings mean the world to our growing family, ${sender}`,
+        enabled: true,
+        required: true,
+      },
+    ];
+  }
+
   const isWedding = [
     "wedding",
     "wedding_invite",
     "invites",
-    "godhbharai",
     "shubh_vivah",
     "shubh-vivah",
-  ].includes(occasion) || (options?.templateId && ["godhbharai-blessings", "wedding-invite"].includes(options.templateId));
+  ].includes(occasion) || (options?.templateId && ["wedding-invite"].includes(options.templateId));
 
   if (isWedding) {
     const samplePhotos = options?.samplePhotos && options.samplePhotos.length > 0

@@ -16,6 +16,8 @@ import {
   DayArrivedSceneConfig,
   WishesSceneConfig,
   BirthdayFinaleSceneConfig,
+  GodhbharaiBlessingsSceneConfig,
+  BabyRevealSceneConfig,
 } from "@/types/scenes";
 import {
   ArrowUp,
@@ -284,6 +286,8 @@ export function SceneFlowEditor({
             "day_arrived",
             "wishes",
             "birthday_finale",
+            "godhbharai_blessings",
+            "baby_reveal",
           ].includes(scene.type);
 
           return (
@@ -887,6 +891,109 @@ export function SceneFlowEditor({
                       placeholder="e.g. Make a wish — may all your dreams come true! 🎂🎈"
                       className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Godhbharai Blessings */}
+              {isExpanded && scene.type === "godhbharai_blessings" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Edit Godhbharai Blessings:</span>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Traditional Sanskrit/Sacred Verse</label>
+                    <input
+                      type="text"
+                      value={(scene as GodhbharaiBlessingsSceneConfig).traditionalVerse || ""}
+                      maxLength={250}
+                      onChange={(e) => updateSceneField(idx, "traditionalVerse", e.target.value)}
+                      placeholder="e.g. ॐ सर्वे भवन्तु सुखिनः..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Blessing &amp; Ashirwad Message</label>
+                    <textarea
+                      rows={3}
+                      value={(scene as GodhbharaiBlessingsSceneConfig).blessingText || ""}
+                      maxLength={600}
+                      onChange={(e) => updateSceneField(idx, "blessingText", e.target.value)}
+                      placeholder="Heartfelt prayers and blessings for the mother and child..."
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Collapsible Config: Baby Reveal */}
+              {isExpanded && scene.type === "baby_reveal" && (
+                <div className="border-t border-neutral-800/80 p-4 bg-black/40 space-y-3">
+                  <span className="text-[11px] font-bold text-amber-300 block">Baby Reveal (Name Hint &amp; Due Date):</span>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Reveal Style</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateSceneField(idx, "revealType", "scratch_card")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                          (scene as BabyRevealSceneConfig).revealType === "scratch_card"
+                            ? "bg-amber-500/20 border-amber-500 text-amber-300"
+                            : "border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+                        }`}
+                      >
+                        <span>✨</span>
+                        <span>Scratch Card</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => updateSceneField(idx, "revealType", "due_date_countdown")}
+                        className={`py-2 px-3 rounded-xl border text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                          (scene as BabyRevealSceneConfig).revealType === "due_date_countdown"
+                            ? "bg-amber-500/20 border-amber-500 text-amber-300"
+                            : "border-neutral-800 text-neutral-400 hover:bg-neutral-800"
+                        }`}
+                      >
+                        <span>📅</span>
+                        <span>Countdown</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Name Hint / Initials</label>
+                      <input
+                        type="text"
+                        value={(scene as BabyRevealSceneConfig).nameHint || ""}
+                        maxLength={100}
+                        onChange={(e) => updateSceneField(idx, "nameHint", e.target.value)}
+                        placeholder="e.g. Starts with 'A'..."
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-neutral-400 block mb-1">Expected Due Date</label>
+                      <input
+                        type="text"
+                        value={(scene as BabyRevealSceneConfig).dueDate || ""}
+                        maxLength={50}
+                        onChange={(e) => updateSceneField(idx, "dueDate", e.target.value)}
+                        placeholder="e.g. Autumn 2026"
+                        className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-neutral-400 block mb-1">Celebratory Message</label>
+                    <textarea
+                      rows={2}
+                      value={(scene as BabyRevealSceneConfig).revealMessage || ""}
+                      maxLength={250}
+                      onChange={(e) => updateSceneField(idx, "revealMessage", e.target.value)}
+                      placeholder="e.g. A tiny miracle is on the way to fill our lives with boundless joy ✨"
+                      className="w-full rounded-xl border border-neutral-700 bg-neutral-950 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 font-serif"
+                    />
+                  </div>
+                  <div className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-2.5 text-[10px] text-amber-300/80">
+                    ⚖️ Strict Legal Compliance: Under India&apos;s PCPNDT Act, sex determination/reveal is strictly prohibited. Lovewrit only permits name clues and due-date countdowns.
                   </div>
                 </div>
               )}
