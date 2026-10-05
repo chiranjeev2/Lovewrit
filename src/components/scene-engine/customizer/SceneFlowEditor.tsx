@@ -1294,7 +1294,6 @@ export function SceneFlowEditor({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] text-neutral-400 block">Quick Blessing Presets (Editable):</label>
-                      <span className="text-[9px] text-amber-400 font-medium">Faith closings require review by member of that faith</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -1310,6 +1309,7 @@ export function SceneFlowEditor({
                           onChange(updated);
                         }}
                         className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
+                        title="Faith-Neutral"
                       >
                         🕊️ Faith-Neutral
                       </button>
@@ -1320,15 +1320,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Om Shanti • ॐ शान्तिः",
-                            traditionTag: "Om Shanti • Sacred Peace (Review by member of faith)",
+                            traditionTag: "Om Shanti • Sacred Peace",
                             prayerText: "ॐ द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः।\nMay their noble Atman attain Moksha and dwell in eternal divine peace. Om Shanti Shanti Shanti.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
-                        title="Hindu • Review by member of that faith"
+                        title="Hindu"
                       >
-                        🕉️ Om Shanti (Review by faith)
+                        🕉️ Om Shanti
                       </button>
                       <button
                         type="button"
@@ -1337,15 +1337,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Waheguru",
-                            traditionTag: "Waheguru (Review by member of faith)",
+                            traditionTag: "Waheguru",
                             prayerText: "Waheguru",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
-                        title="Sikh (Neutral Waheguru) • Review by member of that faith"
+                        title="Sikh (Neutral Waheguru)"
                       >
-                        ੴ Waheguru (Review by faith)
+                        ੴ Waheguru
                       </button>
                       <button
                         type="button"
@@ -1354,15 +1354,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Inna Lillahi wa Inna Ilayhi Raji'un",
-                            traditionTag: "Inna Lillahi wa Inna Ilayhi Raji'un (Review by member of faith)",
+                            traditionTag: "Inna Lillahi wa Inna Ilayhi Raji'un",
                             prayerText: "Surely to Allah we belong, and to Him we shall return.\nMay Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
-                        title="Muslim • Review by member of that faith"
+                        title="Muslim"
                       >
-                        🌙 Inna Lillahi (Review by faith)
+                        🌙 Inna Lillahi
                       </button>
                       <button
                         type="button"
@@ -1371,32 +1371,15 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Rest in Peace & Grace",
-                            traditionTag: "Rest in Eternal Peace (Review by member of faith)",
+                            traditionTag: "Rest in Eternal Peace",
                             prayerText: "May the Lord bless and keep them in His loving care.\nRest in eternal peace, reunited with the saints in light and heavenly grace.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
                         className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
-                        title="Christian • Review by member of that faith"
+                        title="Christian"
                       >
-                        ✝️ Rest in Peace (Review by faith)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const updated = [...scenes];
-                          updated[idx] = {
-                            ...updated[idx],
-                            title: "Michhami Dukkadam • Universal Harmony",
-                            traditionTag: "Michhami Dukkadam (Review by member of faith)",
-                            prayerText: "खामेमि सव्व जीवे, सव्वे जीवा खमंतु मे। मित्ती मे सव्व भूएसु, वेरं मज्झं न केणइ॥\nMay all beings forgive, and may peace and equanimity prevail.",
-                          } as SceneConfig;
-                          onChange(updated);
-                        }}
-                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
-                        title="Jain • Review by member of that faith"
-                      >
-                        ☸️ Michhami Dukkadam (Review by faith)
+                        ✝️ Rest in Peace
                       </button>
                       <button
                         type="button"

@@ -311,7 +311,7 @@ export const TributeWallSceneSchema = BaseSceneSchema.extend({
 // 23. Devotional Blessing Scene
 export const DevotionalBlessingSceneSchema = BaseSceneSchema.extend({
   type: z.literal("devotional_blessing"),
-  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general", "jain"]).default("general"),
+  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general"]).default("general"),
   verseTitle: z.string().max(120).optional().transform((v) => v ? sanitizeText(v, 120) : undefined),
   sourceCitation: z.string().max(150).optional().transform((v) => v ? sanitizeText(v, 150) : undefined),
   sacredText: z.string().max(800).transform((v) => sanitizeText(v, 800)),
@@ -322,7 +322,7 @@ export const DevotionalBlessingSceneSchema = BaseSceneSchema.extend({
 // 23b. Devotional Event Significance & Schedule Scene
 export const DevotionalSignificanceSceneSchema = BaseSceneSchema.extend({
   type: z.literal("devotional_significance"),
-  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general", "jain"]).default("general"),
+  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general"]).default("general"),
   significanceTitle: z.string().max(120).default("Sacred Significance & Rituals").transform((v) => sanitizeText(v, 120)),
   storyText: z.string().max(1000).transform((v) => sanitizeText(v, 1000)),
   traditions: z.array(z.string().max(200).transform((v) => sanitizeText(v, 200))).max(6).default([
@@ -341,7 +341,7 @@ export const DevotionalSignificanceSceneSchema = BaseSceneSchema.extend({
 // 24. Devotional Finale Scene
 export const DevotionalFinaleSceneSchema = BaseSceneSchema.extend({
   type: z.literal("devotional_finale"),
-  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general", "jain"]).default("general"),
+  faith: z.enum(["hindu", "sikh", "muslim", "christian", "secular", "general"]).default("general"),
   ritualType: z.enum([
     "diya_aarti",
     "flower_offering",
@@ -351,7 +351,6 @@ export const DevotionalFinaleSceneSchema = BaseSceneSchema.extend({
     "dua_blessing",
     "choral_benediction",
     "gratitude_reflection",
-    "jain_navkar",
   ]).default("peace_candle"),
   blessingWish: z.string().max(300).default("May divine grace and peace surround you always.").transform((v) => sanitizeText(v, 300)),
 });

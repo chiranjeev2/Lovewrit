@@ -88,7 +88,7 @@ async function testSacredTributePack() {
   if (teachingsConfigVisible) passedAssertions++;
 
   // Test Tribute Closing Presets in Customizer (Neutral Default + Each Faith Preset)
-  console.log('  Testing Tribute Closing Presets (Faith-Neutral, Hindu, Sikh, Muslim, Christian, Jain)...');
+  console.log('  Testing Tribute Closing Presets (Faith-Neutral, Hindu, Sikh, Muslim, Christian)...');
   await page.evaluate(() => {
     const cards = Array.from(document.querySelectorAll('.rounded-2xl.border'));
     const prayerCard = cards.find(c => c.textContent && (c.textContent.includes('Closing Quiet Prayer') || c.textContent.includes('Forever in Our Hearts')));
@@ -107,34 +107,28 @@ async function testSacredTributePack() {
       expectedPrayer: 'Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts.\nMay your journey be wrapped in peace, serenity, and boundless grace.'
     },
     {
-      buttonLabel: '🕉️ Om Shanti (Review by faith)',
+      buttonLabel: '🕉️ Om Shanti',
       expectedTitle: 'Om Shanti • ॐ शान्तिः',
-      expectedTag: 'Om Shanti • Sacred Peace (Review by member of faith)',
+      expectedTag: 'Om Shanti • Sacred Peace',
       expectedPrayer: 'ॐ द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः।\nMay their noble Atman attain Moksha and dwell in eternal divine peace. Om Shanti Shanti Shanti.'
     },
     {
-      buttonLabel: 'ੴ Waheguru (Review by faith)',
+      buttonLabel: 'ੴ Waheguru',
       expectedTitle: 'Waheguru',
-      expectedTag: 'Waheguru (Review by member of faith)',
+      expectedTag: 'Waheguru',
       expectedPrayer: 'Waheguru'
     },
     {
-      buttonLabel: '🌙 Inna Lillahi (Review by faith)',
+      buttonLabel: '🌙 Inna Lillahi',
       expectedTitle: "Inna Lillahi wa Inna Ilayhi Raji'un",
-      expectedTag: "Inna Lillahi wa Inna Ilayhi Raji'un (Review by member of faith)",
+      expectedTag: "Inna Lillahi wa Inna Ilayhi Raji'un",
       expectedPrayer: 'Surely to Allah we belong, and to Him we shall return.\nMay Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family.'
     },
     {
-      buttonLabel: '✝️ Rest in Peace (Review by faith)',
+      buttonLabel: '✝️ Rest in Peace',
       expectedTitle: 'Rest in Peace & Grace',
-      expectedTag: 'Rest in Eternal Peace (Review by member of faith)',
+      expectedTag: 'Rest in Eternal Peace',
       expectedPrayer: 'May the Lord bless and keep them in His loving care.\nRest in eternal peace, reunited with the saints in light and heavenly grace.'
-    },
-    {
-      buttonLabel: '☸️ Michhami Dukkadam (Review by faith)',
-      expectedTitle: 'Michhami Dukkadam • Universal Harmony',
-      expectedTag: 'Michhami Dukkadam (Review by member of faith)',
-      expectedPrayer: 'खामेमि सव्व जीवे, सव्वे जीवा खमंतु मे। मित्ती मे सव्व भूएसु, वेरं मज्झं न केणइ॥\nMay all beings forgive, and may peace and equanimity prevail.'
     }
   ];
 
@@ -155,7 +149,7 @@ async function testSacredTributePack() {
 
     const presetResult = await page.evaluate(() => {
       const cards = Array.from(document.querySelectorAll('.rounded-2xl.border'));
-      const prayerCard = cards.find(c => c.textContent && (c.textContent.includes('Closing Quiet Prayer') || c.textContent.includes('Hearts') || c.textContent.includes('Shanti') || c.textContent.includes('Waheguru') || c.textContent.includes('Lillahi') || c.textContent.includes('Peace') || c.textContent.includes('Michhami')));
+      const prayerCard = cards.find(c => c.textContent && (c.textContent.includes('Closing Quiet Prayer') || c.textContent.includes('Hearts') || c.textContent.includes('Shanti') || c.textContent.includes('Waheguru') || c.textContent.includes('Lillahi') || c.textContent.includes('Peace')));
       if (!prayerCard) return { title: '', tag: '', prayer: '' };
 
       const title = prayerCard.querySelector('h4')?.textContent?.trim() || '';
@@ -500,10 +494,11 @@ async function testSacredTributePack() {
 
   await browser.close();
 
-  console.log(`\n=== ALL SACRED TRIBUTE PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);
+  const expectedAssertions = 18 + presetsToTest.length;
+  console.log(`\n=== ALL SACRED TRIBUTE PACK VERIFICATION TESTS PASSED! (${passedAssertions} / ${expectedAssertions} assertions verified) ===\n`);
 
-  if (passedAssertions !== 24) {
-    console.error(`❌ Expected 24 assertions, but only ${passedAssertions} passed.`);
+  if (passedAssertions !== expectedAssertions) {
+    console.error(`❌ Expected ${expectedAssertions} assertions, but only ${passedAssertions} passed.`);
     process.exit(1);
   }
 }

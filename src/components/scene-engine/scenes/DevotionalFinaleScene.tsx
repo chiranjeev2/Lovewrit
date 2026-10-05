@@ -94,15 +94,6 @@ const RITUAL_DETAILS: Record<string, RitualMeta> = {
     ringColor: "border-amber-500/40 text-amber-300",
     offeringParticles: ["✨", "🕊️", "💛", "🌸", "✨"],
   },
-  jain_navkar: {
-    title: "Michhami Dukkadam • Universal Harmony",
-    actionPrompt: "Tap to offer veneration and seek harmony",
-    offeredText: "Universal Harmony & Peace • Michhami Dukkadam ☸️",
-    symbol: "☸️",
-    glowColor: "bg-amber-400/20",
-    ringColor: "border-amber-400/40 text-amber-300",
-    offeringParticles: ["✨", "☸️", "🌸", "🕊️", "💛"],
-  },
 };
 
 export default function DevotionalFinaleScene({
@@ -118,7 +109,6 @@ export default function DevotionalFinaleScene({
     config.faith === "sikh" ? "shabad_ardas" :
     config.faith === "muslim" ? "dua_blessing" :
     config.faith === "christian" ? "choral_benediction" :
-    config.faith === "jain" ? "jain_navkar" :
     config.faith === "secular" ? "gratitude_reflection" : "peace_candle"
   );
 

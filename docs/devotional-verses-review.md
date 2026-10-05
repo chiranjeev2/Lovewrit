@@ -201,18 +201,38 @@
 
 ---
 
-## 6. Jain Tradition
+## 6. Memorial & Sacred Tribute Closing Presets (Faith-Specific Review)
 
-### 6.1 Navkar (Namokar) Mantra • Universal Veneration
-- **ID:** `jain-navkar-mantra`
-- **Faith:** Jain
-- **Language / Script:** Prakrit (Ardhamagadhi)
-- **Source Reference:** *Foundational Canonical Jain Prayer*
-- **Original Scripture:**
-  ```text
-  णमो अरिहंताणं। णमो सिद्धाणं। णमो आयरियाणं। णमो उवज्झायाणं। णमो लोए सव्वसाहूणं।
-  एसोपंचणमुक्कारो, सव्वपावप्पणासणो। मंगला णं च सव्वेसिं, पढमं हवई मंगलं॥
-  ```
-- **Transliteration:** `Ṇamō Arihantāṇaṁ | Ṇamō Siddhāṇaṁ | Ṇamō Āyariyāṇaṁ | Ṇamō Uvajjhāyāṇaṁ | Ṇamō Lōē Savva Sāhūṇaṁ | Ēsō Pañcha Ṇamukkārō Savva Pāvappaṇāsaṇō | Maṅgalāṇaṁ Cha Savvēsiṁ Paḍhamaṁ Havaī Maṅgalaṁ ||`
-- **Translation / Meaning:** I bow to the Arihantas (the enlightened ones); I bow to the Siddhas (the liberated souls); I bow to the Acharyas (spiritual masters); I bow to the Upadhyayas (teachers); I bow to all the Sadhus (monks/seekers) in the world. This five-fold obeisance destroys all sins and is the foremost among all auspicious blessings.
-- **Verified:** `false` (Pending confirmation by Jain religious elder or scholar)
+The following closing lines are offered as presets in the Memorial & Sacred Tribute customizer. To maintain absolute reverence and theological accuracy, each faith-specific preset requires verification by an elder or scholar of that faith before final canonical publication.
+
+### 6.1 Faith-Neutral (Default)
+- **Preset:** Forever in Our Hearts
+- **Tag:** `Forever in Our Hearts`
+- **Text:** *"Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts. May your journey be wrapped in peace, serenity, and boundless grace."*
+- **Status:** Faith-neutral; safe for all families.
+
+### 6.2 Hindu Tradition
+- **Preset:** Om Shanti • ॐ शान्तिः
+- **Tag:** `Om Shanti • Sacred Peace`
+- **Review Notice:** **Review by member of that faith required**
+- **Text:** *"ॐ द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः। May their noble Atman attain Moksha and dwell in eternal divine peace. Om Shanti Shanti Shanti."*
+
+### 6.3 Sikh Tradition
+- **Preset:** Waheguru
+- **Tag:** `Waheguru`
+- **Review Notice:** **Review by member of that faith required**
+- **Text:** *"Waheguru"*
+- **Note:** Sikh victory greetings (e.g. Fateh) and Gurmukhi verses without confirmed scholarly memorial translations have been strictly removed; plain "Waheguru" remembrance is retained.
+
+### 6.4 Islamic Tradition
+- **Preset:** Inna Lillahi wa Inna Ilayhi Raji'un
+- **Tag:** `Inna Lillahi wa Inna Ilayhi Raji'un`
+- **Review Notice:** **Review by member of that faith required**
+- **Text:** *"Surely to Allah we belong, and to Him we shall return. May Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family."*
+
+### 6.5 Christian Tradition
+- **Preset:** Rest in Peace & Grace
+- **Tag:** `Rest in Eternal Peace`
+- **Review Notice:** **Review by member of that faith required**
+- **Text:** *"May the Lord bless and keep them in His loving care. Rest in eternal peace, reunited with the saints in light and heavenly grace."*
+

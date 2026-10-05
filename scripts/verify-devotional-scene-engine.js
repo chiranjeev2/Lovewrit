@@ -173,32 +173,6 @@ async function testDevotionalPack() {
   console.log(`  ✓ Created Sikh Devotional slug: ${sikhOrderRes.slug}`);
   if (sikhOrderRes.slug) passedAssertions++;
 
-  // Order D: Jain Paryushan / Mahavir Jayanti (☸️ Michhami Dukkadam)
-  const jainOrderRes = await page.evaluate(async () => {
-    const res = await fetch('/api/checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        productType: 'PAGE',
-        templateId: 'jagrata-kirtan-invitation',
-        tier: 'SELF_SERVICE',
-        customerName: 'The Shah Parivaar',
-        customerEmail: 'shah.jain@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
-        pageData: {
-          senderName: 'The Shah Parivaar',
-          recipientName: 'Respected Sadharmik Bandhus',
-          occasion: 'paryushan',
-          letter: 'With folded hands and pure heart, we invite you to join us for Navkar Mahamantra Aradhana and Paryushan Parva. May universal forgiveness, compassion, and peace prevail. Michhami Dukkadam.',
-          colorTheme: 'champagne',
-        }
-      })
-    });
-    return res.json();
-  });
-  console.log(`  ✓ Created Jain Devotional slug: ${jainOrderRes.slug}`);
-  if (jainOrderRes.slug) passedAssertions++;
-
   // -------------------------------------------------------------
   // Test 3: Test Published Hindu Page on Android (412x915) with 4x CPU Throttle
   // -------------------------------------------------------------
@@ -412,65 +386,6 @@ async function testDevotionalPack() {
   console.log(`  ✓ Sikh Ardas Finale screenshot: ${sikhShotPath}`);
 
   // -------------------------------------------------------------
-  // Test 5B: Test Jain Devotional Page (Navkar Mantra & Michhami Dukkadam)
-  // -------------------------------------------------------------
-  console.log('\n[5B] Testing Jain Devotional Page (Navkar Mantra & Michhami Dukkadam Finale)...');
-  await androidPage.goto(`http://localhost:3000/p/${jainOrderRes.slug}`, { waitUntil: 'networkidle2' });
-  await new Promise(r => setTimeout(r, 1200));
-
-  // Open letter
-  await safeEvaluate(androidPage, () => {
-    const seal = document.querySelector('button[aria-label="Tap to open letter"]') ||
-      Array.from(document.querySelectorAll('button, div')).find(el => el.textContent && el.textContent.includes('TAP TO OPEN'));
-    if (seal) seal.click();
-  });
-  await new Promise(r => setTimeout(r, 1800));
-
-  // Verify Navkar Mahamantra in Scene 2
-  const jainVerseValid = await safeEvaluate(androidPage, () => {
-    const text = document.body.textContent || '';
-    return text.includes('णमो अरिहंताणं') || text.includes('Navkar') || text.includes('Namokar');
-  });
-  console.log('  ✓ Jain Navkar Mahamantra verified:', jainVerseValid);
-  if (jainVerseValid) passedAssertions++;
-
-  // Advance to Scene 3
-  await safeEvaluate(androidPage, () => {
-    const continueBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Continue') && !b.disabled);
-    if (continueBtn) continueBtn.click();
-  });
-  await new Promise(r => setTimeout(r, 1200));
-
-  // Advance to Scene 4 (Devotional Finale)
-  await safeEvaluate(androidPage, () => {
-    const continueBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Continue') && !b.disabled);
-    if (continueBtn) continueBtn.click();
-  });
-  await new Promise(r => setTimeout(r, 1200));
-
-  // Verify Jain Michhami Dukkadam touchpoint
-  const jainTouchpointValid = await safeEvaluate(androidPage, () => {
-    const btn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && (b.textContent.includes('☸️') || b.textContent.includes('Michhami') || b.textContent.includes('Touch') || b.textContent.includes('harmony')));
-    if (btn) {
-      btn.click();
-      return true;
-    }
-    return false;
-  });
-  await new Promise(r => setTimeout(r, 1000));
-
-  const jainAffirmed = await safeEvaluate(androidPage, () => {
-    const text = document.body.textContent || '';
-    return text.includes('Michhami Dukkadam') || text.includes('Universal Harmony') || text.includes('forgiven');
-  });
-  console.log('  ✓ Jain Michhami Dukkadam & Universal Forgiveness affirmed:', jainTouchpointValid && jainAffirmed);
-  if (jainTouchpointValid && jainAffirmed) passedAssertions++;
-
-  const jainShotPath = path.join(ARTIFACT_DIR, 'verified_devotional_jain_michhami_android.png');
-  await androidPage.screenshot({ path: jainShotPath });
-  console.log(`  ✓ Jain Michhami Dukkadam Finale screenshot: ${jainShotPath}`);
-
-  // -------------------------------------------------------------
   // Test 6: Viewport Matrix (iPhone 375, iPad mini 768, iPad Pro 1024, Desktop 1440)
   // -------------------------------------------------------------
   console.log('\n[6] Testing Multi-Device Viewports on Hindu Devotional Page...');
@@ -532,11 +447,11 @@ async function testDevotionalPack() {
   await browser.close();
 
   console.log('\n=================================================');
-  console.log(`🎉 ALL B5 DEVOTIONAL ASSERTIONS PASSED: ${passedAssertions} / 23`);
+  console.log(`🎉 ALL B5 DEVOTIONAL ASSERTIONS PASSED: ${passedAssertions} / 20`);
   console.log('=================================================');
 
-  if (passedAssertions !== 23) {
-    console.error(`❌ Expected 23 assertions, but only ${passedAssertions} passed.`);
+  if (passedAssertions !== 20) {
+    console.error(`❌ Expected 20 assertions, but only ${passedAssertions} passed.`);
     process.exit(1);
   }
 }
