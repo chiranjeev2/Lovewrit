@@ -196,7 +196,7 @@ async function runQa() {
     try {
       console.log(`  Running ${pack.name}...`);
       const output = execSync(`node ${pack.script}`, { encoding: 'utf-8' });
-      const match = output.match(/PASSED:?\s*(\d+)\s*\/\s*(\d+)/i) || output.match(/\((\d+)\s*assertions/i);
+      const match = output.match(/\((\d+)\s*\/\s*(\d+)\s*assertions/i) || output.match(/PASSED:?\s*(\d+)\s*\/\s*(\d+)/i) || output.match(/\((\d+)\s*assertions/i);
       const details = match ? (match[2] ? `${match[1]} / ${match[2]} assertions verified` : `${match[1]} assertions verified`) : 'Passed';
       console.log(`  PASSED: ${pack.name}: ${details}`);
       summary.push({ suite: pack.name, status: 'PASSED', details });
