@@ -29,25 +29,25 @@ export default function Footer() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-200">
               Occasions
             </h4>
-            <ul className="mt-3 space-y-1 text-xs">
+            <ul className="mt-3 space-y-2 text-xs">
               <li>
-                <Link href="/#templates" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
+                <Link href="/#templates" className="hover:text-rose-400 transition">
                   Romantic Proposals
                 </Link>
               </li>
               <li>
-                <Link href="/#templates" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
-                  Anniversaries &amp; Milestones
+                <Link href="/#templates" className="hover:text-rose-400 transition">
+                  Anniversaries & Milestones
                 </Link>
               </li>
               <li>
-                <Link href="/#templates" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
+                <Link href="/#templates" className="hover:text-rose-400 transition">
                   Heartfelt Apologies
                 </Link>
               </li>
               <li>
-                <Link href="/#templates" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
-                  Memory Lane &amp; Reminiscing
+                <Link href="/#templates" className="hover:text-rose-400 transition">
+                  Memory Lane & Reminiscing
                 </Link>
               </li>
             </ul>
@@ -55,27 +55,27 @@ export default function Footer() {
 
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-neutral-200">
-              Platform &amp; Legal
+              Platform & Legal
             </h4>
-            <ul className="mt-3 space-y-1 text-xs">
+            <ul className="mt-3 space-y-2 text-xs">
               <li>
-                <Link href="/#pricing" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
+                <Link href="/#pricing" className="hover:text-rose-400 transition">
                   Fair Regional Pricing
                 </Link>
               </li>
               <li>
-                <Link href="/faq" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
+                <Link href="/faq" className="hover:text-rose-400 transition">
                   Frequently Asked Questions
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
+                <Link href="/privacy" className="hover:text-rose-400 transition">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
-                  Terms &amp; Conditions
+                <Link href="/terms" className="hover:text-rose-400 transition">
+                  Terms & Conditions
                 </Link>
               </li>
               <li>
@@ -83,13 +83,13 @@ export default function Footer() {
                   href={process.env.NEXT_PUBLIC_FEEDBACK_URL || "mailto:founder@lovewrit.com?subject=Lovewrit%20Beta%20Feedback"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:text-amber-300 text-amber-400/90 transition min-h-[44px] inline-flex items-center gap-1"
+                  className="hover:text-amber-300 text-amber-400/90 transition flex items-center gap-1"
                 >
                   <span>Beta Feedback ↗</span>
                 </a>
               </li>
               <li>
-                <Link href="/admin" className="hover:text-rose-400 transition min-h-[44px] inline-flex items-center">
+                <Link href="/admin" className="hover:text-rose-400 transition">
                   Founder Dashboard
                 </Link>
               </li>
@@ -100,21 +100,21 @@ export default function Footer() {
         <div className="mt-8 border-t border-neutral-900 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-neutral-500 gap-3">
           <p>© {new Date().getFullYear()} Lovewrit. All rights reserved.</p>
           <div className="flex flex-wrap items-center gap-4 text-[11px]">
-            <Link href="/faq" className="hover:text-neutral-300 transition min-h-[44px] min-w-[44px] inline-flex items-center justify-center py-1">
+            <Link href="/faq" className="hover:text-neutral-300 transition">
               FAQ
             </Link>
             <span className="text-neutral-700">•</span>
-            <Link href="/privacy" className="hover:text-neutral-300 transition min-h-[44px] inline-flex items-center py-1">
+            <Link href="/privacy" className="hover:text-neutral-300 transition">
               Privacy Policy
             </Link>
             <span className="text-neutral-700">•</span>
-            <Link href="/terms" className="hover:text-neutral-300 transition min-h-[44px] inline-flex items-center py-1">
-              Terms &amp; Conditions
+            <Link href="/terms" className="hover:text-neutral-300 transition">
+              Terms & Conditions
             </Link>
             <span className="text-neutral-700">•</span>
-            <span className="inline-flex items-center text-rose-400/80 min-h-[44px]">
+            <span className="inline-flex items-center text-rose-400/80">
               <Sparkles className="mr-1 h-3 w-3" />
-              Digital Keepsakes &amp; Cards
+              Digital Keepsakes & Cards
             </span>
           </div>
         </div>
