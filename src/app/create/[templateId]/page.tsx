@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, use, useDeferredValue } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, notFound } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
@@ -102,7 +102,10 @@ export default function CreateLovewritPage({
   const { currency, setCurrency, region, language, setLanguage, t } = useApp();
 
   const templateId = resolvedParams.templateId;
-  const template = getTemplateById(templateId) || TEMPLATES[0];
+  const template = getTemplateById(templateId);
+  if (!template) {
+    notFound();
+  }
 
   // Selected format & tier (respects template's primary format: CARD or PAGE)
   const [productType, setProductType] = useState<"CARD" | "PAGE">(
