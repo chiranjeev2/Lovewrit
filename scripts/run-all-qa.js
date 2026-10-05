@@ -79,7 +79,7 @@ async function runQa() {
   }
 
   // 3. Guest Input Sanitization Security Test
-  console.log('[Step 3/9] Running Guest Input & Text Sanitization Security Test...');
+  console.log('[Step 3/10] Running Guest Input & Text Sanitization Security Test...');
   try {
     execSync('node scripts/test-guest-sanitization.mjs', { stdio: 'pipe' });
     console.log('  ✅ Guest Personalization Security: Script stripping, emoji/RTL/Hindi, 60 char cap\n');
@@ -87,6 +87,17 @@ async function runQa() {
   } catch (err) {
     console.error('  ❌ Guest sanitization test failed:', err.message);
     summary.push({ suite: 'Guest Security & Sanitization', status: 'FAILED', details: 'Sanitization error' });
+  }
+
+  // 3b. Client IP & Trust Model Unit Test
+  console.log('[Step 4/10] Running Client IP Trust Model & Fallback Unit Tests...');
+  try {
+    execSync('node scripts/test-client-ip-trust.mjs', { stdio: 'pipe' });
+    console.log('  ✅ Client IP Trust Model: 12 / 12 Passed (Vercel trust, spoofing prevention, non-shared fallback)\n');
+    summary.push({ suite: 'Client IP Trust Model', status: 'PASSED', details: '12 / 12 assertions green (Vercel-only trust, non-shared fallback)' });
+  } catch (err) {
+    console.error('  ❌ Client IP trust unit test failed:', err.message);
+    summary.push({ suite: 'Client IP Trust Model', status: 'FAILED', details: 'IP trust unit test failed' });
   }
 
   // 4. Ensure server is active for browser testing
