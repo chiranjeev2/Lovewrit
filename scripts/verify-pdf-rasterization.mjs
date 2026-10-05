@@ -103,15 +103,53 @@ async function verifyPdfRasterization() {
       const variance = varianceSum / pixelCount;
       const stdDev = Math.sqrt(variance);
 
-      // On Page 2 (Inside Right panel), inspect photo sharpness region (right 50% of the canvas)
+      // On Page 2 (Inside Right panel), inspect photo sharpness and buyer message text legibility
       let photoEffectiveDpi = 0;
+      let messageRegionStats = null;
       if (pageNum === 2) {
         // Physical panel width is 5 inches (half of 10-inch sheet)
-        // Photo occupies approximately 3.5 inches
-        // Right half of canvas width:
         const rightHalfPixels = canvas.width / 2;
         const panelWidthInches = 5.0; // 5 inches
         photoEffectiveDpi = rightHalfPixels / panelWidthInches; // Effective rasterized DPI
+
+        // Inside Right Panel Message Region (x: 55% to 95%, y: 18% to 80%)
+        const msgX1 = Math.round(canvas.width * 0.55);
+        const msgX2 = Math.round(canvas.width * 0.95);
+        const msgY1 = Math.round(canvas.height * 0.18);
+        const msgY2 = Math.round(canvas.height * 0.80);
+
+        let msgDarkInkPixels = 0;
+        let msgTotalPixels = 0;
+        let msgLuminanceSum = 0;
+
+        for (let y = msgY1; y < msgY2; y++) {
+          for (let x = msgX1; x < msgX2; x++) {
+            const idx = (y * canvas.width + x) * 4;
+            const r = data[idx];
+            const g = data[idx + 1];
+            const b = data[idx + 2];
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            msgLuminanceSum += lum;
+            msgTotalPixels++;
+            // Dark text ink threshold (dark ink on light paper < 160)
+            if (lum < 160) {
+              msgDarkInkPixels++;
+            }
+          }
+        }
+
+        const msgMeanLum = msgTotalPixels > 0 ? msgLuminanceSum / msgTotalPixels : 255;
+        messageRegionStats = {
+          x1: msgX1,
+          x2: msgX2,
+          y1: msgY1,
+          y2: msgY2,
+          totalPixels: msgTotalPixels,
+          darkInkPixels: msgDarkInkPixels,
+          meanLuminance: Math.round(msgMeanLum),
+          inkPercentage: Number(((msgDarkInkPixels / msgTotalPixels) * 100).toFixed(2)),
+          isLegible: msgDarkInkPixels >= 500
+        };
       }
 
       results.push({
@@ -123,6 +161,7 @@ async function verifyPdfRasterization() {
         stdDev: Math.round(stdDev),
         isBlank: stdDev < 10, // stdDev < 10 means flat uniform/white/blank page
         photoEffectiveDpi: Math.round(photoEffectiveDpi),
+        messageRegionStats,
         dataUrl: canvas.toDataURL('image/png')
       });
     }
@@ -152,6 +191,18 @@ async function verifyPdfRasterization() {
       console.log(`  Photo Region Effective DPI: ${res.photoEffectiveDpi} DPI (Target: >= 150 DPI)`);
       if (res.photoEffectiveDpi < 150) {
         throw new Error(`Effective DPI too low: ${res.photoEffectiveDpi} < 150`);
+      }
+
+      if (res.messageRegionStats) {
+        console.log(`  Inside Message Box Check:`);
+        console.log(`    Dark Ink Pixels: ${res.messageRegionStats.darkInkPixels}`);
+        console.log(`    Mean Luminance: ${res.messageRegionStats.meanLuminance} / 255`);
+        console.log(`    Ink Density: ${res.messageRegionStats.inkPercentage}%`);
+        console.log(`    Text Legibility: ${res.messageRegionStats.isLegible ? '✅ LEGIBLE (Crisp buyer message text detected)' : '❌ UNREADABLE / BLANK'}`);
+
+        if (!res.messageRegionStats.isLegible) {
+          throw new Error(`Page 2 message text is not legible! Ink pixels: ${res.messageRegionStats.darkInkPixels} < 500`);
+        }
       }
     }
 

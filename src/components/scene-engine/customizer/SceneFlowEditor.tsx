@@ -216,9 +216,9 @@ export function SceneFlowEditor({
           <button
             type="button"
             onClick={() => setShowGuestTool(!showGuestTool)}
-            className="rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3 py-1 text-[11px] font-medium text-amber-300 flex items-center gap-1.5 transition cursor-pointer"
+            className="rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 px-3.5 py-2.5 text-xs font-medium text-amber-300 flex items-center gap-1.5 transition cursor-pointer min-h-[44px]"
           >
-            <Users className="w-3.5 h-3.5" />
+            <Users className="w-4 h-4" />
             <span>Guest Link Generator</span>
           </button>
           <span className="rounded-full bg-rose-500/10 border border-rose-500/20 px-2.5 py-0.5 text-[10px] font-mono font-bold text-rose-300">
@@ -318,97 +318,99 @@ export function SceneFlowEditor({
                   : "border-neutral-800/50 bg-neutral-950/30 opacity-60"
               }`}
             >
-              <div className="p-3.5 flex items-center justify-between">
-                {/* Left: Reorder & Scene Identity */}
-                <div className="flex items-center space-x-3">
-                  <div className="flex flex-col space-y-0.5">
+              <div className="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0">
+                {/* Top / Left: Scene Index & Title */}
+                <div className="flex items-center space-x-2.5 min-w-0">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-800 text-[11px] font-mono font-bold text-neutral-300 shrink-0">
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="flex items-center space-x-1.5 flex-wrap">
+                      <h4 className="text-xs font-bold text-white truncate">{scene.title}</h4>
+                      {scene.required && (
+                        <span className="inline-flex items-center space-x-0.5 text-[9px] text-amber-400 font-semibold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
+                          <Lock className="h-2.5 w-2.5" />
+                          <span>Required</span>
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-neutral-400 block capitalize">
+                      Type: {scene.type.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Bottom on mobile / Right on desktop: Controls Toolbar */}
+                <div className="flex items-center justify-between sm:justify-end space-x-2 pt-1 sm:pt-0 border-t border-neutral-800/60 sm:border-t-0">
+                  {/* Reorder Buttons */}
+                  <div className="flex items-center space-x-1">
                     <button
                       type="button"
                       disabled={isFirstOrLast || idx <= 1}
                       onClick={() => moveScene(idx, -1)}
-                      className={`p-1 rounded hover:bg-neutral-800 transition ${
+                      className={`p-2 rounded-lg hover:bg-neutral-800 transition min-h-[44px] min-w-[44px] flex items-center justify-center ${
                         isFirstOrLast || idx <= 1 ? "opacity-20 cursor-not-allowed" : "text-neutral-300"
                       }`}
                       title="Move up"
                     >
-                      <ArrowUp className="h-3 w-3" />
+                      <ArrowUp className="h-4 w-4" />
                     </button>
                     <button
                       type="button"
                       disabled={isFirstOrLast || idx >= scenes.length - 2}
                       onClick={() => moveScene(idx, 1)}
-                      className={`p-1 rounded hover:bg-neutral-800 transition ${
+                      className={`p-2 rounded-lg hover:bg-neutral-800 transition min-h-[44px] min-w-[44px] flex items-center justify-center ${
                         isFirstOrLast || idx >= scenes.length - 2 ? "opacity-20 cursor-not-allowed" : "text-neutral-300"
                       }`}
                       title="Move down"
                     >
-                      <ArrowDown className="h-3 w-3" />
+                      <ArrowDown className="h-4 w-4" />
                     </button>
                   </div>
 
-                  <div className="flex items-center space-x-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-neutral-800 text-[10px] font-mono font-bold text-neutral-300">
-                      {idx + 1}
-                    </span>
-                    <div>
-                      <div className="flex items-center space-x-1.5">
-                        <h4 className="text-xs font-bold text-white">{scene.title}</h4>
-                        {scene.required && (
-                          <span className="inline-flex items-center space-x-0.5 text-[9px] text-amber-400 font-semibold bg-amber-500/10 px-1.5 py-0.2 rounded border border-amber-500/20">
-                            <Lock className="h-2.5 w-2.5" />
-                            <span>Required</span>
-                          </span>
-                        )}
+                  {/* Actions: Preview, Expand, Toggle */}
+                  <div className="flex items-center space-x-1.5">
+                    {onPreviewSceneIndex && (
+                      <button
+                        type="button"
+                        onClick={() => onPreviewSceneIndex(idx)}
+                        className="rounded-lg bg-neutral-800/80 hover:bg-neutral-700 px-3 py-2 text-xs font-medium text-neutral-300 transition cursor-pointer min-h-[44px] flex items-center justify-center"
+                        title="Jump to preview this scene"
+                      >
+                        👁️ Preview
+                      </button>
+                    )}
+
+                    {isExpandable && (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedSceneId(isExpanded ? null : scene.id)}
+                        className="p-2 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        title="Configure scene content"
+                      >
+                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </button>
+                    )}
+
+                    {!scene.required ? (
+                      <button
+                        type="button"
+                        onClick={() => toggleScene(idx)}
+                        className={`p-2 rounded-lg transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center ${
+                          scene.enabled
+                            ? "text-rose-400 hover:bg-rose-500/20"
+                            : "text-neutral-500 hover:bg-neutral-800"
+                        }`}
+                        title={scene.enabled ? "Disable this scene" : "Enable this scene"}
+                      >
+                        {scene.enabled ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                      </button>
+                    ) : (
+                      <div className="p-2 text-neutral-600 min-h-[44px] min-w-[44px] flex items-center justify-center" title="This scene is permanent to the story">
+                        <Lock className="h-4 w-4" />
                       </div>
-                      <span className="text-[10px] text-neutral-400 block capitalize">
-                        Type: {scene.type.replace(/_/g, " ")}
-                      </span>
-                    </div>
+                    )}
                   </div>
-                </div>
-
-                {/* Right: Preview Jump, Expand & Toggle */}
-                <div className="flex items-center space-x-1.5">
-                  {onPreviewSceneIndex && (
-                    <button
-                      type="button"
-                      onClick={() => onPreviewSceneIndex(idx)}
-                      className="rounded-lg bg-neutral-800/80 hover:bg-neutral-700 px-2 py-1 text-[10px] font-medium text-neutral-300 transition cursor-pointer"
-                      title="Jump to preview this scene"
-                    >
-                      👁️ Preview
-                    </button>
-                  )}
-
-                  {isExpandable && (
-                    <button
-                      type="button"
-                      onClick={() => setExpandedSceneId(isExpanded ? null : scene.id)}
-                      className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
-                      title="Configure scene content"
-                    >
-                      {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                    </button>
-                  )}
-
-                  {!scene.required ? (
-                    <button
-                      type="button"
-                      onClick={() => toggleScene(idx)}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        scene.enabled
-                          ? "text-rose-400 hover:bg-rose-500/20"
-                          : "text-neutral-500 hover:bg-neutral-800"
-                      }`}
-                      title={scene.enabled ? "Disable this scene" : "Enable this scene"}
-                    >
-                      {scene.enabled ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                    </button>
-                  ) : (
-                    <div className="p-1.5 text-neutral-600" title="This scene is permanent to the story">
-                      <Lock className="h-3.5 w-3.5" />
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -1294,7 +1296,7 @@ export function SceneFlowEditor({
                       <label className="text-[10px] text-neutral-400 block">Quick Blessing Presets (Editable):</label>
                       <span className="text-[9px] text-amber-400 font-medium">Faith closings require review by member of that faith</span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -1302,12 +1304,12 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Forever in Our Hearts",
-                            traditionTag: "Forever in Our Hearts (Faith-Neutral)",
+                            traditionTag: "Forever in Our Hearts",
                             prayerText: "Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts.\nMay your journey be wrapped in peace, serenity, and boundless grace.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
-                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
                       >
                         🕊️ Faith-Neutral
                       </button>
@@ -1323,7 +1325,7 @@ export function SceneFlowEditor({
                           } as SceneConfig;
                           onChange(updated);
                         }}
-                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
                         title="Hindu • Review by member of that faith"
                       >
                         🕉️ Om Shanti (Review by faith)
@@ -1334,14 +1336,14 @@ export function SceneFlowEditor({
                           const updated = [...scenes];
                           updated[idx] = {
                             ...updated[idx],
-                            title: "Waheguru • ਅਕਾਲ ਪੁਰਖ",
-                            traditionTag: "Waheguru • Divine Grace (Review by member of faith)",
-                            prayerText: "ਜਿਨੀ ਨਾਮੁ ਧਿਆਇਆ ਗਏ ਮਸਕਤਿ ਘਾਲਿ ॥ ਨਾਨਕ ਤੇ ਮੁਖ ਉਜਲੇ ਕੇਤੀ ਛੁਟੀ ਨਾਲਿ ॥\nMay the beloved soul merge into the Divine Light of Akal Purakh.",
+                            title: "Waheguru",
+                            traditionTag: "Waheguru (Review by member of faith)",
+                            prayerText: "Waheguru",
                           } as SceneConfig;
                           onChange(updated);
                         }}
-                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
-                        title="Sikh (Neutral Waheguru • Not victory greeting) • Review by member of that faith"
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
+                        title="Sikh (Neutral Waheguru) • Review by member of that faith"
                       >
                         ੴ Waheguru (Review by faith)
                       </button>
@@ -1352,12 +1354,12 @@ export function SceneFlowEditor({
                           updated[idx] = {
                             ...updated[idx],
                             title: "Inna Lillahi wa Inna Ilayhi Raji'un",
-                            traditionTag: "إِنَّا لِلَّٰهِ وَإِنَّا إِلَيْهِ رَاجِعُونَ (Review by member of faith)",
+                            traditionTag: "Inna Lillahi wa Inna Ilayhi Raji'un (Review by member of faith)",
                             prayerText: "Surely to Allah we belong, and to Him we shall return.\nMay Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family.",
                           } as SceneConfig;
                           onChange(updated);
                         }}
-                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
                         title="Muslim • Review by member of that faith"
                       >
                         🌙 Inna Lillahi (Review by faith)
@@ -1374,10 +1376,44 @@ export function SceneFlowEditor({
                           } as SceneConfig;
                           onChange(updated);
                         }}
-                        className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-[10px] text-amber-200 border border-neutral-700 font-serif transition"
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
                         title="Christian • Review by member of that faith"
                       >
                         ✝️ Rest in Peace (Review by faith)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Michhami Dukkadam • Universal Harmony",
+                            traditionTag: "Michhami Dukkadam (Review by member of faith)",
+                            prayerText: "खामेमि सव्व जीवे, सव्वे जीवा खमंतु मे। मित्ती मे सव्व भूएसु, वेरं मज्झं न केणइ॥\nMay all beings forgive, and may peace and equanimity prevail.",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
+                        title="Jain • Review by member of that faith"
+                      >
+                        ☸️ Michhami Dukkadam (Review by faith)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = [...scenes];
+                          updated[idx] = {
+                            ...updated[idx],
+                            title: "Personal Blessing",
+                            traditionTag: "Personal Blessing",
+                            prayerText: "",
+                          } as SceneConfig;
+                          onChange(updated);
+                        }}
+                        className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-xs text-amber-200 border border-neutral-700 font-serif transition min-h-[44px] flex items-center justify-center"
+                        title="Write your own custom blessing"
+                      >
+                        ✍️ Custom Blessing
                       </button>
                     </div>
                   </div>

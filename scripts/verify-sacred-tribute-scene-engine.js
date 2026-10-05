@@ -5,13 +5,25 @@ const fs = require('fs');
 const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const ARTIFACT_DIR = path.resolve('C:\\Users\\coole\\.gemini\\antigravity\\brain\\af9c29f6-4b77-4dc1-8748-b019d5701bb6');
 
+async function safeEvaluate(page, fn, ...args) {
+  try {
+    return await page.evaluate(fn, ...args);
+  } catch (err) {
+    if (err.message && (err.message.includes('Execution context was destroyed') || err.message.includes('Cannot find context'))) {
+      await new Promise(r => setTimeout(r, 1200));
+      return await page.evaluate(fn, ...args);
+    }
+    throw err;
+  }
+}
+
 async function testSacredTributePack() {
   console.log('=== STARTING REAL-BROWSER SACRED TRIBUTE PACK VERIFICATION ===\n');
 
   const browser = await puppeteer.launch({
     executablePath: EDGE_PATH,
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu']
   });
 
   const page = await browser.newPage();
@@ -74,6 +86,100 @@ async function testSacredTributePack() {
   });
   console.log('  ✓ What They Taught Us configuration editor verified:', teachingsConfigVisible);
   if (teachingsConfigVisible) passedAssertions++;
+
+  // Test Tribute Closing Presets in Customizer (Neutral Default + Each Faith Preset)
+  console.log('  Testing Tribute Closing Presets (Faith-Neutral, Hindu, Sikh, Muslim, Christian, Jain)...');
+  await page.evaluate(() => {
+    const cards = Array.from(document.querySelectorAll('.rounded-2xl.border'));
+    const prayerCard = cards.find(c => c.textContent && (c.textContent.includes('Closing Quiet Prayer') || c.textContent.includes('Forever in Our Hearts')));
+    if (prayerCard) {
+      const configBtn = prayerCard.querySelector('button[title="Configure scene content"]');
+      if (configBtn) configBtn.click();
+    }
+  });
+  await new Promise(r => setTimeout(r, 600));
+
+  const presetsToTest = [
+    {
+      buttonLabel: '🕊️ Faith-Neutral',
+      expectedTitle: 'Forever in Our Hearts',
+      expectedTag: 'Forever in Our Hearts',
+      expectedPrayer: 'Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts.\nMay your journey be wrapped in peace, serenity, and boundless grace.'
+    },
+    {
+      buttonLabel: '🕉️ Om Shanti (Review by faith)',
+      expectedTitle: 'Om Shanti • ॐ शान्तिः',
+      expectedTag: 'Om Shanti • Sacred Peace (Review by member of faith)',
+      expectedPrayer: 'ॐ द्यौः शान्तिरन्तरिक्षं शान्तिः पृथिवी शान्तिरापः शान्तिरोषधयः शान्तिः।\nMay their noble Atman attain Moksha and dwell in eternal divine peace. Om Shanti Shanti Shanti.'
+    },
+    {
+      buttonLabel: 'ੴ Waheguru (Review by faith)',
+      expectedTitle: 'Waheguru',
+      expectedTag: 'Waheguru (Review by member of faith)',
+      expectedPrayer: 'Waheguru'
+    },
+    {
+      buttonLabel: '🌙 Inna Lillahi (Review by faith)',
+      expectedTitle: "Inna Lillahi wa Inna Ilayhi Raji'un",
+      expectedTag: "Inna Lillahi wa Inna Ilayhi Raji'un (Review by member of faith)",
+      expectedPrayer: 'Surely to Allah we belong, and to Him we shall return.\nMay Allah grant them forgiveness, elevate their ranks in Jannat al-Firdaus, and bestow patience (Sabr) upon their family.'
+    },
+    {
+      buttonLabel: '✝️ Rest in Peace (Review by faith)',
+      expectedTitle: 'Rest in Peace & Grace',
+      expectedTag: 'Rest in Eternal Peace (Review by member of faith)',
+      expectedPrayer: 'May the Lord bless and keep them in His loving care.\nRest in eternal peace, reunited with the saints in light and heavenly grace.'
+    },
+    {
+      buttonLabel: '☸️ Michhami Dukkadam (Review by faith)',
+      expectedTitle: 'Michhami Dukkadam • Universal Harmony',
+      expectedTag: 'Michhami Dukkadam (Review by member of faith)',
+      expectedPrayer: 'खामेमि सव्व जीवे, सव्वे जीवा खमंतु मे। मित्ती मे सव्व भूएसु, वेरं मज्झं न केणइ॥\nMay all beings forgive, and may peace and equanimity prevail.'
+    }
+  ];
+
+  for (const preset of presetsToTest) {
+    const clicked = await page.evaluate((targetLabel) => {
+      const buttons = Array.from(document.querySelectorAll('button'));
+      const btn = buttons.find(b => b.textContent && b.textContent.includes(targetLabel));
+      if (!btn) return false;
+      btn.click();
+      return true;
+    }, preset.buttonLabel);
+
+    if (!clicked) {
+      throw new Error(`Preset button not found: ${preset.buttonLabel}`);
+    }
+
+    await new Promise(r => setTimeout(r, 400));
+
+    const presetResult = await page.evaluate(() => {
+      const cards = Array.from(document.querySelectorAll('.rounded-2xl.border'));
+      const prayerCard = cards.find(c => c.textContent && (c.textContent.includes('Closing Quiet Prayer') || c.textContent.includes('Hearts') || c.textContent.includes('Shanti') || c.textContent.includes('Waheguru') || c.textContent.includes('Lillahi') || c.textContent.includes('Peace') || c.textContent.includes('Michhami')));
+      if (!prayerCard) return { title: '', tag: '', prayer: '' };
+
+      const title = prayerCard.querySelector('h4')?.textContent?.trim() || '';
+      const tagInput = prayerCard.querySelector('input[placeholder="e.g. Forever in Our Hearts"]');
+      const tag = tagInput ? tagInput.value : '';
+      const textarea = prayerCard.querySelector('textarea');
+      const prayer = textarea ? textarea.value : '';
+
+      return { title, tag, prayer };
+    });
+
+    if (presetResult.title !== preset.expectedTitle) {
+      throw new Error(`Preset title mismatch for ${preset.buttonLabel}: got "${presetResult.title}", expected "${preset.expectedTitle}"`);
+    }
+    if (presetResult.tag !== preset.expectedTag) {
+      throw new Error(`Preset tag mismatch for ${preset.buttonLabel}: got "${presetResult.tag}", expected "${preset.expectedTag}"`);
+    }
+    if (presetResult.prayer !== preset.expectedPrayer) {
+      throw new Error(`Preset prayer mismatch for ${preset.buttonLabel}: got "${presetResult.prayer}", expected "${preset.expectedPrayer}"`);
+    }
+
+    console.log(`    ✓ Preset [${preset.buttonLabel}] exact text verified`);
+    passedAssertions++;
+  }
 
   // -------------------------------------------------------------
   // Test 2: Create Published Sacred Tribute Order via /api/checkout
@@ -162,7 +268,7 @@ async function testSacredTributePack() {
   await androidPage.screenshot({ path: candleLitShotPath });
   console.log(`  ✓ Scene 2 (Candle Lit with Warm Halo) screenshot: ${candleLitShotPath}`);
 
-  const candleLitSuccess = await androidPage.evaluate(() => {
+  const candleLitSuccess = await safeEvaluate(androidPage, () => {
     const text = document.body.textContent || '';
     return text.includes('You lit a candle in their memory') || text.includes('43 candles lit') || text.includes('candles lit in loving tribute');
   });
@@ -170,7 +276,7 @@ async function testSacredTributePack() {
   if (candleLitSuccess) passedAssertions++;
 
   // Advance to Scene 3: Life in Photos (Timeline)
-  await androidPage.evaluate(() => {
+  await safeEvaluate(androidPage, () => {
     const allButtons = Array.from(document.querySelectorAll('button'));
     const sceneBtn = allButtons.find(b => b.textContent && b.textContent.includes('Celebrate Their Life'));
     if (sceneBtn) {
@@ -180,14 +286,15 @@ async function testSacredTributePack() {
       if (continueBtn) continueBtn.click();
     }
   });
-  await new Promise(r => setTimeout(r, 2200));
+  await androidPage.waitForFunction(() => (document.body.textContent || '').includes('Life in Photos'), { timeout: 10000 }).catch(() => {});
+  await new Promise(r => setTimeout(r, 1200));
 
   // SCENE 3: Life in Photos (Timeline)
   const timelineShotPath = path.join(ARTIFACT_DIR, 'verified_tribute_scene3_timeline_android.png');
   await androidPage.screenshot({ path: timelineShotPath });
   console.log(`  ✓ Scene 3 (Life in Photos) screenshot: ${timelineShotPath}`);
 
-  const hasTimeline = await androidPage.evaluate(() => {
+  const hasTimeline = await safeEvaluate(androidPage, () => {
     const text = document.body.textContent || '';
     return text.includes('Life in Photos') || text.includes('Early Beginnings') || text.includes('1968');
   });
@@ -195,19 +302,20 @@ async function testSacredTributePack() {
   if (hasTimeline) passedAssertions++;
 
   // Advance to Scene 4: Cherished Memories
-  await androidPage.evaluate(() => {
+  await safeEvaluate(androidPage, () => {
     const allButtons = Array.from(document.querySelectorAll('button'));
     const continueBtn = allButtons.find(b => b.textContent && b.textContent.includes('Continue') && !b.disabled);
     if (continueBtn) continueBtn.click();
   });
-  await new Promise(r => setTimeout(r, 2200));
+  await androidPage.waitForFunction(() => (document.body.textContent || '').includes('Cherished Memories'), { timeout: 10000 }).catch(() => {});
+  await new Promise(r => setTimeout(r, 1200));
 
   // SCENE 4: Cherished Memories
   const memoriesShotPath = path.join(ARTIFACT_DIR, 'verified_tribute_scene4_memories_android.png');
   await androidPage.screenshot({ path: memoriesShotPath });
   console.log(`  ✓ Scene 4 (Cherished Memories) screenshot: ${memoriesShotPath}`);
 
-  const hasMemories = await androidPage.evaluate(() => {
+  const hasMemories = await safeEvaluate(androidPage, () => {
     const text = document.body.textContent || '';
     return text.includes('Cherished Memories') || text.includes('Warmth Around the Table');
   });
@@ -215,19 +323,20 @@ async function testSacredTributePack() {
   if (hasMemories) passedAssertions++;
 
   // Advance to Scene 5: What They Taught Us
-  await androidPage.evaluate(() => {
+  await safeEvaluate(androidPage, () => {
     const allButtons = Array.from(document.querySelectorAll('button'));
     const continueBtn = allButtons.find(b => b.textContent && b.textContent.includes('Continue') && !b.disabled);
     if (continueBtn) continueBtn.click();
   });
-  await new Promise(r => setTimeout(r, 2200));
+  await androidPage.waitForFunction(() => (document.body.textContent || '').includes('What They Taught Us'), { timeout: 25000 });
+  await new Promise(r => setTimeout(r, 1200));
 
   // SCENE 5: What They Taught Us
   const teachingsShotPath = path.join(ARTIFACT_DIR, 'verified_tribute_scene5_teachings_android.png');
   await androidPage.screenshot({ path: teachingsShotPath });
   console.log(`  ✓ Scene 5 (What They Taught Us) screenshot: ${teachingsShotPath}`);
 
-  const hasTeachings = await androidPage.evaluate(() => {
+  const hasTeachings = await safeEvaluate(androidPage, () => {
     const text = document.body.textContent || '';
     return text.includes('What They Taught Us') || text.includes('quiet dignity') || text.includes('Legacy of Values');
   });
@@ -235,54 +344,71 @@ async function testSacredTributePack() {
   if (hasTeachings) passedAssertions++;
 
   // Advance to Scene 6: Moderated Tribute Wall
-  await androidPage.evaluate(() => {
-    const allButtons = Array.from(document.querySelectorAll('button'));
-    const sceneBtn = allButtons.find(b => b.textContent && b.textContent.includes('Read Condolences'));
-    if (sceneBtn) {
-      sceneBtn.click();
-    } else {
-      const continueBtn = allButtons.find(b => b.textContent && b.textContent.includes('Continue') && !b.disabled);
-      if (continueBtn) continueBtn.click();
-    }
-  });
-  await new Promise(r => setTimeout(r, 2200));
+  await androidPage.keyboard.press('ArrowRight');
+  await androidPage.waitForFunction(() => (document.body.textContent || '').includes('Words of Remembrance'), { timeout: 25000 });
+  await new Promise(r => setTimeout(r, 1200));
 
   // SCENE 6: Tribute Wall
   const wallShotPath = path.join(ARTIFACT_DIR, 'verified_tribute_scene6_wall_android.png');
   await androidPage.screenshot({ path: wallShotPath });
   console.log(`  ✓ Scene 6 (Tribute Wall) screenshot: ${wallShotPath}`);
 
-  const hasWall = await androidPage.evaluate(() => {
+  const wallData = await safeEvaluate(androidPage, () => {
     const text = document.body.textContent || '';
-    return text.includes('Words of Remembrance') || text.includes('Pre-Moderated Tribute Wall') || text.includes('Submit Tribute');
+    const hasTitle = text.includes('Words of Remembrance');
+    const hasSubtitle = text.includes('Condolences and fond memories from loved ones and friends');
+    const hasNotice = text.includes('Approval Required') || text.includes('Pre-Moderated') || text.includes('Awaiting family review');
+    return { hasTitle, hasSubtitle, hasNotice };
   });
-  console.log('  ✓ Pre-moderated tribute wall rendered:', hasWall);
-  if (hasWall) passedAssertions++;
+  console.log('  ✓ Pre-moderated tribute wall exact title and notice verified:', wallData);
+  if (wallData.hasTitle && wallData.hasSubtitle) passedAssertions++;
 
   // Advance to Scene 7: Closing Quiet Prayer
-  await androidPage.evaluate(() => {
-    const allButtons = Array.from(document.querySelectorAll('button'));
-    const sceneBtn = allButtons.find(b => b.textContent && b.textContent.includes('Closing Quiet Prayer'));
-    if (sceneBtn) {
-      sceneBtn.click();
-    } else {
-      const continueBtn = allButtons.find(b => b.textContent && b.textContent.includes('Continue') && !b.disabled);
-      if (continueBtn) continueBtn.click();
-    }
-  });
-  await new Promise(r => setTimeout(r, 2200));
+  await androidPage.keyboard.press('ArrowRight');
+  await androidPage.waitForFunction(() => {
+    const h2 = document.querySelector('h2');
+    const hasReplay = Array.from(document.querySelectorAll('button')).some(b => b.textContent && b.textContent.includes('Replay Sacred Tribute'));
+    return Boolean(h2 && h2.textContent.includes('Forever in Our Hearts') && hasReplay);
+  }, { timeout: 25000 });
+  await new Promise(r => setTimeout(r, 1200));
 
   // SCENE 7: Closing Prayer
   const prayerShotPath = path.join(ARTIFACT_DIR, 'verified_tribute_scene7_prayer_android.png');
   await androidPage.screenshot({ path: prayerShotPath });
   console.log(`  ✓ Scene 7 (Closing Prayer) screenshot: ${prayerShotPath}`);
 
-  const hasPrayer = await androidPage.evaluate(() => {
-    const text = document.body.textContent || '';
-    return text.includes('Forever in Our Hearts') || text.includes('Rest in Eternal Peace') || text.includes('Replay Sacred Tribute') || text.includes('In Sacred Remembrance');
+  const prayerData = await safeEvaluate(androidPage, () => {
+    const titleEl = document.querySelector('h2');
+    const title = titleEl ? titleEl.textContent.trim() : '';
+    const tagEl = document.querySelector('span.font-serif');
+    const tag = tagEl ? tagEl.textContent.trim() : '';
+    const bodyEl = document.querySelector('p.italic');
+    const body = bodyEl ? bodyEl.textContent.trim() : '';
+    const replayBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Replay Sacred Tribute'));
+    return {
+      title,
+      tag,
+      body,
+      hasReplay: Boolean(replayBtn)
+    };
   });
-  console.log('  ✓ Closing quiet prayer rendered:', hasPrayer);
-  if (hasPrayer) passedAssertions++;
+
+  const expectedExactTitle = "Forever in Our Hearts";
+  const expectedExactTag = "Forever in Our Hearts";
+  const expectedExactPrayer = "Though parted from our sight, your gentle wisdom, warmth, and love remain forever in our hearts.\nMay your journey be wrapped in peace, serenity, and boundless grace.";
+
+  if (prayerData.title !== expectedExactTitle) {
+    throw new Error(`Scene 7 title mismatch: got "${prayerData.title}", expected "${expectedExactTitle}"`);
+  }
+  if (!prayerData.tag.includes(expectedExactTag)) {
+    throw new Error(`Scene 7 tag mismatch: got "${prayerData.tag}", expected to include "${expectedExactTag}"`);
+  }
+  const cleanRenderedPrayer = prayerData.body.replace(/[“”"]/g, '').trim();
+  if (cleanRenderedPrayer !== expectedExactPrayer.trim()) {
+    throw new Error(`Scene 7 prayer text mismatch: got "${cleanRenderedPrayer}", expected "${expectedExactPrayer.trim()}"`);
+  }
+  console.log(`  ✓ Closing quiet prayer exact title, tag & prayer text verified: "${expectedExactTitle}"`);
+  passedAssertions++;
 
   // Verify ZERO Lovewrit or Founder branding on page
   const zeroBrandingOnPage = await androidPage.evaluate(() => {
@@ -375,6 +501,11 @@ async function testSacredTributePack() {
   await browser.close();
 
   console.log(`\n=== ALL SACRED TRIBUTE PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);
+
+  if (passedAssertions !== 24) {
+    console.error(`❌ Expected 24 assertions, but only ${passedAssertions} passed.`);
+    process.exit(1);
+  }
 }
 
 testSacredTributePack().catch(err => {

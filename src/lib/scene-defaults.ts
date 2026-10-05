@@ -745,6 +745,9 @@ export function getDefaultScenesForOccasion(
     "pooja",
     "katha",
     "satsang",
+    "paryushan",
+    "mahavir_jayanti",
+    "jain_devotional",
   ].includes(occasion) || (options?.templateId && [
     "jagrata-kirtan-invitation",
     "sikh-akhand-path",
@@ -755,11 +758,20 @@ export function getDefaultScenesForOccasion(
     "christian-christening",
     "christian-wedding-blessing",
     "secular-blessing-ceremony",
-  ].includes(options.templateId));
+    "jain-paryushan",
+  ].includes(options.templateId)) || (options?.letter && options.letter.includes("Michhami Dukkadam"));
 
   if (isDevotional) {
-    let faith: "hindu" | "sikh" | "muslim" | "christian" | "secular" = "hindu";
+    let faith: "hindu" | "sikh" | "muslim" | "christian" | "secular" | "jain" = "hindu";
     if (
+      occasion === "paryushan" ||
+      occasion === "mahavir_jayanti" ||
+      occasion === "jain_devotional" ||
+      options?.templateId === "jain-paryushan" ||
+      (options?.letter && options.letter.includes("Michhami Dukkadam"))
+    ) {
+      faith = "jain";
+    } else if (
       occasion === "akhand_path" ||
       occasion === "gurpurab" ||
       options?.templateId === "sikh-akhand-path" ||
@@ -807,10 +819,27 @@ export function getDefaultScenesForOccasion(
     let eventTime = "7:30 PM Onwards";
     let venueAddress = "Civil Lines, Near Model Town";
     let venueMapUrl = "https://maps.google.com";
-    let ritualType: "diya_aarti" | "shabad_ardas" | "dua_blessing" | "choral_benediction" | "gratitude_reflection" = "diya_aarti";
+    let ritualType: "diya_aarti" | "shabad_ardas" | "dua_blessing" | "choral_benediction" | "gratitude_reflection" | "jain_navkar" = "diya_aarti";
     let blessingWish = "May the divine flame illuminate your life with infinite joy, good health, and peace.";
 
-    if (faith === "sikh") {
+    if (faith === "jain") {
+      openerTitle = `☸️ Jai Jinendra, ${recipient}`;
+      openerSub = `Invited with reverence and heartfelt bhavana from ${sender}`;
+      significanceTitle = "Paryushan Parva & Navkar Mahamantra Aradhana";
+      storyText = "With humble hearts and universal forgiveness, we invite you to join us in spiritual reflection, pratikraman, and collective recitation of the Navkar Mahamantra. May all living beings be blessed with peace and harmony.";
+      traditions = [
+        "Navkar Mahamantra Mangalaacharan",
+        "Samvatsari Pratikraman & Bhavana",
+        "Michhami Dukkadam & Kshamapana Gathering",
+      ];
+      etiquetteNote = "Kindly observe quiet reverent silence during the recitation. Modest attire appreciated.";
+      venueName = options?.location || "Shri Mahavira Jain Shwetambar Derasar";
+      eventDate = "Sunday, 13 September 2026";
+      eventTime = "9:30 AM Onwards";
+      venueAddress = "Derasar Marg, Heritage Enclave";
+      ritualType = "jain_navkar";
+      blessingWish = "Michhami Dukkadam. May universal friendship, forgiveness, and peace dwell in our hearts. ☸️";
+    } else if (faith === "sikh") {
       openerTitle = `ੴ Sat Sri Akaal, ${recipient}`;
       openerSub = `Sadar Nimantran with the divine blessings of Sri Guru Granth Sahib Ji, from ${sender}`;
       significanceTitle = "Akhand Path Sahib & Kirtan Samagam";

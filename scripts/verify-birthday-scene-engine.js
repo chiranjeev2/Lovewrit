@@ -380,6 +380,11 @@ async function testBirthdayPack() {
   await browser.close();
 
   console.log(`\n=== ALL BIRTHDAY PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);
+
+  if (passedAssertions !== 18) {
+    console.error(`❌ Expected 18 assertions, but only ${passedAssertions} passed.`);
+    process.exit(1);
+  }
 }
 
 testBirthdayPack().catch((err) => {

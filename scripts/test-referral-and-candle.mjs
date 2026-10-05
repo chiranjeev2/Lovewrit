@@ -194,12 +194,13 @@ async function runTests() {
   const initialRecord = await db.referralRecord.findUnique({ where: { code: finalCreatorCode } });
   const initialBalance = initialRecord.creditBalance;
 
+  const legitBuyerIp = `198.51.100.${Math.floor(Math.random() * 80) + 100}`;
   const paidSlug = `slug-paid-${Date.now()}`;
   const paidOrder = await db.order.create({
     data: {
       slug: paidSlug,
       stripeSessionId: `sim_${paidSlug}`,
-      customerEmail: 'legit_buyer_1@test.com',
+      customerEmail: `legit_buyer_${Date.now()}@test.com`,
       customerName: 'Legit Buyer One',
       productType: 'PAGE',
       templateId: 'festive-birthday',
@@ -212,19 +213,19 @@ async function runTests() {
     }
   });
 
-  await verifyOrder(paidSlug, '198.51.100.2', 'BuyerBrowser/2.0');
+  await verifyOrder(paidSlug, legitBuyerIp, 'BuyerBrowser/2.0');
   const updatedRecord = await db.referralRecord.findUnique({ where: { code: finalCreatorCode } });
   assert(updatedRecord.creditBalance === initialBalance + 49, `Legitimate paid order credited ₹49 (new balance: ${updatedRecord.creditBalance})`);
 
   // Test 1g: Exactly One Credit Per Paid Order (Idempotency)
   console.log('\n  Testing: Exactly One Credit Per Paid Order (Idempotency)...');
-  await verifyOrder(paidSlug, '198.51.100.2', 'BuyerBrowser/2.0');
+  await verifyOrder(paidSlug, legitBuyerIp, 'BuyerBrowser/2.0');
   const recordAfterDuplicate = await db.referralRecord.findUnique({ where: { code: finalCreatorCode } });
   assert(recordAfterDuplicate.creditBalance === updatedRecord.creditBalance, 'Duplicate verification does NOT grant double credit (idempotent)');
 
   // Test 1h: Buyer IP Daily Rate Limit (Max 3 referral grants per IP per 24 hours)
   console.log('\n  Testing: Buyer IP Daily Rate Limit (Max 3/day)...');
-  const spamIp = '198.51.100.77';
+  const spamIp = `198.51.100.${Math.floor(Math.random() * 50) + 200}`;
   let spamGrantedCount = 0;
   for (let i = 0; i < 5; i++) {
     const sSlug = `slug-spam-${i}-${Date.now()}`;

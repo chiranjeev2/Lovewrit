@@ -1,6 +1,6 @@
 export interface DevotionalVerse {
   id: string;
-  faith: "hindu" | "sikh" | "muslim" | "christian" | "secular";
+  faith: "hindu" | "sikh" | "muslim" | "christian" | "jain" | "secular";
   title: string;
   source: string;
   scriptureText: string;
@@ -154,6 +154,18 @@ export const CURATED_DEVOTIONAL_VERSES: DevotionalVerse[] = [
     meaning: "A dedication to living peacefully with empathy, gratitude, and kindness toward every fellow being.",
     verified: false,
   },
+
+  // --- JAIN TRADITION ---
+  {
+    id: "jain-navkar-mantra",
+    faith: "jain",
+    title: "Navkar (Namokar) Mantra • Universal Veneration",
+    source: "Foundational Canonical Jain Prayer",
+    scriptureText: "णमो अरिहंताणं। णमो सिद्धाणं। णमो आयरियाणं। णमो उवज्झायाणं। णमो लोए सव्वसाहूणं।\nएसोपंचणमुक्कारो, सव्वपावप्पणासणो। मंगला णं च सव्वेसिं, पढमं हवई मंगलं॥",
+    transliteration: "Ṇamō Arihantāṇaṁ | Ṇamō Siddhāṇaṁ | Ṇamō Āyariyāṇaṁ | Ṇamō Uvajjhāyāṇaṁ | Ṇamō Lōē Savva Sāhūṇaṁ | Ēsō Pañcha Ṇamukkārō Savva Pāvappaṇāsaṇō | Maṅgalāṇaṁ Cha Savvēsiṁ Paḍhamaṁ Havaī Maṅgalaṁ ||",
+    meaning: "I bow to the Arihantas; I bow to the Siddhas; I bow to the Acharyas; I bow to the Upadhyayas; I bow to all the Sadhus in the world. This five-fold obeisance destroys all sins and is the foremost among all auspicious blessings.",
+    verified: false,
+  },
 ];
 
 export function getVersesByFaith(faith: string): DevotionalVerse[] {
@@ -168,7 +180,7 @@ export function getDefaultVerseForFaith(faith: string): DevotionalVerse {
 /**
  * Provides a blank template for buyers who wish to write their own blessing.
  */
-export function getBlankBlessingForFaith(faith: "hindu" | "sikh" | "muslim" | "christian" | "secular"): DevotionalVerse {
+export function getBlankBlessingForFaith(faith: "hindu" | "sikh" | "muslim" | "christian" | "jain" | "secular"): DevotionalVerse {
   return {
     id: `custom-blessing-${faith}`,
     faith,

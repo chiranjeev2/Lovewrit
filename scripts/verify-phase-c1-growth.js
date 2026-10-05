@@ -282,8 +282,13 @@ async function testPhaseC1Growth() {
   await browser.close();
 
   console.log('\n=================================================');
-  console.log(`🎉 ALL PHASE C1 GROWTH ASSERTIONS PASSED: ${passedAssertions} / 14`);
+  console.log(`🎉 ALL PHASE C1 GROWTH ASSERTIONS PASSED: ${passedAssertions} / 15`);
   console.log('=================================================');
+
+  if (passedAssertions !== 15) {
+    console.error(`❌ Expected 15 assertions, but only ${passedAssertions} passed.`);
+    process.exit(1);
+  }
 }
 
 testPhaseC1Growth().catch(err => {

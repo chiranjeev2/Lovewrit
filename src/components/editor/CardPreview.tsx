@@ -324,8 +324,8 @@ const CardPreview = React.memo(function CardPreview({
         )}
 
         {/* Subtle background ambient glow */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-black/20 blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-black/20 blur-2xl pointer-events-none" />
 
         {/* Decorative floral corner accents when floral border active */}
         {borderStyle === "floral" && (

@@ -352,6 +352,11 @@ async function testGodhbharaiPack() {
   await browser.close();
 
   console.log(`\n=== ALL GODHBHARAI PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);
+
+  if (passedAssertions !== 16) {
+    console.error(`❌ Expected 16 assertions, but only ${passedAssertions} passed.`);
+    process.exit(1);
+  }
 }
 
 testGodhbharaiPack().catch((err) => {
