@@ -918,20 +918,7 @@ export const TEMPLATES: TemplateDefinition[] = [
   },
 ];
 
-const TEMPLATE_ALIASES: Record<string, string> = {
-  "sincere-apology": "from-my-heart",
-  "golden-celebration": "festive-birthday",
-  "auspicious-godhbharai": "godhbharai-blessings",
-  "sacred-tribute-memorial": "in-loving-memory",
-  "royal-monogram-invite": "forever-proposal",
-  "royal-wedding-invite": "forever-proposal",
-  "love-letter": "letter-to-dear-one",
-};
-
 export function getTemplateById(id: string): TemplateDefinition | undefined {
-  const direct = TEMPLATES.find((t) => t.id === id);
-  if (direct) return direct;
-  const targetId = TEMPLATE_ALIASES[id];
-  if (targetId) return TEMPLATES.find((t) => t.id === targetId);
-  return undefined;
+  return TEMPLATES.find((t) => t.id === id);
 }
+
