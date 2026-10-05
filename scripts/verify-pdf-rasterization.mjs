@@ -152,6 +152,10 @@ async function verifyPdfRasterization() {
         };
       }
 
+      // Extract text content from PDF.js
+      const textContent = await pdfPage.getTextContent();
+      const extractedText = textContent.items.map(i => i.str).join(' ');
+
       results.push({
         pageNum,
         width: canvas.width,
@@ -162,6 +166,7 @@ async function verifyPdfRasterization() {
         isBlank: stdDev < 10, // stdDev < 10 means flat uniform/white/blank page
         photoEffectiveDpi: Math.round(photoEffectiveDpi),
         messageRegionStats,
+        extractedText,
         dataUrl: canvas.toDataURL('image/png')
       });
     }
@@ -188,22 +193,48 @@ async function verifyPdfRasterization() {
     console.log(`  Non-Blank Status: ${!res.isBlank ? '✅ NON-BLANK (Rich artwork)' : '❌ BLANK'}`);
 
     if (res.pageNum === 2) {
-      console.log(`  Photo Region Effective DPI: ${res.photoEffectiveDpi} DPI (Target: >= 150 DPI)`);
-      if (res.photoEffectiveDpi < 150) {
-        throw new Error(`Effective DPI too low: ${res.photoEffectiveDpi} < 150`);
-      }
+      console.log(`\n  ================================================================`);
+      console.log(`  📖 EXTRACTED PAGE 2 BUYER MESSAGE TEXT (PDF.js Text Layer):`);
+      console.log(`  ================================================================`);
+      console.log(`  "${res.extractedText}"`);
+      console.log(`  ================================================================\n`);
 
+      // Primary Assertion: Buyer's exact message string appears on page 2
+      const expectedMessageSnippets = [
+        "Three wonderful years",
+        "still fall for you a little more every day",
+        "Thank you for building this beautiful dream of a life with me",
+        "Happy Anniversary!",
+        "Dearest Ananya",
+        "Dev"
+      ];
+
+      for (const snippet of expectedMessageSnippets) {
+        if (!res.extractedText.includes(snippet)) {
+          throw new Error(`Text-extraction assertion FAILED: Page 2 does not contain expected snippet "${snippet}". Extracted text: "${res.extractedText}"`);
+        }
+      }
+      console.log(`  ✅ [PRIMARY ASSERTION PASSED] Buyer's exact message text confirmed on Page 2!`);
+
+      // Secondary Check: Ink contrast and density
       if (res.messageRegionStats) {
-        console.log(`  Inside Message Box Check:`);
+        console.log(`  [SECONDARY CHECK] Inside Message Box Ink Contrast & Density:`);
         console.log(`    Dark Ink Pixels: ${res.messageRegionStats.darkInkPixels}`);
         console.log(`    Mean Luminance: ${res.messageRegionStats.meanLuminance} / 255`);
         console.log(`    Ink Density: ${res.messageRegionStats.inkPercentage}%`);
-        console.log(`    Text Legibility: ${res.messageRegionStats.isLegible ? '✅ LEGIBLE (Crisp buyer message text detected)' : '❌ UNREADABLE / BLANK'}`);
+        console.log(`    Text Legibility: ${res.messageRegionStats.isLegible ? '✅ LEGIBLE (Ink density confirmed)' : '❌ UNREADABLE / BLANK'}`);
 
         if (!res.messageRegionStats.isLegible) {
           throw new Error(`Page 2 message text is not legible! Ink pixels: ${res.messageRegionStats.darkInkPixels} < 500`);
         }
       }
+
+      console.log(`  Photo Region Effective DPI: ${res.photoEffectiveDpi} DPI (Target: >= 150 DPI)`);
+      if (res.photoEffectiveDpi < 150) {
+        throw new Error(`Effective DPI too low: ${res.photoEffectiveDpi} < 150`);
+      }
+
+      console.log(`\n  📍 EXACT PAGE 2 RASTERIZED IMAGE PATH:\n     ${outPath}\n`);
     }
 
     if (res.isBlank) {
