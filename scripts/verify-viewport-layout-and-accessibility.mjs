@@ -151,10 +151,28 @@ export async function runLayoutAndA11yAudit() {
         const winW = window.innerWidth;
         const scrollW = document.documentElement.scrollWidth;
 
-        // 1. Horizontal Overflow check
+        // 1. Horizontal Overflow check (document scrollWidth)
         const hasOverflow = scrollW > winW + 2;
 
-        // 2. Clipped elements check
+        // 2. Element boundary check: check every element's getBoundingClientRect (right edge <= viewport width)
+        const allElements = Array.from(document.querySelectorAll('*'));
+        let overflowingElements = 0;
+        let worstOverflowRight = 0;
+        let worstOverflowTag = '';
+        for (const el of allElements) {
+          const rect = el.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0 && el.offsetParent !== null) {
+            if (rect.right > winW + 2) {
+              overflowingElements++;
+              if (rect.right > worstOverflowRight) {
+                worstOverflowRight = rect.right;
+                worstOverflowTag = `${el.tagName.toLowerCase()}${el.className ? '.' + el.className.toString().split(' ')[0] : ''}`;
+              }
+            }
+          }
+        }
+
+        // 3. Clipped interactive/content elements check
         const visibleEls = Array.from(document.querySelectorAll('button, a, input, h1, h2, h3, h4, p, label'));
         let clipped = 0;
         for (const el of visibleEls) {
@@ -166,7 +184,7 @@ export async function runLayoutAndA11yAudit() {
           }
         }
 
-        // 3. Mobile tap targets check (at 375px only)
+        // 4. Mobile tap targets check (at 375px only)
         // Exempt standard inline links inside paragraphs per WCAG 2.5.8
         let smallTapTargets = 0;
         if (isMobile) {
@@ -186,9 +204,12 @@ export async function runLayoutAndA11yAudit() {
           scrollW,
           winW,
           hasOverflow,
+          overflowingElements,
+          worstOverflowRight,
+          worstOverflowTag,
           clipped,
           smallTapTargets,
-          passed: !hasOverflow && clipped === 0 && smallTapTargets === 0
+          passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0
         };
       }, vp.isMobile);
 
@@ -197,6 +218,7 @@ export async function runLayoutAndA11yAudit() {
         occasion: route.occasion,
         viewport: vp.name,
         overflow: res.hasOverflow ? `FAIL (${res.scrollW}px)` : 'PASS',
+        elementBoundary: res.overflowingElements > 0 ? `FAIL (${res.overflowingElements} els, ${Math.round(res.worstOverflowRight)}px)` : 'PASS',
         clipped: res.clipped > 0 ? `FAIL (${res.clipped})` : 'PASS',
         tapTargets: res.smallTapTargets > 0 ? `FAIL (${res.smallTapTargets})` : 'PASS',
         status: res.passed ? 'PASSED' : 'FAILED'
@@ -207,7 +229,7 @@ export async function runLayoutAndA11yAudit() {
         passedAudits++;
       } else {
         failedAudits++;
-        console.error(`  ❌ FAIL: [${route.category}] ${route.occasion} at ${vp.name}: Overflow=${record.overflow}, Clipped=${record.clipped}, TapTargets=${record.tapTargets}`);
+        console.error(`  ❌ FAIL: [${route.category}] ${route.occasion} at ${vp.name}: ScrollOverflow=${record.overflow}, ElementBoundary=${record.elementBoundary}, Clipped=${record.clipped}, TapTargets=${record.tapTargets}`);
       }
     }
   }

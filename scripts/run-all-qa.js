@@ -34,6 +34,7 @@ async function ensureServerRunning() {
   const serverProcess = spawn('npx.cmd', ['next', 'dev', '-p', '3000'], {
     detached: false,
     stdio: 'ignore',
+    env: { ...process.env, VERCEL: '1' },
   });
 
   for (let i = 0; i < 30; i++) {
@@ -159,8 +160,29 @@ async function runQa() {
     process.exit(1);
   }
 
+  // 8b. Studio Customizer 375px & Order Flow Audit (10 Templates)
+  console.log('[Step 8b/10] Running 375px Studio Customizer & Order Creation Flow Audit...');
+  try {
+    const customizerOutput = execSync('node scripts/test-all-8-customizers.mjs', { encoding: 'utf-8' });
+    console.log(customizerOutput);
+    console.log('  PASSED: 375px Studio Customizer & Order Flow: 10 / 10 templates verified\n');
+    summary.push({
+      suite: 'Studio Customizer 375px & Order Flow',
+      status: 'PASSED',
+      details: '10 / 10 templates verified (0 overflow, 0 clipped, mobile preview, checkout ready)',
+    });
+  } catch (err) {
+    console.error('  FAILED: Studio Customizer 375px audit failed:', err.stdout?.toString() || err.message);
+    summary.push({
+      suite: 'Studio Customizer 375px & Order Flow',
+      status: 'FAILED',
+      details: 'Customizer layout or flow failure',
+    });
+    process.exit(1);
+  }
+
   // 9. Assertion Pack Test Suites
-  console.log('[Step 9/9] Running Pack Verification Suites...');
+  console.log('[Step 9/10] Running Pack Verification Suites...');
   const PACK_SCRIPTS = [
     { name: 'B1 Birthday Pack', script: 'scripts/verify-birthday-scene-engine.js' },
     { name: 'B2 Godhbharai Pack', script: 'scripts/verify-godhbharai-scene-engine.js' },
@@ -176,17 +198,17 @@ async function runQa() {
       const output = execSync(`node ${pack.script}`, { encoding: 'utf-8' });
       const match = output.match(/PASSED:?\s*(\d+)\s*\/\s*(\d+)/i) || output.match(/\((\d+)\s*assertions/i);
       const details = match ? (match[2] ? `${match[1]} / ${match[2]} assertions verified` : `${match[1]} assertions verified`) : 'Passed';
-      console.log(`  ✅ ${pack.name}: ${details}`);
+      console.log(`  PASSED: ${pack.name}: ${details}`);
       summary.push({ suite: pack.name, status: 'PASSED', details });
     } catch (err) {
-      console.error(`  ❌ ${pack.name} failed:`, err.message);
+      console.error(`  FAILED: ${pack.name} failed:`, err.message);
       summary.push({ suite: pack.name, status: 'FAILED', details: 'Check failed' });
     }
   }
 
   // Print Final Summary Table
   console.log('\n================================================================');
-  console.log('                   📊 PRE-MERGE QA SUMMARY TABLE                ');
+  console.log('                     PRE-MERGE QA SUMMARY TABLE                 ');
   console.log('================================================================');
   console.table(summary);
   console.log('================================================================\n');
@@ -197,9 +219,9 @@ async function runQa() {
 
   const allPassed = summary.every((s) => s.status === 'PASSED');
   if (allPassed) {
-    console.log('🎉 ALL PRE-MERGE QA CHECKS PASSED WITH 100% SUCCESS!\n');
+    console.log('ALL PRE-MERGE QA CHECKS PASSED.\n');
   } else {
-    console.error('⚠️ SOME QA CHECKS FAILED. PLEASE REVIEW TABLE ABOVE.\n');
+    console.error('SOME QA CHECKS FAILED. PLEASE REVIEW TABLE ABOVE.\n');
     process.exit(1);
   }
 }

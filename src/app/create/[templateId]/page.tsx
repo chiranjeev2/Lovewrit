@@ -2289,7 +2289,7 @@ export default function CreateLovewritPage({
                           key={b.id}
                           type="button"
                           onClick={() => setCardBorderStyle(b.id as CardBorderStyleKey)}
-                          className={`rounded-xl border py-2 px-2 text-center text-xs font-medium transition ${
+                          className={`rounded-xl border min-h-[44px] py-2 px-2 text-center text-xs font-medium flex items-center justify-center transition ${
                             cardBorderStyle === b.id
                               ? "border-rose-500 bg-rose-500/20 text-rose-300"
                               : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
@@ -2350,7 +2350,7 @@ export default function CreateLovewritPage({
                                 type="button"
                                 onClick={() => handleAddSticker(stk.emoji)}
                                 title={stk.label}
-                                className="h-8 w-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
                               >
                                 {stk.emoji}
                               </button>

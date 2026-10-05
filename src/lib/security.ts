@@ -46,7 +46,8 @@ export function getClientIp(req: ClientRequestLike | NextRequest): string {
   }
 
   // 2. Non-Vercel: Use verified connection / socket address
-  const socketIp = req.ip || req.socket?.remoteAddress;
+  const reqObj = req as ClientRequestLike;
+  const socketIp = reqObj.ip || reqObj.socket?.remoteAddress;
   if (socketIp && socketIp !== "127.0.0.1" && socketIp !== "::1") {
     // Normalize IPv4-mapped IPv6 address (e.g. ::ffff:192.168.1.1 -> 192.168.1.1)
     return socketIp.replace(/^::ffff:/, "");

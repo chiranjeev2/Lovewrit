@@ -19,3 +19,4 @@ Lovewrit uses client IP and device identity for anti-abuse protections:
 
 1. **No Shared Loopback Pool:** Multiple users browsing behind a local proxy or client without socket IP will never share a single rate-limiting quota.
 2. **Multi-Layer Verification:** IP rate-limiting is always paired with device-level cookies (24h TTL) and device fingerprints so that modifying a single header cannot circumvent protections.
+

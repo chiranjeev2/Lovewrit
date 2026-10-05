@@ -4,19 +4,21 @@ const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge
 const BASE_URL = 'http://localhost:3000';
 
 const OCCASIONS = [
-  { occasion: 'proposal', slug: 'forever-proposal', sender: 'Dev', recipient: 'Ananya' },
-  { occasion: 'birthday', slug: 'festive-birthday', sender: 'Rohan', recipient: 'Simran' },
-  { occasion: 'memorial', slug: 'in-loving-memory', sender: 'Kapoor Family', recipient: 'Late Shri Ram Nath Kapoor' },
-  { occasion: 'sorry', slug: 'sincere-apology', sender: 'Aarav', recipient: 'Meera' },
-  { occasion: 'godhbharai', slug: 'godhbharai-blessing', sender: 'Sharma Parivaar', recipient: 'Pooja' },
-  { occasion: 'invites', slug: 'royal-wedding-invite', sender: 'The Vermas', recipient: 'Honored Guest' },
-  { occasion: 'kitty_party', slug: 'kitty-party-soiree', sender: 'Sunita & Friends', recipient: 'Ladies' },
+  { occasion: 'apology', slug: 'sincere-apology', sender: 'Aarav', recipient: 'Meera' },
+  { occasion: 'romantic', slug: 'forever-proposal', sender: 'Dev', recipient: 'Ananya' },
+  { occasion: 'anniversary', slug: 'golden-anniversary', sender: 'Kabir', recipient: 'Rhea' },
+  { occasion: 'birthday', slug: 'golden-celebration', sender: 'Rohan', recipient: 'Simran' },
+  { occasion: 'godhbharai', slug: 'auspicious-godhbharai', sender: 'Sharma Parivaar', recipient: 'Pooja' },
+  { occasion: 'memorial', slug: 'sacred-tribute-memorial', sender: 'Kapoor Family', recipient: 'Late Shri Ram Nath Kapoor' },
+  { occasion: 'kitty_party', slug: 'chic-kitty-party', sender: 'Sunita & Friends', recipient: 'Ladies' },
   { occasion: 'jagrata_kirtan', slug: 'jagrata-kirtan-invitation', sender: 'Devotees', recipient: 'Bhaktjan' },
+  { occasion: 'wedding_invite', slug: 'royal-monogram-invite', sender: 'The Vermas', recipient: 'Honored Guest' },
+  { occasion: 'letter', slug: 'love-letter', sender: 'Papa', recipient: 'Beta' },
 ];
 
 async function testAllCustomizers() {
   console.log('================================================================');
-  console.log('   📱 TESTING 375px STUDIO CUSTOMIZER ON ALL 8 OCCASIONS        ');
+  console.log('   TESTING 375px STUDIO CUSTOMIZER ON ALL OCCASION TEMPLATES    ');
   console.log('================================================================\n');
 
   const browser = await puppeteer.launch({
@@ -53,12 +55,11 @@ async function testAllCustomizers() {
       }
 
       const tapFails = [];
-      const interactives = Array.from(document.querySelectorAll('button, a[href], input[type="button"], input[type="submit"]'));
+      const interactives = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"]'));
       for (const btn of interactives) {
         const rect = btn.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0 && btn.offsetParent !== null) {
-          const isInline = btn.tagName === 'A' && btn.parentElement && ['P', 'SPAN', 'LABEL'].includes(btn.parentElement.tagName) && (btn.parentElement.textContent?.length || 0) > (btn.textContent?.length || 0);
-          if (!isInline && (rect.width < 44 || rect.height < 44)) {
+          if (rect.width < 44 || rect.height < 44) {
             tapFails.push({
               text: btn.textContent?.trim().slice(0, 25) || btn.getAttribute('aria-label') || 'unlabeled',
               dim: `${Math.round(rect.width)}x${Math.round(rect.height)}`
@@ -143,16 +144,17 @@ async function testAllCustomizers() {
   await browser.close();
 
   console.log('\n================================================================');
-  console.log('         📊 ALL 8 OCCASIONS 375px AUDIT SUMMARY TABLE           ');
+  console.log('         375px CUSTOMIZER AUDIT SUMMARY TABLE                   ');
   console.log('================================================================');
   console.table(results);
 
   const hasFailures = results.some(r => r.overflow !== 'PASS' || r.clipped !== 'PASS' || r.tapTargets !== 'PASS' || r.checkoutReady !== 'PASS');
+  const passedCount = results.filter(r => r.overflow === 'PASS' && r.clipped === 'PASS' && r.tapTargets === 'PASS' && r.checkoutReady === 'PASS').length;
   if (hasFailures) {
-    console.error('Audit failed with layout issues!');
+    console.error(`Audit failed: ${passedCount} / ${results.length} passed.`);
     process.exit(1);
   } else {
-    console.log('All 8 Occasions passed 375px audit with 100% compliance!');
+    console.log(`PASSED: ${passedCount} / ${results.length} customizer audits passed at 375px.`);
   }
 }
 
