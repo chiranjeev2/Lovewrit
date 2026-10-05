@@ -72,6 +72,17 @@ assert(
   'On Vercel: trusts x-real-ip when x-forwarded-for absent'
 );
 
+const reqVercelSingle = createMockRequest({
+  headers: {
+    'x-forwarded-for': '198.51.100.200',
+    'user-agent': 'VercelClient/1.0',
+  }
+});
+assert(
+  getClientIp(reqVercelSingle) === '198.51.100.200',
+  'On Vercel: trusts single IP from x-forwarded-for ("198.51.100.200")'
+);
+
 // -----------------------------------------------------------------------------
 // CASE 2: Non-Vercel (Untrusted Edge / Direct / Local)
 // -----------------------------------------------------------------------------
@@ -172,5 +183,5 @@ assert(
   'getDeviceFingerprintLite generates distinct fingerprints for distinct clients'
 );
 
-console.log(`\n🎉 ALL getClientIp & SECURITY TRUST UNIT TESTS PASSED! (${passed} / ${total})\n`);
+console.log(`\nALL getClientIp & SECURITY TRUST UNIT TESTS PASSED: (${passed} / ${total} assertions verified)\n`);
 
