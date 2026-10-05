@@ -34,6 +34,7 @@ async function ensureServerRunning() {
   const serverProcess = spawn('npx.cmd', ['next', 'dev', '-p', '3000'], {
     detached: false,
     stdio: 'ignore',
+    shell: true,
     env: { ...process.env, VERCEL: '1' },
   });
 
