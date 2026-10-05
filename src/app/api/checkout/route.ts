@@ -411,7 +411,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Dev / Simulation Mode
+    // 2. Dev / Simulation Mode (Strictly disabled in production)
+    if (process.env.NODE_ENV === "production") {
+      console.error("[CRITICAL] Attempted simulated checkout in production mode");
+      return NextResponse.json(
+        { error: "Simulated checkouts are strictly disabled in production. Live payment gateway required." },
+        { status: 500 }
+      );
+    }
+
     const simulatedSessionId = `sim_${order.id}`;
     await db.order.update({
       where: { id: order.id },

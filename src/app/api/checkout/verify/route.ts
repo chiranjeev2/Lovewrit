@@ -191,8 +191,29 @@ export async function GET(req: NextRequest) {
       }
     };
 
-    // Dev simulation or Free/Founder bypass verification
-    if (sessionId?.startsWith("sim_") || sessionId?.startsWith("free_") || sessionId?.startsWith("founder_")) {
+    // Dev simulation (Strictly forbidden in production)
+    if (sessionId?.startsWith("sim_")) {
+      if (process.env.NODE_ENV === "production") {
+        console.error(`[CRITICAL] Blocked simulated session verification attempt in production: ${sessionId}`);
+        return NextResponse.json(
+          { error: "Simulated sessions are strictly forbidden in production." },
+          { status: 403 }
+        );
+      }
+      order = await db.order.update({
+        where: { id: order.id },
+        data: { status: "PAID" },
+        include: {
+          cardData: true,
+          pageData: true,
+        },
+      });
+      await creditReferrerIfNeeded(order);
+      return NextResponse.json({ success: true, order });
+    }
+
+    // Free/Founder bypass verification
+    if (sessionId?.startsWith("free_") || sessionId?.startsWith("founder_")) {
       order = await db.order.update({
         where: { id: order.id },
         data: { status: "PAID" },
