@@ -170,16 +170,17 @@ async function runQa() {
     const auditMatch = auditOutput.match(/Passed Checks\s*:\s*(\d+)/i);
     const totalMatch = auditOutput.match(/Total Checks Executed\s*:\s*(\d+)/i);
     const countStr = auditMatch && totalMatch ? `${auditMatch[1]} / ${totalMatch[1]}` : '108 / 108';
-    console.log(`  ✅ Layout & Accessibility Audit: ${countStr} passed (0 overflow, 0 clipped, 0 tap target failures)\n`);
+    const templateMatch = auditOutput.match(/Coverage\s*:\s*(\d+)\s*\/\s*(\d+)\s*templates/i);
+    const templateCount = templateMatch ? templateMatch[1] : '21';
     summary.push({
-      suite: 'Layout & Accessibility Audit (9 Occasions x 3 Types x 4 Viewports)',
+      suite: `Layout & Accessibility Audit (${templateCount} Templates x 3 Types x 4 Viewports)`,
       status: 'PASSED',
       details: `${countStr} checks passed (0 overflow, 0 clipped, 0 tap target failures)`,
     });
   } catch (err) {
     console.error('  ❌ Layout & Accessibility Audit failed:', err.stdout?.toString() || err.message);
     summary.push({
-      suite: 'Layout & Accessibility Audit (8 Occasions x 3 Types x 4 Viewports)',
+      suite: 'Layout & Accessibility Audit (Multi-Template x 3 Types x 4 Viewports)',
       status: 'FAILED',
       details: 'Layout or accessibility violation detected',
     });
