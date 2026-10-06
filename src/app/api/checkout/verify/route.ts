@@ -13,6 +13,15 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Missing session or slug" }, { status: 400 });
     }
 
+    // Dev simulation (Strictly forbidden in production)
+    if (sessionId?.startsWith("sim_") && process.env.NODE_ENV === "production") {
+      console.error(`[CRITICAL] Blocked simulated session verification attempt in production: ${sessionId}`);
+      return NextResponse.json(
+        { error: "Simulated sessions are strictly forbidden in production." },
+        { status: 403 }
+      );
+    }
+
     let order = await db.order.findFirst({
       where: slug ? { slug } : { stripeSessionId: sessionId! },
       include: {
