@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useTransition, Suspense } from "react";
+import React, { useState, useEffect, useRef, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import {
   SceneConfig,
@@ -175,20 +175,22 @@ export function SceneContainer({
   const totalScenes = enabledScenes.length;
 
   const [currentIndex, setCurrentIndex] = useState(previewActiveIndex ?? 0);
+  const [prevPropIndex, setPrevPropIndex] = useState(previewActiveIndex);
   const [direction, setDirection] = useState(1);
+
+  if (previewActiveIndex !== undefined && previewActiveIndex !== prevPropIndex) {
+    setPrevPropIndex(previewActiveIndex);
+    if (previewActiveIndex >= 0 && previewActiveIndex < totalScenes) {
+      setDirection(previewActiveIndex >= currentIndex ? 1 : -1);
+      setCurrentIndex(previewActiveIndex);
+    }
+  }
+
   // Music is OFF by default for Sacred Tribute per prompt specification
   const [isMuted, setIsMuted] = useState(isTribute);
   const [hasStartedAudio, setHasStartedAudio] = useState(false);
   const [completedInteractions, setCompletedInteractions] = useState<Record<string, boolean>>({});
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  // Sync with studio preview dock if prop changes
-  useEffect(() => {
-    if (previewActiveIndex !== undefined && previewActiveIndex >= 0 && previewActiveIndex < totalScenes) {
-      setDirection(previewActiveIndex >= currentIndex ? 1 : -1);
-      setCurrentIndex(previewActiveIndex);
-    }
-  }, [previewActiveIndex, totalScenes]);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -196,10 +198,15 @@ export function SceneContainer({
   useEffect(() => {
     if (typeof window !== "undefined") {
       const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-      setPrefersReducedMotion(mediaQuery.matches);
+      const timer = setTimeout(() => {
+        setPrefersReducedMotion(mediaQuery.matches);
+      }, 0);
       const listener = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
       mediaQuery.addEventListener("change", listener);
-      return () => mediaQuery.removeEventListener("change", listener);
+      return () => {
+        clearTimeout(timer);
+        mediaQuery.removeEventListener("change", listener);
+      };
     }
   }, []);
 
@@ -252,19 +259,19 @@ export function SceneContainer({
   const isCurrentInteractionDone = completedInteractions[currentScene?.id] === true;
   const canAdvance = isInteractionScene ? isCurrentInteractionDone : true;
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentIndex < totalScenes - 1) {
       setDirection(1);
       setCurrentIndex((prev) => prev + 1);
     }
-  };
+  }, [currentIndex, totalScenes]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     if (currentIndex > 0) {
       setDirection(-1);
       setCurrentIndex((prev) => prev - 1);
     }
-  };
+  }, [currentIndex]);
 
   const handleSkipToEnd = () => {
     setDirection(1);
@@ -302,7 +309,7 @@ export function SceneContainer({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentIndex, isInteractionScene, isLetterScene, isOpener]);
+  }, [currentIndex, isInteractionScene, isLetterScene, isOpener, handleNext, handlePrev]);
 
   // Touch swipe handling (disabled inside interaction and letter scenes per Rule 4)
   const touchStartY = useRef<number | null>(null);

@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { BabyRevealSceneConfig } from "@/types/scenes";
-import { Sparkles, Calendar, Heart, ArrowRight, Gift } from "lucide-react";
+import { Calendar, Heart, ArrowRight, Gift } from "lucide-react";
 import confetti from "canvas-confetti";
 
 interface BabyRevealSceneProps {
@@ -19,12 +19,12 @@ export default function BabyRevealScene({
   onComplete,
 }: BabyRevealSceneProps) {
   const [isRevealed, setIsRevealed] = useState(false);
-  const [scratchProgress, setScratchProgress] = useState(0);
+  const [, setScratchProgress] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const isDrawingRef = useRef(false);
 
   // Trigger celebration on reveal
-  const handleReveal = () => {
+  const handleReveal = useCallback(() => {
     if (isRevealed) return;
     setIsRevealed(true);
     setScratchProgress(100);
@@ -39,7 +39,7 @@ export default function BabyRevealScene({
     } catch {
       // Confetti fallback
     }
-  };
+  }, [isRevealed, onComplete]);
 
   // Scratch card canvas setup for scratch_card mode
   useEffect(() => {
@@ -118,7 +118,7 @@ export default function BabyRevealScene({
       canvas.removeEventListener("touchmove", handlePointerMove);
       window.removeEventListener("touchend", handlePointerUp);
     };
-  }, [config.revealType]);
+  }, [config.revealType, handleReveal]);
 
   return (
     <div className="relative w-full max-w-xl mx-auto px-4 py-6 flex flex-col items-center justify-center min-h-[75vh] select-none text-stone-900">

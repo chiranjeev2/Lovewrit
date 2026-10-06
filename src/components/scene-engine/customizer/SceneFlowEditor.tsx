@@ -27,7 +27,7 @@ import {
   DevotionalSignificanceSceneConfig,
   DevotionalFinaleSceneConfig,
 } from "@/types/scenes";
-import { CURATED_DEVOTIONAL_VERSES, getVersesByFaith } from "@/lib/devotional-verses";
+import { CURATED_DEVOTIONAL_VERSES } from "@/lib/devotional-verses";
 import {
   ArrowUp,
   ArrowDown,

@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { DevotionalBlessingSceneConfig } from "@/types/scenes";
-import { BookOpen, Copy, Check, Sparkles } from "lucide-react";
+import { Copy, Check } from "lucide-react";
 
 interface DevotionalBlessingSceneProps {
   config: DevotionalBlessingSceneConfig;
@@ -53,7 +53,6 @@ const FAITH_EMBLEMS: Record<string, { symbol: string; label: string; accentColor
 
 export default function DevotionalBlessingScene({
   config,
-  theme = "gold",
 }: DevotionalBlessingSceneProps) {
   const [copied, setCopied] = useState(false);
   const faithMeta = FAITH_EMBLEMS[config.faith || "general"] || FAITH_EMBLEMS.general;

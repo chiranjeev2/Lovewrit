@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { TributeWallSceneConfig } from "@/types/scenes";
-import { Heart, MessageSquare, ShieldCheck, Flag, Check, ArrowRight } from "lucide-react";
+import { ShieldCheck, Flag, ArrowRight } from "lucide-react";
 
 interface TributeItem {
   id: string;

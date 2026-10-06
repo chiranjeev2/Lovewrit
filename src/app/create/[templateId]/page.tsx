@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect, use, useDeferredValue, useMemo } from "react";
+import React, { useState, useRef, useEffect, use, useDeferredValue } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
@@ -44,38 +45,28 @@ import {
   Upload,
   Calendar,
   Clock,
-  Sparkle,
   Music,
   Eye,
   Sliders,
   AlertCircle,
-  HelpCircle,
   Check,
-  ShieldCheck,
   Loader2,
   Gift,
   CreditCard,
   Tag,
-  Volume2,
   Lock,
   Camera,
   Film,
   Play,
   Pause,
   MapPin,
-  Flame,
   Crown,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Info,
-  Layers,
   FileText,
   Plus,
   Trash2,
-  ArrowRight,
-  ArrowUp,
-  ArrowDown,
   Zap,
   Mic,
 } from "lucide-react";
@@ -99,7 +90,7 @@ export default function CreateLovewritPage({
   const resolvedParams = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { currency, setCurrency, region, language, setLanguage, t } = useApp();
+  const { currency, setCurrency, region, language } = useApp();
 
   const templateId = resolvedParams.templateId;
   const template = getTemplateById(templateId);
@@ -119,7 +110,7 @@ export default function CreateLovewritPage({
   const [senderName, setSenderName] = useState<string>(template.sampleSender);
   const [recipientName, setRecipientName] = useState<string>(template.sampleRecipient);
   const [occasion, setOccasion] = useState<string>(template.occasion);
-  const [location, setLocation] = useState<string>(template.sampleLocation || "");
+  const [location] = useState<string>(template.sampleLocation || "");
   const [venueName, setVenueName] = useState<string>("");
   const [venueAddress, setVenueAddress] = useState<string>("");
   const [venueMapUrl, setVenueMapUrl] = useState<string>("");
@@ -130,6 +121,7 @@ export default function CreateLovewritPage({
   const [selectedTheme, setSelectedTheme] = useState<ColorThemeKey>(template.defaultTheme);
   const [photoShape, setPhotoShape] = useState<PhotoShapeKey>(template.defaultShape);
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>(language);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(0);
 
   // Photo uploads
   const [cardPhoto, setCardPhoto] = useState<string>(template.samplePhotos[0] || "");
@@ -303,6 +295,7 @@ export default function CreateLovewritPage({
             })
             .catch(() => {});
         }
+        setNowTimestamp(Date.now());
       });
     }
     return () => {
@@ -310,7 +303,7 @@ export default function CreateLovewritPage({
         audioPreviewRef.current.pause();
       }
     };
-  }, []);
+  }, [searchParams, template.id]);
 
   const handleExitFounderMode = () => {
     setIsFounderFree(false);
@@ -877,7 +870,7 @@ export default function CreateLovewritPage({
               });
               const verifyData = await verifyRes.json();
               if (verifyRes.ok && verifyData.success) {
-                window.location.href = `/checkout/success?session_id=${data.razorpayOrderId}&slug=${data.slug}&token=${data.adminToken}`;
+                router.push(`/checkout/success?session_id=${data.razorpayOrderId}&slug=${data.slug}&token=${data.adminToken}`);
               } else {
                 throw new Error(verifyData.error || "Payment verification failed");
               }
@@ -1830,13 +1823,13 @@ export default function CreateLovewritPage({
                         <div className="inline-flex items-center space-x-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-200 self-start sm:self-auto">
                           <span>🔒</span>
                           <span>
-                            {new Date(revealDateTime).getTime() > Date.now() ? (
+                            {nowTimestamp > 0 && new Date(revealDateTime).getTime() > nowTimestamp ? (
                               <>
                                 Locks until{" "}
                                 {Math.max(
                                   1,
                                   Math.round(
-                                    (new Date(revealDateTime).getTime() - Date.now()) / (1000 * 60 * 60)
+                                    (new Date(revealDateTime).getTime() - nowTimestamp) / (1000 * 60 * 60)
                                   )
                                 )}{" "}
                                 hours from now
@@ -2041,10 +2034,12 @@ export default function CreateLovewritPage({
                     >
                       {/* Photo Thumbnail */}
                       <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800">
-                        <img
+                        <Image
                           src={photo}
                           alt={`Photo ${idx + 1}`}
-                          className="w-full h-full object-cover"
+                          fill
+                          unoptimized
+                          className="object-cover"
                         />
                         {/* Order badge */}
                         <div className="absolute top-1.5 left-1.5">

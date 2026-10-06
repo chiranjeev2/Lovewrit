@@ -20,7 +20,6 @@ export function ForgiveReplyScene({
   title,
   subtitle,
   senderName,
-  recipientName,
   promptText = "Can we start fresh?",
   forgiveButtonText = "I Forgive You ❤️",
   replyPlaceholder,

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, Heart, Mail } from "lucide-react";
+import { Sparkles, Heart } from "lucide-react";
 import { motion } from "framer-motion";
 import { ColorThemeKey } from "@/lib/templates-data";
 
@@ -114,7 +114,6 @@ interface OpenerSceneProps {
 }
 
 export function OpenerScene({
-  title,
   subtitle,
   senderName,
   recipientName,

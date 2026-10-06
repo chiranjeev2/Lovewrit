@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { WhatTheyTaughtUsSceneConfig } from "@/types/scenes";
-import { Sparkles, ArrowRight, Heart } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface WhatTheyTaughtUsSceneProps {
   config: WhatTheyTaughtUsSceneConfig;

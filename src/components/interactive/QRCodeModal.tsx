@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import QRCode from "qrcode";
 import { QrCode, Download, X, Copy, Check } from "lucide-react";
 
@@ -75,7 +76,7 @@ export default function QRCodeModal({
         {/* QR Code Canvas Frame */}
         <div className="mx-auto my-2 flex w-52 h-52 items-center justify-center overflow-hidden rounded-2xl bg-white p-3 shadow-xl">
           {dataUrl ? (
-            <img src={dataUrl} alt="Lovewrit QR Code" className="w-full h-full object-contain" />
+            <Image src={dataUrl} alt="Lovewrit QR Code" width={208} height={208} unoptimized className="w-full h-full object-contain" />
           ) : (
             <div className="text-xs text-neutral-400">Generating code...</div>
           )}

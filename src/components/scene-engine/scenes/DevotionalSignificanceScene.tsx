@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { DevotionalSignificanceSceneConfig } from "@/types/scenes";
-import { Calendar, Clock, MapPin, Sparkles, HeartHandshake, Info } from "lucide-react";
+import { Calendar, MapPin, Info } from "lucide-react";
 
 interface DevotionalSignificanceSceneProps {
   config: DevotionalSignificanceSceneConfig;

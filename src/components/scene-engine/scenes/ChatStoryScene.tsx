@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { ChatStorySceneConfig } from "@/types/scenes";
-import { MessageCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { ImageLightboxModal, LightboxPhoto } from "@/components/shared/ImageLightboxModal";
 
 interface ChatStorySceneProps {

@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useState } from "react";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import { getBaseUrl } from "@/lib/base-url";
-import { Sparkles, Users, Award, Copy, Check, ArrowRight, ShieldCheck, HelpCircle } from "lucide-react";
+import { Sparkles, Users, Copy, Check, ShieldCheck } from "lucide-react";
 
 export default function CreatorsPage() {
   const [lookupInput, setLookupInput] = useState("");

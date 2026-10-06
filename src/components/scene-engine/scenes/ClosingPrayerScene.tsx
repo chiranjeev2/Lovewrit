@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { motion } from "framer-motion";
 import { ClosingPrayerSceneConfig } from "@/types/scenes";
 import { RotateCcw } from "lucide-react";
 

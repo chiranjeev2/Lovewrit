@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { DEFAULT_OCCASIONS, OccasionEvent, getActiveUpcomingOccasion } from "@/lib/occasion-calendar";
 import { isRequestAdminAuthorized, verifyAdminMasterKey } from "@/lib/admin-auth";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const setting = await db.platformSetting.findUnique({
       where: { key: "occasion_calendar" },

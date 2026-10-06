@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import Image from "next/image";
 import {
   COLOR_THEMES,
   ColorThemeKey,
@@ -16,7 +17,6 @@ import {
   MapPin,
   CheckCircle,
   Navigation,
-  X,
   Maximize2,
   Film,
   Camera,
@@ -534,10 +534,12 @@ const PagePreview = React.memo(function PagePreview({
         {photos[0] && (
           <div className="pt-4 pb-1 flex justify-center">
             <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl transition-all duration-300 hover:scale-105 group bg-neutral-900/60">
-              <img
+              <Image
                 src={photos[0]}
                 alt={displayedRecipient}
-                className="w-full h-full object-cover"
+                fill
+                unoptimized
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition" />
             </div>
@@ -631,12 +633,14 @@ const PagePreview = React.memo(function PagePreview({
                   handlePhotoClick(idx >= 0 ? idx : 0);
                 }}
                 title="Click to view full photo"
-                className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group"
+                className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group relative"
               >
-                <img
+                <Image
                   src={timeline[timelineIndex]?.photoUrl}
-                  alt={timeline[timelineIndex]?.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                  alt={timeline[timelineIndex]?.title || "Timeline photo"}
+                  fill
+                  unoptimized
+                  className="object-cover group-hover:scale-105 transition duration-300"
                 />
               </div>
             )}
@@ -700,10 +704,12 @@ const PagePreview = React.memo(function PagePreview({
                   className={`group relative cursor-pointer overflow-hidden rounded-3xl border ${theme.borderStyle} bg-neutral-900/80 p-2 shadow-2xl transition duration-300 hover:scale-[1.03] hover:z-20 ${rotation} hover:rotate-0`}
                 >
                   <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-950">
-                    <img
+                    <Image
                       src={img}
                       alt={`Moment ${i + 1}`}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                      fill
+                      unoptimized
+                      className="object-cover transition duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition flex items-end justify-between p-3.5">
                       <span className="text-xs font-medium text-white">
@@ -742,11 +748,13 @@ const PagePreview = React.memo(function PagePreview({
                       title="Click to view full photo"
                       className="w-full sm:w-1/2 cursor-pointer group relative overflow-hidden rounded-3xl border border-white/20 bg-neutral-900/90 p-2 shadow-xl hover:scale-[1.02] transition"
                     >
-                      <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl">
-                        <img
+                      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl">
+                        <Image
                           src={img}
                           alt={`Memory step ${i + 1}`}
-                          className="h-full w-full object-cover group-hover:scale-105 transition duration-500"
+                          fill
+                          unoptimized
+                          className="object-cover group-hover:scale-105 transition duration-500"
                         />
                       </div>
                     </div>
@@ -817,10 +825,12 @@ const PagePreview = React.memo(function PagePreview({
 
                     {/* Negative Frame Image */}
                     <div className="aspect-[3/4] w-full overflow-hidden rounded-md bg-black relative border-2 border-black/90 shadow-inner">
-                      <img
+                      <Image
                         src={img}
                         alt={`Filmstrip frame ${i + 1}`}
-                        className="h-full w-full object-cover group-hover:scale-105 group-hover:contrast-105 transition duration-500 filter"
+                        fill
+                        unoptimized
+                        className="object-cover group-hover:scale-105 group-hover:contrast-105 transition duration-500 filter"
                       />
                       {/* Subtle retro vignette overlay */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none opacity-60" />

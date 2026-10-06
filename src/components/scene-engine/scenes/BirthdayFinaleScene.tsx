@@ -175,17 +175,22 @@ export default function BirthdayFinaleScene({
       }
     };
     window.addEventListener("keydown", handleKey);
+    const holdTimer = holdTimerRef.current;
+    const progressInterval = progressIntervalRef.current;
+    const audioContext = audioContextRef.current;
+    const mediaStream = mediaStreamRef.current;
+    const micAnimFrame = micAnimFrameRef.current;
     return () => {
       window.removeEventListener("keydown", handleKey);
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-      if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      if (progressInterval) clearInterval(progressInterval);
+      if (holdTimer) clearTimeout(holdTimer);
+      if (mediaStream) {
+        mediaStream.getTracks().forEach((t) => t.stop());
       }
-      if (audioContextRef.current) {
-        audioContextRef.current.close().catch(() => {});
+      if (audioContext) {
+        audioContext.close().catch(() => {});
       }
-      if (micAnimFrameRef.current) cancelAnimationFrame(micAnimFrameRef.current);
+      if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
     };
   }, [isBlown, triggerCelebration]);
 
@@ -423,6 +428,7 @@ export default function BirthdayFinaleScene({
               onClick={() => {
                 setIsBlown(false);
                 setHoldProgress(0);
+                onReplay?.();
               }}
               className="py-3 px-4 rounded-2xl bg-stone-100 hover:bg-stone-200 text-stone-600 text-xs font-semibold transition cursor-pointer flex items-center justify-center gap-1.5 w-full sm:w-auto"
               title="Light candle again"

@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { WishesSceneConfig } from "@/types/scenes";
-import { Heart, ChevronLeft, ChevronRight, MessageSquareHeart, ArrowRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, MessageSquareHeart, ArrowRight } from "lucide-react";
 
 interface WishesSceneProps {
   config: WishesSceneConfig;

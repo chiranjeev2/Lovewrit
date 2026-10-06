@@ -9,7 +9,7 @@ import {
   getActiveUpcomingOccasion,
   calculateTimeRemaining,
 } from "@/lib/occasion-calendar";
-import { Sparkles, ArrowRight, Clock } from "lucide-react";
+import { ArrowRight, Clock } from "lucide-react";
 
 export function OccasionCountdownBanner() {
   const pathname = usePathname();

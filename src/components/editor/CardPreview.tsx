@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   COLOR_THEMES,
   ColorThemeKey,
@@ -616,11 +617,13 @@ const CardPreview = React.memo(function CardPreview({
                       : theme.borderStyle
                   }`}
                 >
-                  <img
+                  <Image
                     src={displayPhotos[0]}
                     alt="Moment photo"
+                    fill
+                    unoptimized
                     onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[0]]: true }))}
-                    className="w-full h-full object-cover"
+                    className="object-cover"
                   />
                   {isScrollTheme && (
                     <div className="absolute inset-0 pointer-events-none rounded-[inherit] border border-[#8c6227]/40 ring-1 ring-inset ring-amber-900/20" />
@@ -641,11 +644,13 @@ const CardPreview = React.memo(function CardPreview({
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
-                    <img
+                    <Image
                       src={displayPhotos[0]}
                       alt="Moment 1"
+                      fill
+                      unoptimized
                       onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[0]]: true }))}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
                     />
                   </div>
                   <div
@@ -655,11 +660,13 @@ const CardPreview = React.memo(function CardPreview({
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
-                    <img
+                    <Image
                       src={displayPhotos[1]}
                       alt="Moment 2"
+                      fill
+                      unoptimized
                       onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[1]]: true }))}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
                     />
                   </div>
                 </div>
@@ -672,11 +679,13 @@ const CardPreview = React.memo(function CardPreview({
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
-                    <img
+                    <Image
                       src={displayPhotos[0]}
                       alt="Moment 1"
+                      fill
+                      unoptimized
                       onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[0]]: true }))}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
                     />
                   </div>
                   <div
@@ -686,11 +695,13 @@ const CardPreview = React.memo(function CardPreview({
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
-                    <img
+                    <Image
                       src={displayPhotos[1]}
                       alt="Moment 2"
+                      fill
+                      unoptimized
                       onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[1]]: true }))}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
                     />
                   </div>
                   <div
@@ -700,11 +711,13 @@ const CardPreview = React.memo(function CardPreview({
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
-                    <img
+                    <Image
                       src={displayPhotos[2]}
                       alt="Moment 3"
+                      fill
+                      unoptimized
                       onError={() => setImageErrors((prev) => ({ ...prev, [displayPhotos[2]]: true }))}
-                      className="w-full h-full object-cover"
+                      className="object-cover"
                     />
                   </div>
                 </div>

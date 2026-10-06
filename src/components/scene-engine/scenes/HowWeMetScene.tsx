@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { HowWeMetSceneConfig } from "@/types/scenes";
-import { MapPin, Calendar, Heart, ArrowRight } from "lucide-react";
+import { MapPin, Heart, ArrowRight } from "lucide-react";
 import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 interface HowWeMetSceneProps {

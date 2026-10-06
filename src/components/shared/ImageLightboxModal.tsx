@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -45,7 +46,10 @@ export function ImageLightboxModal({
   const previousActiveElement = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   // Normalize photos list
@@ -69,9 +73,11 @@ export function ImageLightboxModal({
   // Sync index when initialIndex changes or modal opens
   useEffect(() => {
     if (isOpen) {
-      setCurrentIndex(Math.max(0, Math.min(initialIndex, total - 1)));
-      setScale(1);
-      setPan({ x: 0, y: 0 });
+      const timer = setTimeout(() => {
+        setCurrentIndex(Math.max(0, Math.min(initialIndex, total - 1)));
+        setScale(1);
+        setPan({ x: 0, y: 0 });
+      }, 0);
       previousActiveElement.current = document.activeElement as HTMLElement | null;
 
       // Lock body scroll
@@ -79,6 +85,7 @@ export function ImageLightboxModal({
       document.body.style.overflow = "hidden";
 
       return () => {
+        clearTimeout(timer);
         document.body.style.overflow = originalOverflow;
         if (previousActiveElement.current) {
           previousActiveElement.current.focus();
@@ -376,9 +383,12 @@ export function ImageLightboxModal({
                 transition: scale === 1 ? "transform 0.2s ease-out" : "none",
               }}
             >
-              <img
+              <Image
                 src={currentPhoto.src}
                 alt={currentPhoto.alt || "Keepsake memory photo"}
+                width={1200}
+                height={800}
+                unoptimized
                 className="max-h-[75vh] max-w-[92vw] sm:max-w-[85vw] object-contain rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] border border-white/10"
                 draggable={false}
               />
