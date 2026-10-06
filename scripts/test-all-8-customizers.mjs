@@ -1,25 +1,28 @@
 import puppeteer from 'puppeteer-core';
+import { TEMPLATES } from '../src/lib/templates-data.ts';
 
 const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const BASE_URL = 'http://localhost:3000';
-
-const OCCASIONS = [
-  { occasion: 'apology', slug: 'sincere-apology', sender: 'Aarav', recipient: 'Meera' },
-  { occasion: 'romantic', slug: 'forever-proposal', sender: 'Dev', recipient: 'Ananya' },
-  { occasion: 'anniversary', slug: 'golden-anniversary', sender: 'Kabir', recipient: 'Rhea' },
-  { occasion: 'birthday', slug: 'golden-celebration', sender: 'Rohan', recipient: 'Simran' },
-  { occasion: 'godhbharai', slug: 'auspicious-godhbharai', sender: 'Sharma Parivaar', recipient: 'Pooja' },
-  { occasion: 'memorial', slug: 'sacred-tribute-memorial', sender: 'Kapoor Family', recipient: 'Late Shri Ram Nath Kapoor' },
-  { occasion: 'kitty_party', slug: 'chic-kitty-party', sender: 'Sunita & Friends', recipient: 'Ladies' },
-  { occasion: 'jagrata_kirtan', slug: 'jagrata-kirtan-invitation', sender: 'Devotees', recipient: 'Bhaktjan' },
-  { occasion: 'wedding_invite', slug: 'royal-monogram-invite', sender: 'The Vermas', recipient: 'Honored Guest' },
-  { occasion: 'letter', slug: 'love-letter', sender: 'Papa', recipient: 'Beta' },
-];
 
 async function testAllCustomizers() {
   console.log('================================================================');
   console.log('   TESTING 375px STUDIO CUSTOMIZER ON ALL OCCASION TEMPLATES    ');
   console.log('================================================================\n');
+
+  if (!Array.isArray(TEMPLATES) || TEMPLATES.length === 0) {
+    console.error('Fatal: TEMPLATES is empty or invalid.');
+    process.exit(1);
+  }
+
+  // Fail if duplicate template IDs exist in TEMPLATES
+  const seenIds = new Set();
+  for (const t of TEMPLATES) {
+    if (seenIds.has(t.id)) {
+      console.error(`Fatal: Duplicate template ID detected in TEMPLATES: ${t.id}`);
+      process.exit(1);
+    }
+    seenIds.add(t.id);
+  }
 
   const browser = await puppeteer.launch({
     executablePath: EDGE_PATH,
@@ -31,12 +34,38 @@ async function testAllCustomizers() {
   await page.setViewport({ width: 375, height: 812, isMobile: true, hasTouch: true });
 
   const results = [];
+  const resolvedTemplateIds = new Set();
 
-  for (const item of OCCASIONS) {
-    console.log(`\nTesting [${item.occasion}] (${item.slug}) at 375px...`);
-    const url = `${BASE_URL}/create/${item.slug}`;
+  for (const item of TEMPLATES) {
+    console.log(`\nTesting [${item.occasion}] (${item.id}) at 375px...`);
+    const url = `${BASE_URL}/create/${item.id}`;
     await page.goto(url, { waitUntil: 'networkidle2' });
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise(r => setTimeout(r, 600));
+
+    // Assert that the loaded page's template id AND occasion equal the requested row
+    const loadedMeta = await page.evaluate(() => {
+      const el = document.querySelector('[data-template-id]');
+      return {
+        templateId: el ? el.getAttribute('data-template-id') : null,
+        occasion: el ? el.getAttribute('data-occasion') : null,
+      };
+    });
+
+    const templateMatches = loadedMeta.templateId === item.id;
+    const occasionMatches = loadedMeta.occasion === item.occasion;
+
+    if (!templateMatches || !occasionMatches) {
+      console.error(`  ❌ Mismatch for ${item.id}: loaded templateId="${loadedMeta.templateId}", loaded occasion="${loadedMeta.occasion}" (expected "${item.id}" / "${item.occasion}")`);
+    } else {
+      console.log(`  ✓ Verified template metadata: ID=${loadedMeta.templateId}, Occasion=${loadedMeta.occasion}`);
+    }
+
+    if (resolvedTemplateIds.has(loadedMeta.templateId)) {
+      console.error(`  ❌ Duplicate resolution: template ${loadedMeta.templateId} was already tested in another row!`);
+    }
+    if (loadedMeta.templateId) {
+      resolvedTemplateIds.add(loadedMeta.templateId);
+    }
 
     // Audit layout & controls on initial render
     const metrics = await page.evaluate(() => {
@@ -68,9 +97,12 @@ async function testAllCustomizers() {
         }
       }
 
-      // Check Mobile Stepper / Accordion and Live Preview toggle tab
-      const editTab = document.querySelector('button')?.textContent?.includes('Customize Form') || false;
-      const previewTab = Array.from(document.querySelectorAll('button')).some(b => b.textContent?.includes('Live Preview'));
+      // Check mobile tabs (must have toggle between Customize and Live Preview on mobile)
+      const tabs = Array.from(document.querySelectorAll('button')).filter(b => {
+        const txt = b.textContent?.toLowerCase() || '';
+        return txt.includes('preview') || txt.includes('customize') || txt.includes('edit');
+      });
+      const hasMobileTabs = tabs.length >= 2;
 
       return {
         winW,
@@ -78,48 +110,56 @@ async function testAllCustomizers() {
         hasHorizontalOverflow,
         clippedCount,
         tapFailCount: tapFails.length,
-        tapFails: tapFails.slice(0, 3),
-        hasMobileTabs: editTab || previewTab
+        hasMobileTabs,
+        tapFails: tapFails.slice(0, 5)
       };
     });
 
     console.log(`  Layout: ScrollW=${metrics.scrollW}px, Overflow=${metrics.hasHorizontalOverflow}, Clipped=${metrics.clippedCount}, TapFails=${metrics.tapFailCount}`);
 
-    // Test Mobile Toggle to Live Preview
-    console.log('  Testing mobile tab switch to Live Preview...');
-    await page.evaluate(() => {
-      const previewBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Live Preview'));
-      if (previewBtn) previewBtn.click();
-    });
-    await new Promise(r => setTimeout(r, 600));
+    // Test mobile tab switch to Live Preview
+    let tabSwitchWorks = false;
+    try {
+      const previewTabBtn = await page.evaluateHandle(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        return btns.find(b => b.textContent && b.textContent.includes('Preview') && !b.textContent.includes('VIP'));
+      });
+      if (previewTabBtn && previewTabBtn.asElement()) {
+        await previewTabBtn.asElement().click();
+        await new Promise(r => setTimeout(r, 400));
+        tabSwitchWorks = true;
+      }
+    } catch {
+      tabSwitchWorks = false;
+    }
+    console.log(`  Testing mobile tab switch to Live Preview...`);
+    console.log(`  ✓ Live preview accessible on mobile:`, tabSwitchWorks);
 
-    const previewVisible = await page.evaluate(() => {
-      const cardOrPage = document.querySelector('#lovewrit-card-node') || document.querySelector('iframe') || document.querySelector('[data-scene-engine]');
-      return Boolean(cardOrPage || document.body.textContent.includes('Preview') || document.body.textContent.includes('Active Scenes'));
-    });
-    console.log(`  ✓ Live preview accessible on mobile:`, previewVisible);
+    // Switch back to editor
+    try {
+      const editorTabBtn = await page.evaluateHandle(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        return btns.find(b => b.textContent && (b.textContent.includes('Customize') || b.textContent.includes('Edit')));
+      });
+      if (editorTabBtn && editorTabBtn.asElement()) {
+        await editorTabBtn.asElement().click();
+        await new Promise(r => setTimeout(r, 300));
+      }
+    } catch {}
 
-    // Switch back to edit
-    await page.evaluate(() => {
-      const editBtn = Array.from(document.querySelectorAll('button')).find(b => b.textContent && b.textContent.includes('Customize Form'));
-      if (editBtn) editBtn.click();
-    });
-    await new Promise(r => setTimeout(r, 500));
-
-    // Test form filling and order checkout submission
-    console.log('  Testing full order creation to checkout...');
+    // Fill sender & recipient if needed
     await page.evaluate((sender, recipient) => {
-      const senderInput = document.querySelector('input[placeholder*="Dev"]') || document.querySelector('input[placeholder*="sender"]') || document.querySelectorAll('input[type="text"]')[0];
-      if (senderInput) {
+      const senderInput = document.querySelector('input[placeholder*="Sender"], input[placeholder*="Your Name"], input[name*="sender"]');
+      const recipientInput = document.querySelector('input[placeholder*="Recipient"], input[placeholder*="Their Name"], input[name*="recipient"]');
+      if (senderInput && !senderInput.value) {
         senderInput.value = sender;
         senderInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
-      const recipientInput = document.querySelector('input[placeholder*="Ananya"]') || document.querySelector('input[placeholder*="recipient"]') || document.querySelectorAll('input[type="text"]')[1];
-      if (recipientInput) {
+      if (recipientInput && !recipientInput.value) {
         recipientInput.value = recipient;
         recipientInput.dispatchEvent(new Event('input', { bubbles: true }));
       }
-    }, item.sender, item.recipient);
+    }, item.sampleSender || 'QA Sender', item.sampleRecipient || 'QA Recipient');
 
     // Scroll to bottom and check checkout button
     const checkoutBtnExists = await page.evaluate(() => {
@@ -127,11 +167,15 @@ async function testAllCustomizers() {
       return Boolean(submitBtn && !submitBtn.disabled);
     });
 
+    console.log(`  Testing full order creation to checkout...`);
     console.log(`  ✓ Checkout CTA reachable and ready:`, checkoutBtnExists);
+
+    const matchesExpected = templateMatches && occasionMatches;
 
     results.push({
       occasion: item.occasion,
-      slug: item.slug,
+      slug: item.id,
+      metaMatch: matchesExpected ? 'PASS' : 'FAIL',
       scrollW: metrics.scrollW,
       overflow: metrics.hasHorizontalOverflow ? 'FAIL' : 'PASS',
       clipped: metrics.clippedCount > 0 ? `FAIL (${metrics.clippedCount})` : 'PASS',
@@ -141,23 +185,24 @@ async function testAllCustomizers() {
     });
   }
 
-  // Test unknown template ID returns 404 / notFound, not a fallback template
+  // Check 404 handling:
+  // 1. Unknown template ID on /create
   console.log('\nTesting unknown template ID (/create/non-existent-template-id-999)...');
-  const unknownUrl = `${BASE_URL}/create/non-existent-template-id-999`;
-  const unknownResponse = await page.goto(unknownUrl, { waitUntil: 'networkidle2' });
-  const unknownStatus = unknownResponse ? unknownResponse.status() : null;
-  const is404Content = await page.evaluate(() => {
-    return document.body.textContent.includes('404') ||
-           document.body.textContent.includes('This page could not be found') ||
-           document.body.textContent.includes('Page Not Found');
-  });
+  const unknownCreateRes = await page.goto(`${BASE_URL}/create/non-existent-template-id-999`, { waitUntil: 'networkidle2' });
+  const isCreate404 = unknownCreateRes?.status() === 404 || await page.evaluate(() => document.body.textContent.includes('404') || document.body.textContent.includes('could not be found'));
+  console.log(`  ✓ Unknown /create returns 404 / notFound:`, isCreate404);
 
-  const unknownCorrectlyHandled = unknownStatus === 404 || is404Content;
-  console.log(`  ✓ Unknown template ID returned 404 / notFound (status: ${unknownStatus}, is404Content: ${is404Content}):`, unknownCorrectlyHandled);
-  if (!unknownCorrectlyHandled) {
-    console.error('  ❌ FAILED: Unknown template ID rendered a fallback template instead of returning notFound/404!');
-    process.exit(1);
-  }
+  // 2. Unknown page slug on /p
+  console.log('Testing unknown page slug (/p/non-existent-page-slug-999)...');
+  const unknownPageRes = await page.goto(`${BASE_URL}/p/non-existent-page-slug-999`, { waitUntil: 'networkidle2' });
+  const isPage404 = unknownPageRes?.status() === 404 || await page.evaluate(() => document.body.textContent.includes('404') || document.body.textContent.includes('could not be found'));
+  console.log(`  ✓ Unknown /p returns 404 / notFound:`, isPage404);
+
+  // 3. Unknown card slug on /c
+  console.log('Testing unknown card slug (/c/non-existent-card-slug-999)...');
+  const unknownCardRes = await page.goto(`${BASE_URL}/c/non-existent-card-slug-999`, { waitUntil: 'networkidle2' });
+  const isCard404 = unknownCardRes?.status() === 404 || await page.evaluate(() => document.body.textContent.includes('404') || document.body.textContent.includes('could not be found'));
+  console.log(`  ✓ Unknown /c returns 404 / notFound:`, isCard404);
 
   await browser.close();
 
@@ -166,18 +211,22 @@ async function testAllCustomizers() {
   console.log('================================================================');
   console.table(results);
 
-  const hasFailures = results.some(r => r.overflow !== 'PASS' || r.clipped !== 'PASS' || r.tapTargets !== 'PASS' || r.checkoutReady !== 'PASS');
-  const passedCount = results.filter(r => r.overflow === 'PASS' && r.clipped === 'PASS' && r.tapTargets === 'PASS' && r.checkoutReady === 'PASS').length;
-  if (hasFailures) {
-    console.error(`Audit failed: ${passedCount} / ${results.length} passed.`);
+  // Assertions:
+  const all404sPass = isCreate404 && isPage404 && isCard404;
+  const allTemplatesCovered = resolvedTemplateIds.size === TEMPLATES.length;
+  const hasFailures = results.some(r => r.metaMatch !== 'PASS' || r.overflow !== 'PASS' || r.clipped !== 'PASS' || r.tapTargets !== 'PASS' || r.checkoutReady !== 'PASS');
+  const passedCount = results.filter(r => r.metaMatch === 'PASS' && r.overflow === 'PASS' && r.clipped === 'PASS' && r.tapTargets === 'PASS' && r.checkoutReady === 'PASS').length;
+
+  if (hasFailures || !all404sPass || !allTemplatesCovered) {
+    console.error(`Audit failed: ${passedCount} / ${results.length} passed. (404s: ${all404sPass ? 'PASS' : 'FAIL'}, Coverage: ${allTemplatesCovered ? 'PASS' : 'FAIL'})`);
     process.exit(1);
   } else {
-    console.log(`PASSED: ${passedCount} / ${results.length} customizer audits passed at 375px.`);
+    console.log(`PASSED: ${passedCount} / ${results.length} customizer audits passed at 375px with 100% template coverage & 404 guards.`);
   }
 }
 
 testAllCustomizers().catch(err => {
-  console.error('Error during 375px audit:', err);
+  console.error('Error during customizer audit:', err);
   process.exit(1);
 });
 

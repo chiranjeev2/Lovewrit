@@ -852,7 +852,11 @@ export default function CreateLovewritPage({
       : null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-rose-500 selection:text-white">
+    <div
+      data-template-id={template.id}
+      data-occasion={template.occasion}
+      className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-rose-500 selection:text-white"
+    >
       <Navbar />
 
       {/* Founder Test Mode Active Notice */}

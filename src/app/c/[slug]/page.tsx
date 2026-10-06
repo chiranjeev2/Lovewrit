@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useRef, use } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
 import OpeningMoment from "@/components/shared/OpeningMoment";
 import CountdownReveal from "@/components/interactive/CountdownReveal";
@@ -325,6 +326,10 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     );
   }
 
+  if (!loading && !order) {
+    notFound();
+  }
+
   const cardData: CardCustomData = order?.cardData || {
     senderName: "Dev",
     recipientName: "Ananya",
@@ -366,7 +371,11 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const cardTheme = COLOR_THEMES[cardData.colorTheme as ColorThemeKey] || COLOR_THEMES.rose;
 
   return (
-    <div className={`relative min-h-screen bg-gradient-to-b ${cardTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8 overflow-x-hidden w-full max-w-full`}>
+    <div
+      data-template-id={order?.templateId || template.id}
+      data-occasion={order?.cardData?.occasion || template.occasion}
+      className={`relative min-h-screen bg-gradient-to-b ${cardTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8 overflow-x-hidden w-full max-w-full`}
+    >
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}

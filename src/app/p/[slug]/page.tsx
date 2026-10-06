@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, use } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, notFound } from "next/navigation";
 import PagePreview, {
   TimelineMilestone,
   SecretNote,
@@ -258,6 +258,10 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     );
   }
 
+  if (!loading && !order) {
+    notFound();
+  }
+
   const pageData: PageCustomData = order?.pageData || {
     senderName: "Aarav",
     recipientName: "Simran",
@@ -336,7 +340,11 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
       });
 
     return (
-      <div className={`w-full h-[100dvh] bg-gradient-to-b ${pageTheme.bgGradient} overflow-hidden`}>
+      <div
+        data-template-id={order?.templateId || template.id}
+        data-occasion={order?.pageData?.occasion || template.occasion}
+        className={`w-full h-[100dvh] bg-gradient-to-b ${pageTheme.bgGradient} overflow-hidden`}
+      >
         <SceneContainer
           scenes={scenes}
           senderName={pageData.senderName}
@@ -356,7 +364,11 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   }
 
   return (
-    <div className={`relative min-h-screen bg-gradient-to-b ${pageTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8`}>
+    <div
+      data-template-id={order?.templateId || template.id}
+      data-occasion={order?.pageData?.occasion || template.occasion}
+      className={`relative min-h-screen bg-gradient-to-b ${pageTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8`}
+    >
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}
