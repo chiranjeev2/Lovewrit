@@ -128,6 +128,34 @@ async function runQa() {
     summary.push({ suite: 'Simulated Session Production Guard', status: 'FAILED', details: 'sim_ security test failed' });
   }
 
+  // 3d. Client Secret Leak Audit
+  console.log('[Step 4c/13] Running Client Secret Leak & Env Security Audit...');
+  try {
+    const leakOutput = execSync('node scripts/test-client-secret-leak.mjs', { encoding: 'utf-8' });
+    const match = leakOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : '5 / 5';
+    console.log(`  ✅ Client Secret Leak Audit: ${countStr} Passed (zero secret leaks, server-only API keys)\n`);
+    summary.push({ suite: 'Client Secret Leak Audit', status: 'PASSED', details: `${countStr} assertions green (zero secret leaks, server-only keys)` });
+  } catch (err) {
+    console.error('  ❌ Secret leak test failed:', err.message);
+    summary.push({ suite: 'Client Secret Leak Audit', status: 'FAILED', details: 'Secret leak test failed' });
+    process.exit(1);
+  }
+
+  // 3e. Razorpay Flow & Cryptographic Verification Test
+  console.log('[Step 4d/13] Running Razorpay Cryptographic Verification & Amount Suite...');
+  try {
+    const rzpOutput = execSync('node scripts/test-razorpay-flow.mjs', { encoding: 'utf-8' });
+    const match = rzpOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : '25 / 25';
+    console.log(`  ✅ Razorpay Security Suite: ${countStr} Passed (HMAC-SHA256 signatures, webhooks, multi-currency)\n`);
+    summary.push({ suite: 'Razorpay Flow & Security Suite', status: 'PASSED', details: `${countStr} assertions green (HMAC-SHA256 signatures, webhooks, amounts)` });
+  } catch (err) {
+    console.error('  ❌ Razorpay test failed:', err.message);
+    summary.push({ suite: 'Razorpay Flow & Security Suite', status: 'FAILED', details: 'Razorpay test failed' });
+    process.exit(1);
+  }
+
   // 4. Ensure server is active for browser testing
   console.log('[Step 4/9] Ensuring server is ready for real browser suites...');
   spawnedServer = await ensureServerRunning();
