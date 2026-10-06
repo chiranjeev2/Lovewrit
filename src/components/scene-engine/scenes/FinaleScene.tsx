@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Heart, RotateCcw, Share2, Sparkles } from "lucide-react";
+import { Heart, RotateCcw, Sparkles } from "lucide-react";
 
 interface FinaleSceneProps {
   title?: string;

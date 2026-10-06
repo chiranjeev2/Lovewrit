@@ -3,6 +3,7 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import confetti from "canvas-confetti";
@@ -268,7 +269,7 @@ function SuccessContent() {
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center space-x-3">
                     <div className="rounded-lg bg-white p-1.5 border border-rose-500/20">
-                      <img src={cardQrUrl} alt="Card QR Code" className="h-16 w-16 object-contain" />
+                      <Image src={cardQrUrl} alt="Card QR Code" width={64} height={64} unoptimized className="h-16 w-16 object-contain" />
                     </div>
                     <span className="text-[11px] text-neutral-400">Card QR code ready for printing or scanning</span>
                   </div>
@@ -341,7 +342,7 @@ function SuccessContent() {
                 <div className="flex items-center justify-between pt-2">
                   <div className="flex items-center space-x-3">
                     <div className="rounded-lg bg-white p-1.5 border border-rose-500/20">
-                      <img src={pageQrUrl} alt="Page QR Code" className="h-16 w-16 object-contain" />
+                      <Image src={pageQrUrl} alt="Page QR Code" width={64} height={64} unoptimized className="h-16 w-16 object-contain" />
                     </div>
                     <span className="text-[11px] text-neutral-400">Page QR code ready for printing or scanning</span>
                   </div>
@@ -405,9 +406,12 @@ function SuccessContent() {
               {qrDataUrl ? (
                 <div className="flex flex-col items-center space-y-4">
                   <div className="rounded-2xl bg-white p-3 shadow-2xl border-4 border-rose-500/20">
-                    <img
+                    <Image
                       src={qrDataUrl}
                       alt="Lovewrit QR Code"
+                      width={176}
+                      height={176}
+                      unoptimized
                       className="h-44 w-44 object-contain rounded-lg"
                     />
                   </div>

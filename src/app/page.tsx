@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useApp } from "@/context/AppContext";
 import { TEMPLATES } from "@/lib/templates-data";
 import { PRICING_TIERS } from "@/lib/currency";
@@ -15,22 +16,15 @@ import {
   Heart,
   Sparkles,
   ArrowRight,
-  Music,
   Check,
-  Zap,
-  Clock,
-  Mic,
-  QrCode,
   ShieldCheck,
   Flame,
-  PartyPopper,
-  Layers,
   Crown,
   Smartphone,
 } from "lucide-react";
 
 export default function HomePage() {
-  const { currency, region, t } = useApp();
+  const { region } = useApp();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [formatFilter, setFormatFilter] = useState<"ALL" | "CARD" | "PAGE">("ALL");
 
@@ -309,10 +303,12 @@ export default function HomePage() {
                 >
                   {/* Thumbnail */}
                   <div className="relative aspect-[16/10] overflow-hidden bg-neutral-800">
-                    <img
+                    <Image
                       src={tmpl.coverImage}
                       alt={tmpl.name}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      fill
+                      unoptimized
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-neutral-950 via-neutral-950/20 to-transparent" />
 

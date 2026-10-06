@@ -99,7 +99,7 @@ async function runFullVerification() {
       tier: 'SELF_SERVICE',
       isBundle: false,
       isAdSupported: true,
-      masterKey: 'lovewrit_master_founder_secret_2026',
+      masterKey: process.env.ADMIN_MASTER_KEY || '',
       pageData: {
         senderName: 'Aarav',
         recipientName: 'Simran',

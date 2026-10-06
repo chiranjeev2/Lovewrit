@@ -594,3 +594,4 @@ verifyPdfRasterization().catch(err => {
   console.error('❌ PDF Rasterization Verification Failed:', err);
   process.exit(1);
 });
+

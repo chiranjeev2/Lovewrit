@@ -104,7 +104,7 @@ async function testKittyCelebrationPack() {
   // Test 2: Create Published Kitty Party Order via /api/checkout
   // -------------------------------------------------------------
   console.log('\n[2] Creating an actual published Kitty Party order via /api/checkout...');
-  const orderRes = await page.evaluate(async () => {
+  const orderRes = await page.evaluate(async (mKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -114,7 +114,7 @@ async function testKittyCelebrationPack() {
         tier: 'SELF_SERVICE',
         customerName: 'Shalini & Friends',
         customerEmail: 'shalini.kitty@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
+        masterKey: mKey,
         pageData: {
           senderName: 'Shalini & The Glam Tribe',
           recipientName: 'The Glam Tribe',
@@ -125,7 +125,7 @@ async function testKittyCelebrationPack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
 
   console.log('  ✓ Order created response:', orderRes);
   const slug = orderRes.slug;

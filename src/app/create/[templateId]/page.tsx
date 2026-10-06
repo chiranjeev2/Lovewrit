@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useRef, useEffect, use, useDeferredValue, useMemo } from "react";
+import React, { useState, useRef, useEffect, use, useDeferredValue } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
 import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
@@ -44,38 +45,28 @@ import {
   Upload,
   Calendar,
   Clock,
-  Sparkle,
   Music,
   Eye,
   Sliders,
   AlertCircle,
-  HelpCircle,
   Check,
-  ShieldCheck,
   Loader2,
   Gift,
   CreditCard,
   Tag,
-  Volume2,
   Lock,
   Camera,
   Film,
   Play,
   Pause,
   MapPin,
-  Flame,
   Crown,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Info,
-  Layers,
   FileText,
   Plus,
   Trash2,
-  ArrowRight,
-  ArrowUp,
-  ArrowDown,
   Zap,
   Mic,
 } from "lucide-react";
@@ -99,7 +90,7 @@ export default function CreateLovewritPage({
   const resolvedParams = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { currency, setCurrency, region, language, setLanguage, t } = useApp();
+  const { currency, setCurrency, region, language } = useApp();
 
   const templateId = resolvedParams.templateId;
   const template = getTemplateById(templateId);
@@ -119,7 +110,7 @@ export default function CreateLovewritPage({
   const [senderName, setSenderName] = useState<string>(template.sampleSender);
   const [recipientName, setRecipientName] = useState<string>(template.sampleRecipient);
   const [occasion, setOccasion] = useState<string>(template.occasion);
-  const [location, setLocation] = useState<string>(template.sampleLocation || "");
+  const [location] = useState<string>(template.sampleLocation || "");
   const [venueName, setVenueName] = useState<string>("");
   const [venueAddress, setVenueAddress] = useState<string>("");
   const [venueMapUrl, setVenueMapUrl] = useState<string>("");
@@ -130,6 +121,7 @@ export default function CreateLovewritPage({
   const [selectedTheme, setSelectedTheme] = useState<ColorThemeKey>(template.defaultTheme);
   const [photoShape, setPhotoShape] = useState<PhotoShapeKey>(template.defaultShape);
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageCode>(language);
+  const [nowTimestamp, setNowTimestamp] = useState<number>(0);
 
   // Photo uploads
   const [cardPhoto, setCardPhoto] = useState<string>(template.samplePhotos[0] || "");
@@ -189,6 +181,7 @@ export default function CreateLovewritPage({
 
   // Founder Master Pass (Free All-Access)
   const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
+  const [founderPassKey, setFounderPassKey] = useState<string>("");
 
   // Regift 50% discount & confirmed reply details
   const [replyToSlug, setReplyToSlug] = useState<string | null>(null);
@@ -264,28 +257,16 @@ export default function CreateLovewritPage({
             })
             .catch((err) => console.error("Error verifying reply regift:", err));
         }
-        if (
-          fKeyParam &&
-          (fKeyParam === "lovewrit_master_founder_secret_2026" ||
-            fKeyParam === "memoir_master_founder_secret_2026" ||
-            fKeyParam === "founder_master")
-        ) {
+        const activeFounderKey =
+          fKeyParam ||
+          (typeof window !== "undefined"
+            ? localStorage.getItem("lovewrit_founder_pass")
+            : null);
+        if (activeFounderKey && activeFounderKey.trim().length >= 20) {
+          setFounderPassKey(activeFounderKey.trim());
           setIsFounderFree(true);
           try {
-            localStorage.setItem("lovewrit_founder_pass", fKeyParam);
-          } catch {}
-        } else {
-          try {
-            const savedKey =
-              localStorage.getItem("lovewrit_founder_pass") ||
-              localStorage.getItem("memoir_founder_pass");
-            if (
-              savedKey === "lovewrit_master_founder_secret_2026" ||
-              savedKey === "memoir_master_founder_secret_2026" ||
-              savedKey === "founder_master"
-            ) {
-              setIsFounderFree(true);
-            }
+            localStorage.setItem("lovewrit_founder_pass", activeFounderKey.trim());
           } catch {}
         }
 
@@ -314,6 +295,7 @@ export default function CreateLovewritPage({
             })
             .catch(() => {});
         }
+        setNowTimestamp(Date.now());
       });
     }
     return () => {
@@ -321,7 +303,7 @@ export default function CreateLovewritPage({
         audioPreviewRef.current.pause();
       }
     };
-  }, []);
+  }, [searchParams, template.id]);
 
   const handleExitFounderMode = () => {
     setIsFounderFree(false);
@@ -760,7 +742,7 @@ export default function CreateLovewritPage({
         isBundle,
         isAdSupported: isFreeAdPage,
         replyTo: replyToSlug || undefined,
-        masterKey: isFounderFree ? "lovewrit_master_founder_secret_2026" : undefined,
+        masterKey: isFounderFree && founderPassKey ? founderPassKey : undefined,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         pinCode: pinCode.trim() || undefined,
         nickname: nickname.trim() || undefined,
@@ -835,6 +817,75 @@ export default function CreateLovewritPage({
 
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
+      } else if (data.razorpayOrderId) {
+        const loadRazorpayScript = () => {
+          return new Promise<boolean>((resolve) => {
+            if (typeof window !== "undefined" && (window as unknown as { Razorpay?: unknown }).Razorpay) {
+              return resolve(true);
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+        };
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          throw new Error("Unable to load secure Razorpay checkout. Please check connection.");
+        }
+
+        interface RazorpaySuccessResponse {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }
+
+        const RazorpayCtor = (window as unknown as { Razorpay: new (options: unknown) => { open: () => void } }).Razorpay;
+        const rzp = new RazorpayCtor({
+          key: data.keyId,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Lovewrit",
+          description: `Personalized ${productType === "CARD" ? "Digital Card" : "Page"}`,
+          order_id: data.razorpayOrderId,
+          prefill: {
+            name: customerName,
+            email: customerEmail,
+          },
+          theme: {
+            color: "#e11d48",
+          },
+          handler: async (response: RazorpaySuccessResponse) => {
+            try {
+              const verifyRes = await fetch("/api/checkout/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...response,
+                  orderId: data.orderId,
+                  slug: data.slug,
+                }),
+              });
+              const verifyData = await verifyRes.json();
+              if (verifyRes.ok && verifyData.success) {
+                router.push(`/checkout/success?session_id=${data.razorpayOrderId}&slug=${data.slug}&token=${data.adminToken}`);
+              } else {
+                throw new Error(verifyData.error || "Payment verification failed");
+              }
+            } catch (vErr) {
+              setFormError(vErr instanceof Error ? vErr.message : "Verification error");
+              setIsSubmitting(false);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              setIsSubmitting(false);
+            },
+          },
+        });
+        rzp.open();
       } else {
         throw new Error("Missing checkout redirection URL");
       }
@@ -1772,13 +1823,13 @@ export default function CreateLovewritPage({
                         <div className="inline-flex items-center space-x-1.5 rounded-full bg-rose-500/20 border border-rose-500/40 px-3 py-1 text-xs font-semibold text-rose-200 self-start sm:self-auto">
                           <span>🔒</span>
                           <span>
-                            {new Date(revealDateTime).getTime() > Date.now() ? (
+                            {nowTimestamp > 0 && new Date(revealDateTime).getTime() > nowTimestamp ? (
                               <>
                                 Locks until{" "}
                                 {Math.max(
                                   1,
                                   Math.round(
-                                    (new Date(revealDateTime).getTime() - Date.now()) / (1000 * 60 * 60)
+                                    (new Date(revealDateTime).getTime() - nowTimestamp) / (1000 * 60 * 60)
                                   )
                                 )}{" "}
                                 hours from now
@@ -1983,10 +2034,12 @@ export default function CreateLovewritPage({
                     >
                       {/* Photo Thumbnail */}
                       <div className="relative aspect-square w-full rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800">
-                        <img
+                        <Image
                           src={photo}
                           alt={`Photo ${idx + 1}`}
-                          className="w-full h-full object-cover"
+                          fill
+                          unoptimized
+                          className="object-cover"
                         />
                         {/* Order badge */}
                         <div className="absolute top-1.5 left-1.5">
@@ -2939,7 +2992,7 @@ export default function CreateLovewritPage({
               </button>
 
               <p className="text-center text-[10px] text-neutral-500">
-                🔒 Safe 256-bit encrypted checkout via Stripe • Multi-currency regional pricing guaranteed
+                🔒 Safe 256-bit encrypted checkout via Razorpay • Multi-currency regional pricing guaranteed
               </p>
             </form>
           </div>

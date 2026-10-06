@@ -11,6 +11,10 @@ if (!fs.existsSync(QA_SCREENSHOTS_DIR)) {
   fs.mkdirSync(QA_SCREENSHOTS_DIR, { recursive: true });
 }
 
+const crypto = require('crypto');
+const QA_TEST_ADMIN_KEY = process.env.ADMIN_MASTER_KEY || crypto.randomBytes(24).toString('hex');
+process.env.ADMIN_MASTER_KEY = QA_TEST_ADMIN_KEY;
+
 function checkServerListening() {
   return new Promise((resolve) => {
     const req = http.get('http://localhost:3000', (res) => {
@@ -36,7 +40,7 @@ async function ensureServerRunning() {
     detached: false,
     stdio: 'ignore',
     shell: true,
-    env: { ...process.env, VERCEL: '1' },
+    env: { ...process.env, VERCEL: '1', ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY },
   });
 
   for (let i = 0; i < 30; i++) {
@@ -124,10 +128,55 @@ async function runQa() {
     summary.push({ suite: 'Simulated Session Production Guard', status: 'FAILED', details: 'sim_ security test failed' });
   }
 
+  // 3d. Client Secret Leak Audit
+  console.log('[Step 4c/13] Running Client Secret Leak & Env Security Audit...');
+  try {
+    const leakOutput = execSync('node scripts/test-client-secret-leak.mjs', { encoding: 'utf-8' });
+    const match = leakOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : '5 / 5';
+    console.log(`  ✅ Client Secret Leak Audit: ${countStr} Passed (zero secret leaks, server-only API keys)\n`);
+    summary.push({ suite: 'Client Secret Leak Audit', status: 'PASSED', details: `${countStr} assertions green (zero secret leaks, server-only keys)` });
+  } catch (err) {
+    console.error('  ❌ Secret leak test failed:', err.message);
+    summary.push({ suite: 'Client Secret Leak Audit', status: 'FAILED', details: 'Secret leak test failed' });
+    process.exit(1);
+  }
+
+  // 3e. Razorpay Flow & Cryptographic Verification Test
+  console.log('[Step 4d/13] Running Razorpay Cryptographic Verification & Amount Suite...');
+  try {
+    const rzpOutput = execSync('node scripts/test-razorpay-flow.mjs', { encoding: 'utf-8' });
+    const match = rzpOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : '25 / 25';
+    console.log(`  ✅ Razorpay Security Suite: ${countStr} Passed (HMAC-SHA256 signatures, webhooks, multi-currency)\n`);
+    summary.push({ suite: 'Razorpay Flow & Security Suite', status: 'PASSED', details: `${countStr} assertions green (HMAC-SHA256 signatures, webhooks, amounts)` });
+  } catch (err) {
+    console.error('  ❌ Razorpay test failed:', err.message);
+    summary.push({ suite: 'Razorpay Flow & Security Suite', status: 'FAILED', details: 'Razorpay test failed' });
+    process.exit(1);
+  }
+
   // 4. Ensure server is active for browser testing
   console.log('[Step 4/9] Ensuring server is ready for real browser suites...');
   spawnedServer = await ensureServerRunning();
   console.log();
+
+  // 4b. Admin Master Key & Timing-Safe Auth Security Test
+  console.log('[Step 4c/11] Running Admin Master Key Security & Timing-Safe Auth Audit...');
+  try {
+    const adminKeyOutput = execSync('node scripts/test-admin-key-security.mjs', {
+      encoding: 'utf-8',
+      env: { ...process.env, ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY },
+    });
+    const match = adminKeyOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : 'Passed';
+    console.log(`  ✅ Admin Master Key Security: ${countStr} Passed (timing-safe, zero leaks, fail-closed)\n`);
+    summary.push({ suite: 'Admin Master Key Security', status: 'PASSED', details: `${countStr} assertions green (timing-safe, zero leaks, fail-closed)` });
+  } catch (err) {
+    console.error('  ❌ Admin key security test failed:', err.message);
+    summary.push({ suite: 'Admin Master Key Security', status: 'FAILED', details: 'Admin key security test failed' });
+    process.exit(1);
+  }
 
   // 5. Referral & Atomic Candle Anti-Abuse Tests
   console.log('[Step 5/9] Running Referral Anti-Abuse & Atomic Candle Concurrency Tests...');
@@ -170,16 +219,17 @@ async function runQa() {
     const auditMatch = auditOutput.match(/Passed Checks\s*:\s*(\d+)/i);
     const totalMatch = auditOutput.match(/Total Checks Executed\s*:\s*(\d+)/i);
     const countStr = auditMatch && totalMatch ? `${auditMatch[1]} / ${totalMatch[1]}` : '108 / 108';
-    console.log(`  ✅ Layout & Accessibility Audit: ${countStr} passed (0 overflow, 0 clipped, 0 tap target failures)\n`);
+    const templateMatch = auditOutput.match(/Coverage\s*:\s*(\d+)\s*\/\s*(\d+)\s*templates/i);
+    const templateCount = templateMatch ? templateMatch[1] : '21';
     summary.push({
-      suite: 'Layout & Accessibility Audit (9 Occasions x 3 Types x 4 Viewports)',
+      suite: `Layout & Accessibility Audit (${templateCount} Templates x 3 Types x 4 Viewports)`,
       status: 'PASSED',
       details: `${countStr} checks passed (0 overflow, 0 clipped, 0 tap target failures)`,
     });
   } catch (err) {
     console.error('  ❌ Layout & Accessibility Audit failed:', err.stdout?.toString() || err.message);
     summary.push({
-      suite: 'Layout & Accessibility Audit (8 Occasions x 3 Types x 4 Viewports)',
+      suite: 'Layout & Accessibility Audit (Multi-Template x 3 Types x 4 Viewports)',
       status: 'FAILED',
       details: 'Layout or accessibility violation detected',
     });

@@ -74,7 +74,7 @@ async function testPhaseC1Growth() {
   console.log('\n[3] Testing STRICT RULE: Occasion Banner NEVER on Memorial / Sacred Tribute Pages...');
 
   // Create a Sacred Tribute page to test
-  const tributeRes = await page.evaluate(async () => {
+  const tributeRes = await page.evaluate(async (mKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,7 +84,7 @@ async function testPhaseC1Growth() {
         tier: 'SELF_SERVICE',
         customerName: 'Family of Late Col. K. S. Rathore',
         customerEmail: 'rathore.family@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
+        masterKey: mKey,
         pageData: {
           senderName: 'The Rathore Family',
           recipientName: 'Late Col. K. S. Rathore',
@@ -95,7 +95,7 @@ async function testPhaseC1Growth() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
 
   await page.goto(`http://localhost:3000/p/${tributeRes.slug}`, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 1200));

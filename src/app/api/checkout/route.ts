@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { stripe, isStripeConfigured } from "@/lib/stripe";
+import { verifyAdminMasterKey } from "@/lib/admin-auth";
+import { razorpay, isRazorpayConfigured } from "@/lib/razorpay";
 import {
   PRICING_TIERS,
   CURRENCY_TO_REGION,
@@ -145,12 +146,7 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const isFounderPass = Boolean(
-      masterKey &&
-      (masterKey === process.env.ADMIN_MASTER_KEY ||
-       masterKey === "lovewrit_master_founder_secret_2026" ||
-       masterKey === "memoir_master_founder_secret_2026")
-    );
+    const isFounderPass = Boolean(masterKey && verifyAdminMasterKey(masterKey));
 
     const isFreeOrder = totalUnit === 0 && !isFounderPass;
 
@@ -344,14 +340,18 @@ export async function POST(req: NextRequest) {
 
     // 0. Free Order / Founder Pass Immediate Bypass (Zero Payment Needed)
     if (isZeroOrder) {
-      const sessionId = isFounderPass ? `founder_${slug}` : `free_${slug}`;
+      const orderRef = isFounderPass ? `founder_${slug}` : `free_${slug}`;
       await db.order.update({
         where: { id: order.id },
-        data: { stripeSessionId: sessionId },
+        data: {
+          razorpayOrderId: orderRef,
+          paymentProvider: isFounderPass ? "founder_pass" : "free",
+          status: "PAID",
+        },
       });
 
       return NextResponse.json({
-        checkoutUrl: `${origin}/checkout/success?session_id=${sessionId}&slug=${slug}&token=${adminToken}`,
+        checkoutUrl: `${origin}/checkout/success?session_id=${orderRef}&slug=${slug}&token=${adminToken}`,
         isFreeOrder: true,
         isFounderPass,
         orderId: order.id,
@@ -360,54 +360,37 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 1. Production / Live Stripe Mode
-    if (isStripeConfigured() && stripe) {
-      const tierTitle =
-        tier === "RUSH"
-          ? "Emergency Rush Priority"
-          : tier === "CUSTOM"
-          ? "Custom Handcrafted"
-          : "Self-Service";
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: ["card"],
-        customer_email: customerEmail,
-        line_items: [
-          {
-            price_data: {
-              currency: currency.toLowerCase(),
-              product_data: {
-                name: `Lovewrit ${productType === "CARD" ? "Digital Card" : "Page"} (${tierTitle})`,
-                description: `${isBundle ? "[Bundle 2-3 Variations] " : ""}${
-                  cardData?.recipientName || pageData?.recipientName || "Honoree"
-                }`,
-              },
-              unit_amount: totalUnit,
-            },
-            quantity: 1,
-          },
-        ],
-        mode: "payment",
-        success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}&slug=${slug}&token=${adminToken}`,
-        cancel_url: `${origin}/create/${templateId}?canceled=true`,
-        metadata: {
+    // 1. Production / Live Razorpay Mode
+    if (isRazorpayConfigured() && razorpay) {
+      const razorpayOrder = await razorpay.orders.create({
+        amount: totalUnit,
+        currency: currency.toUpperCase(),
+        receipt: `rcpt_${order.id.slice(-10)}`,
+        notes: {
           orderId: order.id,
           slug,
           tier,
-          adminToken,
+          adminToken: adminToken || "",
         },
       });
 
       await db.order.update({
         where: { id: order.id },
-        data: { stripeSessionId: session.id },
+        data: {
+          razorpayOrderId: razorpayOrder.id,
+          paymentProvider: "razorpay",
+        },
       });
 
       return NextResponse.json({
-        checkoutUrl: session.url,
+        razorpayOrderId: razorpayOrder.id,
+        keyId: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+        amount: totalUnit,
+        currency: currency.toUpperCase(),
         orderId: order.id,
         slug,
         adminToken,
+        price: `${symbol}${displayPrice}`,
       });
     }
 
@@ -420,15 +403,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const simulatedSessionId = `sim_${order.id}`;
+    const simulatedOrderId = `sim_${order.id}`;
     await db.order.update({
       where: { id: order.id },
-      data: { stripeSessionId: simulatedSessionId },
+      data: {
+        razorpayOrderId: simulatedOrderId,
+        paymentProvider: "simulated",
+      },
     });
 
     return NextResponse.json({
-      checkoutUrl: `${origin}/checkout/success?session_id=${simulatedSessionId}&slug=${slug}&token=${adminToken}`,
+      checkoutUrl: `${origin}/checkout/success?session_id=${simulatedOrderId}&slug=${slug}&token=${adminToken}`,
       isSimulated: true,
+      razorpayOrderId: simulatedOrderId,
+      keyId: "rzp_test_simulated",
+      amount: totalUnit,
+      currency: currency.toUpperCase(),
       orderId: order.id,
       slug,
       adminToken,

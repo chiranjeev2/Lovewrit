@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DevotionalFinaleSceneConfig } from "@/types/scenes";
-import { RotateCcw, Sparkles, Heart } from "lucide-react";
+import { RotateCcw, Sparkles } from "lucide-react";
 
 interface DevotionalFinaleSceneProps {
   config: DevotionalFinaleSceneConfig;

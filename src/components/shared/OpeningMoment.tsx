@@ -6,10 +6,8 @@ import {
   Heart,
   Sparkles,
   Music,
-  Mail,
   Gift,
   Flame,
-  SunMedium,
   PartyPopper,
   CheckCircle2,
 } from "lucide-react";

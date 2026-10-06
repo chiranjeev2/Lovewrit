@@ -79,7 +79,7 @@ async function testGodhbharaiPack() {
   // Test 2: Create Published Godhbharai Order via /api/checkout
   // -------------------------------------------------------------
   console.log('\n[2] Creating an actual published Godhbharai order via /api/checkout...');
-  const orderRes = await page.evaluate(async () => {
+  const orderRes = await page.evaluate(async (fKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -89,7 +89,7 @@ async function testGodhbharaiPack() {
         tier: 'SELF_SERVICE',
         customerName: 'Pooja & Vikram',
         customerEmail: 'pooja.vikram@example.com',
-        fKey: 'memoir_master_founder_secret_2026',
+        fKey: fKey,
         pageData: {
           senderName: 'Pooja & Vikram',
           recipientName: 'Honored Family & Friends',
@@ -100,7 +100,7 @@ async function testGodhbharaiPack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
 
   console.log('  ✓ Order created response:', orderRes);
   const checkoutUrl = orderRes.checkoutUrl;

@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { WeddingStorySceneConfig } from "@/types/scenes";
-import { Sparkles, Heart, ArrowRight } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 interface WeddingStorySceneProps {

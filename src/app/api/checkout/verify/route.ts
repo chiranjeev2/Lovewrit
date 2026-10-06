@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { stripe, isStripeConfigured } from "@/lib/stripe";
+import {
+  razorpay,
+  isRazorpayConfigured,
+  verifyRazorpayPaymentSignature,
+} from "@/lib/razorpay";
 import { getClientIp, getDeviceFingerprintLite } from "@/lib/security";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const sessionId = searchParams.get("session_id");
+    const sessionId = searchParams.get("session_id") || searchParams.get("order_id");
     const slug = searchParams.get("slug");
 
     if (!sessionId && !slug) {
@@ -23,7 +27,7 @@ export async function GET(req: NextRequest) {
     }
 
     let order = await db.order.findFirst({
-      where: slug ? { slug } : { stripeSessionId: sessionId! },
+      where: slug ? { slug } : { razorpayOrderId: sessionId! },
       include: {
         cardData: true,
         pageData: true,
@@ -235,20 +239,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, order });
     }
 
-    // Stripe verification
-    if (isStripeConfigured() && stripe && sessionId) {
-      const session = await stripe.checkout.sessions.retrieve(sessionId);
-      if (session.payment_status === "paid") {
-        order = await db.order.update({
-          where: { id: order.id },
-          data: { status: "PAID" },
-          include: {
-            cardData: true,
-            pageData: true,
-          },
-        });
-        await creditReferrerIfNeeded(order);
-        return NextResponse.json({ success: true, order });
+    // Razorpay order status verification
+    if (isRazorpayConfigured() && razorpay && sessionId) {
+      try {
+        const rzpOrder = await razorpay.orders.fetch(sessionId);
+        if (rzpOrder.status === "paid") {
+          order = await db.order.update({
+            where: { id: order.id },
+            data: { status: "PAID" },
+            include: {
+              cardData: true,
+              pageData: true,
+            },
+          });
+          await creditReferrerIfNeeded(order);
+          return NextResponse.json({ success: true, order });
+        }
+      } catch (e) {
+        console.warn("Razorpay order status fetch note:", e);
       }
     }
 
@@ -259,6 +267,77 @@ export async function GET(req: NextRequest) {
     });
   } catch (err: unknown) {
     console.error("Order verification error:", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Verification error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      orderId,
+      slug,
+    } = body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return NextResponse.json(
+        { error: "Missing required Razorpay payment verification fields" },
+        { status: 400 }
+      );
+    }
+
+    const isValid = verifyRazorpayPaymentSignature({
+      orderId: razorpay_order_id,
+      paymentId: razorpay_payment_id,
+      signature: razorpay_signature,
+    });
+
+    if (!isValid) {
+      return NextResponse.json(
+        { error: "Invalid payment signature verification failed" },
+        { status: 400 }
+      );
+    }
+
+    let order = await db.order.findFirst({
+      where: slug
+        ? { slug }
+        : orderId
+        ? { id: orderId }
+        : { razorpayOrderId: razorpay_order_id },
+      include: {
+        cardData: true,
+        pageData: true,
+      },
+    });
+
+    if (!order) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
+    }
+
+    if (order.status !== "PAID") {
+      order = await db.order.update({
+        where: { id: order.id },
+        data: {
+          status: "PAID",
+          razorpayPaymentId: razorpay_payment_id,
+        },
+        include: {
+          cardData: true,
+          pageData: true,
+        },
+      });
+    }
+
+    return NextResponse.json({ success: true, order });
+  } catch (err: unknown) {
+    console.error("Razorpay verification error:", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Verification error" },
       { status: 500 }

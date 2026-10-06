@@ -22,9 +22,9 @@
     "nanoid": "^6.0.1",
     "next": "16.3.5",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.8",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "stripe": "^22.6.2",
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {

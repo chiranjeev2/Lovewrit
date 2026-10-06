@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { RsvpSceneConfig } from "@/types/scenes";
-import { Armchair, CheckCircle2, XCircle, Heart, ArrowRight, Users } from "lucide-react";
+import { Armchair, CheckCircle2, XCircle, ArrowRight, Users } from "lucide-react";
 
 interface RsvpSceneProps {
   config: RsvpSceneConfig;

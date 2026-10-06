@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { sanitizeGuestName, sanitizeText } from "@/lib/sanitize";
+import { isRequestAdminAuthorized } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -166,10 +167,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Approve / Delete requires token or admin session
-    const adminSession =
-      req.cookies.get("lovewrit_admin_session")?.value ||
-      req.cookies.get("memoir_admin_session")?.value;
-    const isMasterAdmin = adminSession === "authenticated";
+    const isMasterAdmin = isRequestAdminAuthorized(req).authorized;
 
     const entry = await db.guestbookEntry.findUnique({
       where: { id: entryId },

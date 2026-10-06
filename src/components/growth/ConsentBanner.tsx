@@ -8,10 +8,12 @@ export function ConsentBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Only show if user has not yet decided consent
-    if (!hasUserDecidedConsent()) {
-      setVisible(true);
-    }
+    const timer = setTimeout(() => {
+      if (!hasUserDecidedConsent()) {
+        setVisible(true);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!visible) return null;

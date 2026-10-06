@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { TributeCandleSceneConfig } from "@/types/scenes";
-import { Heart, Sparkles, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
@@ -37,8 +37,10 @@ export default function TributeCandleScene({
     if (storedTime) {
       const diffHours = (Date.now() - parseInt(storedTime, 10)) / (1000 * 60 * 60);
       if (diffHours < 24) {
-        setIsLit(true);
-        setIsAlreadyLit(true);
+        setTimeout(() => {
+          setIsLit(true);
+          setIsAlreadyLit(true);
+        }, 0);
       }
     }
 

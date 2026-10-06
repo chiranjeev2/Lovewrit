@@ -3,7 +3,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { GodhbharaiBlessingsSceneConfig } from "@/types/scenes";
-import { Sparkles, Heart, Flower2, ArrowRight } from "lucide-react";
+import { Heart, Flower2, ArrowRight } from "lucide-react";
 
 interface GodhbharaiBlessingsSceneProps {
   config: GodhbharaiBlessingsSceneConfig;

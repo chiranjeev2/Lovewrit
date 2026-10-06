@@ -60,7 +60,7 @@ async function testBirthdayPack() {
   // Test 2: Create Published Birthday Order via /api/checkout
   // -------------------------------------------------------------
   console.log('\n[2] Creating an actual published Birthday order via /api/checkout...');
-  const orderRes = await page.evaluate(async () => {
+  const orderRes = await page.evaluate(async (fKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,7 +70,7 @@ async function testBirthdayPack() {
         tier: 'SELF_SERVICE',
         customerName: 'Aarav',
         customerEmail: 'aarav.birthday@example.com',
-        fKey: 'memoir_master_founder_secret_2026',
+        fKey: fKey,
         pageData: {
           senderName: 'Aarav',
           recipientName: 'Riya',
@@ -81,7 +81,7 @@ async function testBirthdayPack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
 
   console.log('  ✓ Order created response:', orderRes);
   const checkoutUrl = orderRes.checkoutUrl;

@@ -96,7 +96,7 @@ async function testDevotionalPack() {
   console.log('\n[2] Creating actual published orders for Hindu, Muslim & Sikh devotional occasions...');
 
   // Order A: Hindu Jagrata / Kirtan
-  const hinduOrderRes = await page.evaluate(async () => {
+  const hinduOrderRes = await page.evaluate(async (mKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -106,7 +106,7 @@ async function testDevotionalPack() {
         tier: 'SELF_SERVICE',
         customerName: 'Goyal Parivaar',
         customerEmail: 'goyal.jagrata@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
+        masterKey: mKey,
         pageData: {
           senderName: 'Goyal Parivaar',
           recipientName: 'Sharma Parivaar',
@@ -117,12 +117,12 @@ async function testDevotionalPack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
   console.log(`  ✓ Created Hindu Devotional slug: ${hinduOrderRes.slug}`);
   if (hinduOrderRes.slug) passedAssertions++;
 
   // Order B: Muslim Aqeeqah / Nikah (Strictly NO figurative depictions)
-  const muslimOrderRes = await page.evaluate(async () => {
+  const muslimOrderRes = await page.evaluate(async (mKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -132,7 +132,7 @@ async function testDevotionalPack() {
         tier: 'SELF_SERVICE',
         customerName: 'The Khan & Siddiqui Families',
         customerEmail: 'khan.nikah@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
+        masterKey: mKey,
         pageData: {
           senderName: 'The Khan & Siddiqui Families',
           recipientName: 'Respected Elders & Guests',
@@ -143,12 +143,12 @@ async function testDevotionalPack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
   console.log(`  ✓ Created Muslim Devotional slug: ${muslimOrderRes.slug}`);
   if (muslimOrderRes.slug) passedAssertions++;
 
   // Order C: Sikh Akhand Path Sahib
-  const sikhOrderRes = await page.evaluate(async () => {
+  const sikhOrderRes = await page.evaluate(async (mKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -158,7 +158,7 @@ async function testDevotionalPack() {
         tier: 'SELF_SERVICE',
         customerName: 'The Gill Parivaar',
         customerEmail: 'gill.akhandpath@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
+        masterKey: mKey,
         pageData: {
           senderName: 'The Gill Parivaar',
           recipientName: 'Pyari Sangat Ji',
@@ -169,7 +169,7 @@ async function testDevotionalPack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
   console.log(`  ✓ Created Sikh Devotional slug: ${sikhOrderRes.slug}`);
   if (sikhOrderRes.slug) passedAssertions++;
 

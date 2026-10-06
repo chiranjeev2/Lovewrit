@@ -18,7 +18,7 @@ const DEFAULT_METRICS: FunnelMetrics = {
   lastUpdated: new Date().toISOString(),
 };
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const setting = await db.platformSetting.findUnique({
       where: { key: "analytics_funnel" },
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     if (setting?.value) {
       try {
         current = JSON.parse(setting.value);
-      } catch (e) {
+      } catch {
         current = DEFAULT_METRICS;
       }
     }

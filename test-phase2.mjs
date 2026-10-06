@@ -120,9 +120,10 @@ async function runPhase2Tests() {
 
   // 5. Test Founder Queue & Rush Toggle
   console.log("\n[5] Testing Founder Queue & Rush Availability Toggle...");
+  const adminKey = process.env.ADMIN_MASTER_KEY || "";
   const queueRes = await fetch(`${BASE_URL}/api/admin/queue`, {
     headers: {
-      "x-admin-key": "lovewrit_master_founder_secret_2026",
+      "x-admin-key": adminKey,
     },
   });
   const queueData = await queueRes.json();
@@ -138,7 +139,7 @@ async function runPhase2Tests() {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-key": "lovewrit_master_founder_secret_2026",
+      "x-admin-key": adminKey,
     },
     body: JSON.stringify({ action: "TOGGLE_RUSH", isRushAvailable: false }),
   });
@@ -150,7 +151,7 @@ async function runPhase2Tests() {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
-      "x-admin-key": "lovewrit_master_founder_secret_2026",
+      "x-admin-key": adminKey,
     },
     body: JSON.stringify({ action: "TOGGLE_RUSH", isRushAvailable: true }),
   });

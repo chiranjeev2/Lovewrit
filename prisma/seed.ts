@@ -20,7 +20,7 @@ async function main() {
       currency: "INR",
       amountTotal: 20000,
       region: "asia_africa",
-      stripeSessionId: "sim_proposal_demo",
+      razorpayOrderId: "sim_proposal_demo",
       adminToken: "token_proposal_demo",
       pageData: {
         create: {
@@ -60,7 +60,7 @@ async function main() {
       currency: "USD",
       amountTotal: 200,
       region: "americas",
-      stripeSessionId: "sim_anniversary_demo",
+      razorpayOrderId: "sim_anniversary_demo",
       adminToken: "token_anniversary_demo",
       cardData: {
         create: {
@@ -96,7 +96,7 @@ async function main() {
       currency: "INR",
       amountTotal: 100000,
       region: "asia_africa",
-      stripeSessionId: "sim_memorial_demo",
+      razorpayOrderId: "sim_memorial_demo",
       adminToken: "token_memorial_kapoor",
       customNotes: "Please make the tone extra gentle and serene with candlelight aesthetic.",
       pageData: {
@@ -160,7 +160,7 @@ async function main() {
       currency: "USD",
       amountTotal: 10000,
       region: "americas",
-      stripeSessionId: "sim_rush_demo",
+      razorpayOrderId: "sim_rush_demo",
       adminToken: "token_rush_vikram",
       customNotes: "URGENT: Today is my fiancée's 25th birthday! Need the balloon pop unboxing and our song 'Sunset Love' hand-timed by 8:00 PM tonight.",
       pageData: {

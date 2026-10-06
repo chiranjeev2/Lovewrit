@@ -1,22 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { isRequestAdminAuthorized } from "@/lib/admin-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const adminSession =
-      req.cookies.get("lovewrit_admin_session")?.value ||
-      req.cookies.get("memoir_admin_session")?.value;
-    const headerKey = req.headers.get("x-admin-key");
-    const expectedKey = process.env.ADMIN_MASTER_KEY || "lovewrit_master_founder_secret_2026";
-
-    const isAuthorized =
-      adminSession === "authenticated" ||
-      (headerKey &&
-        (headerKey === expectedKey ||
-          headerKey === "lovewrit_master_founder_secret_2026" ||
-          headerKey === "memoir_master_founder_secret_2026"));
-
-    if (!isAuthorized) {
+    const auth = isRequestAdminAuthorized(req);
+    if (auth.serviceUnavailable) {
+      return NextResponse.json(
+        { error: "Admin service unavailable. ADMIN_MASTER_KEY is not configured." },
+        { status: 503 }
+      );
+    }
+    if (!auth.authorized) {
       return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
     }
 
@@ -64,4 +59,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

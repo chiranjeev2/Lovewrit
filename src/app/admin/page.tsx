@@ -279,28 +279,6 @@ interface AdminStats {
             </button>
           </form>
 
-          {/* Quick-Access Key Helper */}
-          <div className="mt-5 rounded-2xl border border-rose-500/20 bg-neutral-950/90 p-3.5 text-left">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-neutral-300">
-                Default Founder Secret Key:
-              </span>
-              <button
-                type="button"
-                onClick={() => setMasterKey("lovewrit_master_founder_secret_2026")}
-                className="rounded-md bg-rose-500/20 px-2 py-0.5 text-[10px] font-bold text-rose-300 hover:bg-rose-500/30 transition"
-              >
-                Auto-Fill Key
-              </button>
-            </div>
-            <code className="mt-1.5 block rounded-lg bg-neutral-900 px-2.5 py-1 text-[11px] font-mono text-rose-300 select-all border border-neutral-800">
-              lovewrit_master_founder_secret_2026
-            </code>
-            <p className="mt-1.5 text-[10px] text-neutral-500">
-              Configured in your local <code className="text-neutral-400">.env</code> file under <code className="text-neutral-400">ADMIN_MASTER_KEY</code>.
-            </p>
-          </div>
-
           <div className="mt-6 text-center">
             <Link href="/" className="text-xs text-neutral-500 hover:text-neutral-300 transition">
               ← Return to public site
@@ -345,24 +323,14 @@ interface AdminStats {
           <div className="flex items-center space-x-3">
             <button
               type="button"
-              onClick={() => {
-                try {
-                  localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
-                } catch {}
-                setShowFounderModal(true);
-              }}
+              onClick={() => setShowFounderModal(true)}
               className="inline-flex items-center space-x-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-rose-500 px-3.5 py-1.5 text-xs font-bold text-neutral-950 hover:opacity-95 shadow-md shadow-amber-500/20 transition cursor-pointer"
             >
               <Crown className="h-3.5 w-3.5" />
               <span>Create Free Lovewrit (Founder Pass)</span>
             </button>
             <Link
-              href="/?founderKey=lovewrit_master_founder_secret_2026#templates"
-              onClick={() => {
-                try {
-                  localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
-                } catch {}
-              }}
+              href="/#templates"
               className="text-xs text-neutral-400 hover:text-white transition px-3 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900"
             >
               Public Site
@@ -811,10 +779,12 @@ interface AdminStats {
               {TEMPLATES.map((tmpl) => (
                 <Link
                   key={tmpl.id}
-                  href={`/create/${tmpl.id}?founderKey=lovewrit_master_founder_secret_2026`}
+                  href={`/create/${tmpl.id}${masterKey ? `?founderKey=${encodeURIComponent(masterKey)}` : ""}`}
                   onClick={() => {
                     try {
-                      localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
+                      if (masterKey) {
+                        localStorage.setItem("lovewrit_founder_pass", masterKey);
+                      }
                     } catch {}
                     setShowFounderModal(false);
                   }}
@@ -838,10 +808,12 @@ interface AdminStats {
 
             <div className="pt-2 border-t border-neutral-800 flex items-center justify-between">
               <Link
-                href="/?founderKey=lovewrit_master_founder_secret_2026#templates"
+                href={`/${masterKey ? `?founderKey=${encodeURIComponent(masterKey)}` : ""}#templates`}
                 onClick={() => {
                   try {
-                    localStorage.setItem("lovewrit_founder_pass", "lovewrit_master_founder_secret_2026");
+                    if (masterKey) {
+                      localStorage.setItem("lovewrit_founder_pass", masterKey);
+                    }
                   } catch {}
                   setShowFounderModal(false);
                 }}

@@ -24,7 +24,7 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
 ### Core Engine & Tech Stack
 - **Frontend & Fullstack API:** Next.js 16 (App Router, Turbopack, React 19, TypeScript, Tailwind CSS)
 - **Database:** Prisma ORM with SQLite (local development) / PostgreSQL (production)
-- **Payments:** Stripe Checkout with multi-currency handling + Founder VIP master key bypass
+- **Payments:** Razorpay with multi-currency handling + Founder VIP master key bypass
 - **Audio & Media:** Web Audio API, native HTML5 media recorder, client-side dynamic preview canvas
 
 ### Phase 1 Features (Completed)
@@ -51,8 +51,8 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
    - Viral reply loop: recipient viewing their card/page can click *"Reply with Gift (50% OFF)"*.
    - Strictly locked against genuine paid orders in the database — no arbitrary promo code entry loopholes.
 4. **Founder VIP Master Pass**:
-   - Master key `lovewrit_master_founder_secret_2026` allows the founder to generate unlimited free test cards/pages with instant ₹0 bypass.
-   - Dedicated template launcher in `/admin` with persistent `localStorage` access.
+   - Configured via `ADMIN_MASTER_KEY` environment variable (minimum 20 characters); allows owner to generate free test cards/pages with instant bypass.
+   - Dedicated template launcher in `/admin` with session authentication.
 5. **Expanded Life Occasions**:
    - Birthdays: `festive-birthday` with balloon pop unboxing & celebratory music.
    - Memorials: `in-loving-memory` with serene candle-lighting reveal & pre-moderated condolence wall.
@@ -86,5 +86,5 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
 - **AI-Powered Heartfelt Writing Assistant**: Multilingual emotion-guided letter writer (English, Hindi, Punjabi) powered by Gemini API.
 - **AI Stylized Photos**: Optional cartoon/Ghibli/watercolor artistic filters for user photos.
 - **Automated Video Montage Generator**: Server-side MP4 generation compiling photos, message captions, and audio into an exportable video for Instagram/WhatsApp status.
-- **Production Cloud Deployment & Custom Domain**: PostgreSQL migration (Supabase/Neon), production Stripe webhooks, and live domain configuration.
+- **Production Cloud Deployment & Custom Domain**: PostgreSQL migration (Supabase/Neon), production Razorpay webhooks, and live domain configuration.
 - **Mobile Native App**: React Native / Flutter wrapper once web sales reach target volume.

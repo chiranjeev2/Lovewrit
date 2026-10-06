@@ -123,10 +123,11 @@ async function runNewEnhancementsTests() {
 
   // 3. Test Founder Admin Portal Login with Master Key
   console.log("\n[3] Testing Admin Founder Portal Authentication...");
+  const adminKey = process.env.ADMIN_MASTER_KEY || "";
   const adminLoginRes = await fetch(`${BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ masterKey: "lovewrit_master_founder_secret_2026" }),
+    body: JSON.stringify({ masterKey: adminKey }),
   });
   const adminLoginData = await adminLoginRes.json();
   console.log("Admin Login result:", {

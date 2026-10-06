@@ -179,7 +179,7 @@ async function testSacredTributePack() {
   // Test 2: Create Published Sacred Tribute Order via /api/checkout
   // -------------------------------------------------------------
   console.log('\n[2] Creating an actual published Sacred Tribute order via /api/checkout...');
-  const orderRes = await page.evaluate(async () => {
+  const orderRes = await page.evaluate(async (mKey) => {
     const res = await fetch('/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -189,7 +189,7 @@ async function testSacredTributePack() {
         tier: 'SELF_SERVICE',
         customerName: 'The Kapoor Family',
         customerEmail: 'kapoor.family@example.com',
-        masterKey: 'memoir_master_founder_secret_2026',
+        masterKey: mKey,
         pageData: {
           senderName: 'The Kapoor Family',
           recipientName: 'Late Shri Ram Nath Kapoor',
@@ -200,7 +200,7 @@ async function testSacredTributePack() {
       })
     });
     return res.json();
-  });
+  }, process.env.ADMIN_MASTER_KEY || '');
 
   console.log('  ✓ Order created response:', orderRes);
   const slug = orderRes.slug;

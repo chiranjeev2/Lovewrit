@@ -29,7 +29,7 @@ import {
   DevotionalSignificanceSceneConfig,
   DevotionalFinaleSceneConfig,
 } from "@/types/scenes";
-import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun, Compass } from "lucide-react";
+import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
 
 interface FallbackStaticScrollProps {

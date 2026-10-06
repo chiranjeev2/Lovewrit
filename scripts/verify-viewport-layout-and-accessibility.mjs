@@ -63,6 +63,7 @@ export async function runLayoutAndA11yAudit() {
   const testEntities = [];
 
   for (const t of TEMPLATES) {
+    const evalData = { ...t, adminMasterKey: process.env.ADMIN_MASTER_KEY || '' };
     const pageRes = await page.evaluate(async (data) => {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -73,7 +74,7 @@ export async function runLayoutAndA11yAudit() {
           tier: 'SELF_SERVICE',
           customerName: `QA ${data.name}`,
           customerEmail: `qa.${data.id}@example.com`,
-          masterKey: 'memoir_master_founder_secret_2026',
+          masterKey: data.adminMasterKey,
           pageData: {
             senderName: data.sampleSender || 'QA Sender',
             recipientName: data.sampleRecipient || 'QA Recipient',
@@ -84,7 +85,7 @@ export async function runLayoutAndA11yAudit() {
         })
       });
       return res.json();
-    }, t);
+    }, evalData);
 
     const cardRes = await page.evaluate(async (data) => {
       const res = await fetch('/api/checkout', {
@@ -96,7 +97,7 @@ export async function runLayoutAndA11yAudit() {
           tier: 'SELF_SERVICE',
           customerName: `QA Card ${data.name}`,
           customerEmail: `qa.card.${data.id}@example.com`,
-          masterKey: 'memoir_master_founder_secret_2026',
+          masterKey: data.adminMasterKey,
           cardData: {
             senderName: data.sampleSender || 'QA Sender',
             recipientName: data.sampleRecipient || 'QA Recipient',
@@ -107,7 +108,7 @@ export async function runLayoutAndA11yAudit() {
         })
       });
       return res.json();
-    }, t);
+    }, evalData);
 
     testEntities.push({
       ...t,

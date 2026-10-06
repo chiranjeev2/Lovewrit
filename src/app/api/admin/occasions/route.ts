@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { DEFAULT_OCCASIONS, OccasionEvent, getActiveUpcomingOccasion } from "@/lib/occasion-calendar";
+import { isRequestAdminAuthorized, verifyAdminMasterKey } from "@/lib/admin-auth";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const setting = await db.platformSetting.findUnique({
       where: { key: "occasion_calendar" },
@@ -30,8 +31,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { masterKey, occasions } = body;
 
-    // Verify admin master key
-    if (masterKey !== "memoir_master_founder_secret_2026") {
+    const auth = isRequestAdminAuthorized(req);
+    const isAuthorized = auth.authorized || (masterKey && verifyAdminMasterKey(masterKey));
+    if (!isAuthorized) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Sparkles, Heart, ArrowRight } from "lucide-react";
-import { ColorThemeKey, COLOR_THEMES } from "@/lib/templates-data";
+import { Heart, ArrowRight } from "lucide-react";
+import { ColorThemeKey } from "@/lib/templates-data";
 
 interface LetterUnfoldSceneProps {
   title?: string;
@@ -18,7 +18,6 @@ interface LetterUnfoldSceneProps {
 
 export function LetterUnfoldScene({
   title,
-  subtitle,
   senderName,
   recipientName,
   letter,
