@@ -131,8 +131,8 @@ async function runSecurityTests() {
       assert(goodLogin.status === 200, "Valid configured masterKey logs in with 200 OK");
       const cookieHeader = goodLogin.headers.get("set-cookie") || "";
       assert(cookieHeader.includes("lovewrit_admin_session"), "Login sets lovewrit_admin_session cookie");
-      assert(cookieHeader.includes("HttpOnly"), "Session cookie is HttpOnly");
-      assert(cookieHeader.includes("SameSite=Strict"), "Session cookie is SameSite=Strict");
+      assert(/httponly/i.test(cookieHeader), "Session cookie is HttpOnly");
+      assert(/samesite=strict/i.test(cookieHeader), "Session cookie is SameSite=Strict");
 
       // Verify authorized access to /api/admin/orders using cookie
       const authOrders = await fetch(`${BASE_URL}/api/admin/orders`, {
