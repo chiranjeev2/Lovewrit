@@ -141,6 +141,24 @@ async function testAllCustomizers() {
     });
   }
 
+  // Test unknown template ID returns 404 / notFound, not a fallback template
+  console.log('\nTesting unknown template ID (/create/non-existent-template-id-999)...');
+  const unknownUrl = `${BASE_URL}/create/non-existent-template-id-999`;
+  const unknownResponse = await page.goto(unknownUrl, { waitUntil: 'networkidle2' });
+  const unknownStatus = unknownResponse ? unknownResponse.status() : null;
+  const is404Content = await page.evaluate(() => {
+    return document.body.textContent.includes('404') ||
+           document.body.textContent.includes('This page could not be found') ||
+           document.body.textContent.includes('Page Not Found');
+  });
+
+  const unknownCorrectlyHandled = unknownStatus === 404 || is404Content;
+  console.log(`  ✓ Unknown template ID returned 404 / notFound (status: ${unknownStatus}, is404Content: ${is404Content}):`, unknownCorrectlyHandled);
+  if (!unknownCorrectlyHandled) {
+    console.error('  ❌ FAILED: Unknown template ID rendered a fallback template instead of returning notFound/404!');
+    process.exit(1);
+  }
+
   await browser.close();
 
   console.log('\n================================================================');

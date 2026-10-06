@@ -1,11 +1,19 @@
 import puppeteer from 'puppeteer-core';
+import path from 'path';
+import fs from 'fs';
 
 const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
 const BASE_URL = 'http://localhost:3000';
+const QA_SCREENSHOTS_DIR = path.resolve('qa-screenshots');
+
+if (!fs.existsSync(QA_SCREENSHOTS_DIR)) {
+  fs.mkdirSync(QA_SCREENSHOTS_DIR, { recursive: true });
+}
 
 const OCCASIONS = [
   { id: 'apology', name: 'Apology', templateId: 'sincere-apology', occasion: 'apology', letter: 'I am truly sorry. Please forgive me.' },
-  { id: 'romantic', name: 'Proposal / Romantic', templateId: 'forever-proposal', occasion: 'proposal', letter: 'You are my once-in-a-lifetime.' },
+  { id: 'proposal', name: 'Proposal', templateId: 'forever-proposal', occasion: 'proposal', letter: 'You are my once-in-a-lifetime.' },
+  { id: 'romantic', name: 'Romantic', templateId: 'golden-anniversary', occasion: 'anniversary', letter: 'Every single day with you is a celebration of love.' },
   { id: 'wedding', name: 'Royal Wedding', templateId: 'royal-monogram-invite', occasion: 'wedding_invite', letter: 'Join us as we unite in holy matrimony.' },
   { id: 'birthday', name: 'Birthday', templateId: 'golden-celebration', occasion: 'birthday', letter: 'Wishing you a magnificent birthday filled with joy.' },
   { id: 'godhbharai', name: 'Godhbharai', templateId: 'auspicious-godhbharai', occasion: 'godhbharai', letter: 'Shower the mother and arriving child with divine blessings.' },
@@ -99,29 +107,32 @@ export async function runLayoutAndA11yAudit() {
   // 2. Build list of all routes to audit
   const routesToAudit = [];
 
-  // A. All 8 Studio Customizers
+  // A. All Studio Customizers
   for (const entity of testEntities) {
     routesToAudit.push({
       category: 'Customizer',
       occasion: entity.name,
+      occasionId: entity.id,
       url: `${BASE_URL}/create/${entity.templateId}`,
     });
   }
 
-  // B. All 8 Published Scene Pages
+  // B. All Published Scene Pages
   for (const entity of testEntities) {
     routesToAudit.push({
       category: 'Published Page',
       occasion: entity.name,
+      occasionId: entity.id,
       url: `${BASE_URL}/p/${entity.pageSlug}`,
     });
   }
 
-  // C. All 8 Card Pages
+  // C. All Card Pages
   for (const entity of testEntities) {
     routesToAudit.push({
       category: 'Card Page',
       occasion: entity.name,
+      occasionId: entity.id,
       url: `${BASE_URL}/c/${entity.cardSlug}`,
     });
   }
@@ -146,6 +157,15 @@ export async function runLayoutAndA11yAudit() {
       totalAudits++;
       await page.setViewport({ width: vp.width, height: vp.height, isMobile: vp.isMobile, hasTouch: vp.isMobile });
       await new Promise(r => setTimeout(r, 200));
+
+      // Regenerate qa-screenshots for Card Pages across all viewports
+      if (route.category === 'Card Page' && route.occasionId) {
+        const shotPrefix = route.occasionId === 'devotional' ? 'religious' : route.occasionId;
+        const shotVpName = vp.width === 375 ? '375_mobile' : vp.width === 768 ? '768_tablet' : vp.width === 1024 ? '1024_laptop' : '1440_desktop';
+        const shotName = `${shotPrefix}_${shotVpName}.png`;
+        const shotPath = path.join(QA_SCREENSHOTS_DIR, shotName);
+        await page.screenshot({ path: shotPath });
+      }
 
       const res = await page.evaluate((isMobile) => {
         const winW = window.innerWidth;

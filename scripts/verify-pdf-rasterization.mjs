@@ -242,10 +242,81 @@ async function verifyPdfRasterization() {
     }
   }
 
+  // -------------------------------------------------------------
+  // Test Indic Buyer Messages (Hindi & Punjabi) on PDF Page 2
+  // -------------------------------------------------------------
+  console.log('\n================================================================');
+  console.log('   🇮🇳 TESTING HINDI & PUNJABI BUYER MESSAGES IN PDF PAGE 2     ');
+  console.log('================================================================\n');
+
+  const { jsPDF } = await import('jspdf');
+  const indicDoc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: [254, 177.8],
+    compress: false
+  });
+
+  const hindiMsg = 'मेरी प्यारी अनन्या, आपको वर्षगांठ की बहुत-बहुत शुभकामनाएँ।';
+  const punjabiMsg = 'ਮੇਰੀ ਪਿਆਰੀ ਅਨੰਨਿਆ, ਤੁਹਾਨੂੰ ਵਿਆਹ ਦੀ ਵਰ੍ਹੇਗੰਢ ਦੀਆਂ ਲੱਖ-ਲੱਖ ਵਧਾਈਆਂ।';
+
+  // Attempt to write Indic scripts using default standard fonts
+  indicDoc.setFont('times', 'normal');
+  indicDoc.setFontSize(12);
+  indicDoc.text(hindiMsg, 20, 40);
+  indicDoc.text(punjabiMsg, 20, 60);
+
+  const indicBase64 = Buffer.from(indicDoc.output('arraybuffer')).toString('base64');
+  const indicPage = await browser.newPage();
+  await indicPage.setContent(htmlContent);
+
+  const indicResults = await indicPage.evaluate(async (base64) => {
+    const raw = atob(base64);
+    const uint8Array = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) {
+      uint8Array[i] = raw.charCodeAt(i);
+    }
+    const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
+    const page = await pdf.getPage(1);
+    const textContent = await page.getTextContent();
+    const extracted = textContent.items.map(i => i.str).join(' ');
+
+    const canvas = document.createElement('canvas');
+    const viewport = page.getViewport({ scale: 2 });
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+
+    return {
+      extracted,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+    };
+  }, indicBase64);
+
+  console.log('  Extracted Text from Indic PDF with standard font:');
+  console.log(`    "${indicResults.extracted}"`);
+
+  const hindiPreserved = indicResults.extracted.includes('अनन्या');
+  const punjabiPreserved = indicResults.extracted.includes('ਅਨੰਨਿਆ');
+
+  console.log('\n  --- INDIC SCRIPT PDF FONT CAPABILITY REPORT ---');
+  if (!hindiPreserved || !punjabiPreserved) {
+    console.log('  ⚠️ PLAIN REPORT: Standard jsPDF core fonts (Times/Helvetica) CANNOT render Hindi or Punjabi glyphs.');
+    console.log('    - Root Cause: jsPDF standard Type 1 fonts only support 8-bit WinAnsiEncoding (Latin-1).');
+    console.log('    - Hindi Devanagari (U+0900..U+097F) and Punjabi Gurmukhi (U+0A00..U+0A7F) code points are stripped or converted to question marks / fallback bytes.');
+    console.log('    - Technical Resolution: Embedding TrueType Unicode fonts (NotoSansDevanagari.ttf & NotoSansGurmukhi.ttf) via jsPDF addFileToVFS() + addFont() is required for native Indic vector text in PDFs.');
+    console.log('    - Web/Image Status: The web card experience and PNG/JPG exports render Indic scripts directly via browser layout engines.');
+  } else {
+    console.log('  ✅ Hindi and Punjabi glyphs rendered and extracted successfully.');
+  }
+  await indicPage.close();
+
   await browser.close();
 
   console.log('\n================================================================');
-  console.log('🎉 ALL PDF RASTERIZATION & SHARPNESS CHECKS PASSED (>= 150 DPI)!');
+  console.log('ALL PDF RASTERIZATION & SHARPNESS CHECKS PASSED (>= 150 DPI)!');
   console.log(`Saved images to: ${OUT_DIR}`);
   console.log('================================================================\n');
 }
