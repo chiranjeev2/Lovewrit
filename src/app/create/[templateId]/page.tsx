@@ -824,6 +824,75 @@ export default function CreateLovewritPage({
 
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
+      } else if (data.razorpayOrderId) {
+        const loadRazorpayScript = () => {
+          return new Promise<boolean>((resolve) => {
+            if (typeof window !== "undefined" && (window as unknown as { Razorpay?: unknown }).Razorpay) {
+              return resolve(true);
+            }
+            const script = document.createElement("script");
+            script.src = "https://checkout.razorpay.com/v1/checkout.js";
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+          });
+        };
+
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          throw new Error("Unable to load secure Razorpay checkout. Please check connection.");
+        }
+
+        interface RazorpaySuccessResponse {
+          razorpay_payment_id: string;
+          razorpay_order_id: string;
+          razorpay_signature: string;
+        }
+
+        const RazorpayCtor = (window as unknown as { Razorpay: new (options: unknown) => { open: () => void } }).Razorpay;
+        const rzp = new RazorpayCtor({
+          key: data.keyId,
+          amount: data.amount,
+          currency: data.currency,
+          name: "Lovewrit",
+          description: `Personalized ${productType === "CARD" ? "Digital Card" : "Page"}`,
+          order_id: data.razorpayOrderId,
+          prefill: {
+            name: customerName,
+            email: customerEmail,
+          },
+          theme: {
+            color: "#e11d48",
+          },
+          handler: async (response: RazorpaySuccessResponse) => {
+            try {
+              const verifyRes = await fetch("/api/checkout/verify", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  ...response,
+                  orderId: data.orderId,
+                  slug: data.slug,
+                }),
+              });
+              const verifyData = await verifyRes.json();
+              if (verifyRes.ok && verifyData.success) {
+                window.location.href = `/checkout/success?session_id=${data.razorpayOrderId}&slug=${data.slug}&token=${data.adminToken}`;
+              } else {
+                throw new Error(verifyData.error || "Payment verification failed");
+              }
+            } catch (vErr) {
+              setFormError(vErr instanceof Error ? vErr.message : "Verification error");
+              setIsSubmitting(false);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              setIsSubmitting(false);
+            },
+          },
+        });
+        rzp.open();
       } else {
         throw new Error("Missing checkout redirection URL");
       }

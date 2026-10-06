@@ -57,7 +57,7 @@ export default function FAQPage() {
     },
     {
       q: "Is my payment information safe?",
-      a: "Yes. Payments are processed securely by our third-party payment provider. We never see or store your full card details.",
+      a: "Yes. Payments are processed securely by Razorpay. We never see or store your full card details or banking credentials.",
     },
     {
       q: "How do I contact support?",
