@@ -65,9 +65,9 @@ export default function HindiPunjabiKeyboard({
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="inline-flex items-center space-x-1.5 rounded-lg border border-neutral-700 bg-neutral-900 px-2.5 py-1 text-[11px] font-medium text-neutral-300 hover:border-rose-500 hover:text-white transition"
+          className="inline-flex items-center space-x-2 rounded-xl border border-neutral-700 bg-neutral-900 px-3.5 py-2.5 text-xs font-medium text-neutral-300 hover:border-rose-500 hover:text-white transition min-h-[44px]"
         >
-          <Keyboard className="h-3.5 w-3.5 text-rose-400" />
+          <Keyboard className="h-4 w-4 text-rose-400" />
           <span>{isOpen ? "Hide Virtual Keyboard" : `⌨️ Hindi & Punjabi Virtual Keyboard`}</span>
         </button>
 

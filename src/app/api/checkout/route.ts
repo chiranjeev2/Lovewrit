@@ -12,6 +12,8 @@ import {
   detectRegion,
 } from "@/lib/currency";
 import { getTemplateById } from "@/lib/templates-data";
+import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
+import { sanitizeText, sanitizeGuestName } from "@/lib/sanitize";
 import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
@@ -258,11 +260,11 @@ export async function POST(req: NextRequest) {
           ? {
               cardData: {
                 create: {
-                  senderName: (cardData?.senderName || pageData?.senderName || customerName),
-                  recipientName: (cardData?.recipientName || pageData?.recipientName || "My Love"),
-                  occasion: (cardData?.occasion || pageData?.occasion || "anniversary"),
-                  message: (cardData?.message || pageData?.letter || ""),
-                  secondaryMessage: cardData?.secondaryMessage || null,
+                  senderName: sanitizeGuestName(cardData?.senderName || pageData?.senderName || customerName, 60),
+                  recipientName: sanitizeGuestName(cardData?.recipientName || pageData?.recipientName || "My Love", 60),
+                  occasion: cardData?.occasion || pageData?.occasion || "anniversary",
+                  message: sanitizeText(cardData?.message || pageData?.letter || "", 10000),
+                  secondaryMessage: cardData?.secondaryMessage ? sanitizeText(cardData.secondaryMessage, 2000) : null,
                   photoUrl: cardData?.photoUrl || (Array.isArray(pageData?.photoUrls) ? (pageData?.photoUrls[0] || "") : ""),
                   photoShape: cardData?.photoShape || "oval",
                   colorTheme: cardData?.colorTheme || pageData?.colorTheme || "rose",
@@ -270,12 +272,12 @@ export async function POST(req: NextRequest) {
                   borderStyle: cardData?.borderStyle || "classic",
                   stickersJson: cardData?.stickersJson || (cardData?.stickers ? JSON.stringify(cardData.stickers) : null),
                   isFlipReveal: Boolean(cardData?.isFlipReveal),
-                  location: cardData?.location || null,
-                  venueName: cardData?.venueName || pageData?.venueName || null,
-                  venueAddress: cardData?.venueAddress || pageData?.venueAddress || null,
+                  location: cardData?.location ? sanitizeText(cardData.location, 200) : null,
+                  venueName: cardData?.venueName ? sanitizeText(cardData.venueName, 200) : (pageData?.venueName ? sanitizeText(pageData.venueName, 200) : null),
+                  venueAddress: cardData?.venueAddress ? sanitizeText(cardData.venueAddress, 300) : (pageData?.venueAddress ? sanitizeText(pageData.venueAddress, 300) : null),
                   venueMapUrl: cardData?.venueMapUrl || pageData?.venueMapUrl || null,
                   voiceMessageUrl: cardData?.voiceMessageUrl || pageData?.voiceMessageUrl || null,
-                  revealAt: (cardData?.revealAt || pageData?.revealAt) ? new Date(cardData?.revealAt || pageData?.revealAt!) : null,
+                  revealAt: (cardData?.revealAt || pageData?.revealAt) ? new Date((cardData?.revealAt || pageData?.revealAt) as string) : null,
                   showOmMotif: Boolean(cardData?.showOmMotif || pageData?.showOmMotif),
                   showBismillah: Boolean(cardData?.showBismillah || pageData?.showBismillah),
                   language: cardData?.language || pageData?.language || "en",
@@ -288,10 +290,10 @@ export async function POST(req: NextRequest) {
           ? {
               pageData: {
                 create: {
-                  senderName: (pageData?.senderName || cardData?.senderName || customerName),
-                  recipientName: (pageData?.recipientName || cardData?.recipientName || "My Love"),
-                  occasion: (pageData?.occasion || cardData?.occasion || "proposal"),
-                  letter: (pageData?.letter || cardData?.message || ""),
+                  senderName: sanitizeGuestName(pageData?.senderName || cardData?.senderName || customerName, 60),
+                  recipientName: sanitizeGuestName(pageData?.recipientName || cardData?.recipientName || "My Love", 60),
+                  occasion: pageData?.occasion || cardData?.occasion || "proposal",
+                  letter: sanitizeText(pageData?.letter || cardData?.message || "", 15000),
                   photoUrls: JSON.stringify(pageData?.photoUrls || (cardData?.photoUrl ? [cardData.photoUrl] : [])),
                   collageLayout: pageData?.collageLayout || "masonry",
                   musicTrack: pageData?.musicTrack || null,
@@ -308,7 +310,7 @@ export async function POST(req: NextRequest) {
                   venueAddress: pageData?.venueAddress || cardData?.venueAddress || null,
                   venueMapUrl: pageData?.venueMapUrl || cardData?.venueMapUrl || null,
                   voiceMessageUrl: pageData?.voiceMessageUrl || cardData?.voiceMessageUrl || null,
-                  revealAt: (pageData?.revealAt || cardData?.revealAt) ? new Date(pageData?.revealAt || cardData?.revealAt!) : null,
+                  revealAt: (pageData?.revealAt || cardData?.revealAt) ? new Date((pageData?.revealAt || cardData?.revealAt) as string) : null,
                   showOmMotif: Boolean(pageData?.showOmMotif || cardData?.showOmMotif),
                   showBismillah: Boolean(pageData?.showBismillah || cardData?.showBismillah),
                   isAdSupported: Boolean(pageData?.isAdSupported || isFreeAdPage),
@@ -316,6 +318,18 @@ export async function POST(req: NextRequest) {
                     pageData?.requireGuestbookApproval ?? isMemorial
                   ),
                   language: pageData?.language || cardData?.language || "en",
+                  scenesJson:
+                    pageData?.scenesJson ||
+                    (pageData?.scenes ? JSON.stringify(pageData.scenes) : null) ||
+                    JSON.stringify(
+                      getDefaultScenesForOccasion(pageData?.occasion || cardData?.occasion || "proposal", {
+                        senderName: pageData?.senderName || cardData?.senderName || customerName,
+                        recipientName: pageData?.recipientName || cardData?.recipientName || "My Love",
+                        letter: pageData?.letter || cardData?.message || "",
+                        templateId,
+                      })
+                    ),
+                  sceneEngineEnabled: true, // Rule 8: True for new orders
                 },
               },
             }
@@ -397,7 +411,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Dev / Simulation Mode
+    // 2. Dev / Simulation Mode (Strictly disabled in production)
+    if (process.env.NODE_ENV === "production") {
+      console.error("[CRITICAL] Attempted simulated checkout in production mode");
+      return NextResponse.json(
+        { error: "Simulated checkouts are strictly disabled in production. Live payment gateway required." },
+        { status: 500 }
+      );
+    }
+
     const simulatedSessionId = `sim_${order.id}`;
     await db.order.update({
       where: { id: order.id },

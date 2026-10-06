@@ -1,6 +1,7 @@
 import { jsPDF } from "jspdf";
 import QRCode from "qrcode";
-import { toPng } from "html-to-image";
+import { toJpeg } from "html-to-image";
+import { getBaseUrl } from "@/lib/base-url";
 
 export interface FoldablePdfOptions {
   senderName: string;
@@ -15,6 +16,97 @@ export interface FoldablePdfOptions {
   eventDate?: string | null;
   shareUrl: string;
   cardRef?: HTMLElement | null;
+  download?: boolean;
+}
+
+export function containsIndicText(text?: string | null): boolean {
+  if (!text) return false;
+  return /[\u0900-\u0A7F]/.test(text);
+}
+
+async function renderIndicMessagePanel(
+  text: string,
+  widthMm: number,
+  options: {
+    fontSizePt?: number;
+    color?: string;
+    align?: "left" | "center";
+  } = {}
+): Promise<{ imgData: string; heightMm: number } | null> {
+  if (typeof document === "undefined") return null;
+
+  const { fontSizePt = 11, color = "#322d2d", align = "left" } = options;
+  const widthPx = Math.round(widthMm * 3.7795); // 96 DPI mm to px
+
+  const el = document.createElement("div");
+  el.style.position = "fixed";
+  el.style.left = "-9999px";
+  el.style.top = "-9999px";
+  el.style.width = `${widthPx}px`;
+  el.style.padding = "4px 8px";
+  el.style.fontFamily = "'Noto Sans Devanagari', 'Noto Sans Gurmukhi', sans-serif";
+  el.style.fontSize = `${Math.round(fontSizePt * 1.33)}px`;
+  el.style.lineHeight = "1.6";
+  el.style.color = color;
+  el.style.textAlign = align;
+  el.style.whiteSpace = "pre-wrap";
+  el.style.wordBreak = "break-word";
+  el.style.backgroundColor = "transparent";
+  el.textContent = text;
+
+  document.body.appendChild(el);
+  try {
+    if (document.fonts) {
+      await document.fonts.ready;
+    }
+    const rect = el.getBoundingClientRect();
+    const pixelRatio = 3;
+    const imgData = await toJpeg(el, {
+      pixelRatio,
+      quality: 0.95,
+      backgroundColor: "transparent",
+    });
+    const heightMm = Math.max(15, rect.height / 3.7795);
+    return { imgData, heightMm };
+  } catch (err) {
+    console.error("Failed to rasterize Indic text panel:", err);
+    return null;
+  } finally {
+    if (el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
+  }
+}
+
+export function wrapDocWithIndicGuard(doc: jsPDF): jsPDF {
+  const rawText = doc.text.bind(doc);
+  (doc as unknown as { text: (text: string | string[], ...args: unknown[]) => jsPDF }).text = function (
+    text: string | string[],
+    ...args: unknown[]
+  ) {
+    const checkStr = (val: unknown) => {
+      if (typeof val === "string" && /[\u0900-\u0A7F]/.test(val)) {
+        throw new Error(
+          `Cannot render Indic text with doc.text(): "${val}". jsPDF standard Type 1 fonts do not support Devanagari/Gurmukhi glyphs. Use renderIndicMessagePanel() or rasterized image rendering.`
+        );
+      }
+      if (Array.isArray(val)) {
+        for (const item of val) checkStr(item);
+      }
+    };
+    checkStr(text);
+    return Reflect.apply(rawText, doc, [text, ...args]) as jsPDF;
+  };
+  return doc;
+}
+
+export function drawVectorHeart(doc: jsPDF, x: number, y: number, size: number = 8): void {
+  doc.setFillColor(230, 215, 215);
+  doc.setDrawColor(230, 215, 215);
+  const r = size * 0.35;
+  doc.circle(x - r * 0.9, y, r, "F");
+  doc.circle(x + r * 0.9, y, r, "F");
+  doc.triangle(x - r * 1.85, y + r * 0.2, x + r * 1.85, y + r * 0.2, x, y + size * 1.1, "F");
 }
 
 /**
@@ -31,7 +123,7 @@ export interface FoldablePdfOptions {
  *   - Center: Subtle folding line guide.
  *   - Right panel (5x7"): Inside Right panel with the heartfelt message, closing signoff, date & location.
  */
-export async function generateFoldableCardPdf(options: FoldablePdfOptions): Promise<void> {
+export async function generateFoldableCardPdf(options: FoldablePdfOptions): Promise<jsPDF> {
   const {
     senderName,
     recipientName,
@@ -42,6 +134,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
     eventDate,
     shareUrl,
     cardRef,
+    download = true,
   } = options;
 
   // 10 x 7 inches in landscape (254 x 177.8 mm)
@@ -49,7 +142,10 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
     orientation: "landscape",
     unit: "mm",
     format: [254, 177.8],
+    compress: true,
   });
+
+  wrapDocWithIndicGuard(doc);
 
   const pageWidth = 254;
   const pageHeight = 177.8;
@@ -92,7 +188,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
 
   // Generate QR Code for back panel
   try {
-    const qrDataUrl = await QRCode.toDataURL(shareUrl || "https://lovewrit.com", {
+    const qrDataUrl = await QRCode.toDataURL(shareUrl || getBaseUrl(), {
       width: 300,
       margin: 1,
       color: { dark: "#1a1a1a", light: "#ffffff" },
@@ -127,7 +223,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
   doc.setTextColor(160, 160, 160);
-  doc.text("Crafted with love • www.lovewrit.com", backCenterX, pageHeight - 12, { align: "center" });
+  doc.text("Crafted with love • Lovewrit Keepsakes", backCenterX, pageHeight - 12, { align: "center" });
 
   // Draw Center Fold Guide on Page 1
   drawFoldGuide();
@@ -143,15 +239,17 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
       const rect = cardRef.getBoundingClientRect();
       const width = Math.round(rect.width);
       const height = Math.round(rect.height);
+      // pixelRatio 3 produces ~1200-1500px width which gives >= 250 DPI for the 4.2" front cover panel
       const pixelRatio = 3;
 
-      // Capture the card preview node directly with zeroed margins and exact bounds
-      const frontPng = await toPng(cardRef, {
+      // Capture the card preview node directly with high-quality JPEG (balanced for crisp print <10 MB)
+      const frontJpg = await toJpeg(cardRef, {
         width,
         height,
         canvasWidth: Math.round(width * pixelRatio),
         canvasHeight: Math.round(height * pixelRatio),
         pixelRatio,
+        quality: 0.95,
         cacheBust: false,
         style: {
           margin: "0",
@@ -177,7 +275,7 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
       const frontW = panelWidth - margin * 2; // 107mm
       const frontH = pageHeight - margin * 2; // 157.8mm
 
-      doc.addImage(frontPng, "PNG", frontX, frontY, frontW, frontH);
+      doc.addImage(frontJpg, "JPEG", frontX, frontY, frontW, frontH, undefined, "FAST");
     } catch (err) {
       console.warn("Could not capture cardRef, falling back to vector front", err);
       renderVectorFrontCover(doc, frontCenterX, recipientName, senderName, occasion);
@@ -214,17 +312,29 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
     doc.roundedRect(16, 45, panelWidth - 32, 90, 4, 4, "D");
     doc.setLineDashPattern([], 0);
 
-    doc.setFont("times", "normal");
-    doc.setFontSize(10.5);
-    doc.setTextColor(60, 50, 50);
-    const splitSecondary = doc.splitTextToSize(secondaryMessage.trim(), panelWidth - 44);
-    doc.text(splitSecondary, insideLeftCenterX, 65, { align: "center", lineHeightFactor: 1.5 });
+    if (containsIndicText(secondaryMessage)) {
+      const panel = await renderIndicMessagePanel(secondaryMessage.trim(), panelWidth - 44, {
+        fontSizePt: 10.5,
+        color: "#3c3232",
+        align: "center",
+      });
+      if (panel) {
+        const imgW = panelWidth - 44;
+        const imgH = panel.heightMm;
+        const imgX = insideLeftCenterX - imgW / 2;
+        const imgY = 55;
+        doc.addImage(panel.imgData, "JPEG", imgX, imgY, imgW, imgH);
+      }
+    } else {
+      doc.setFont("times", "normal");
+      doc.setFontSize(10.5);
+      doc.setTextColor(60, 50, 50);
+      const splitSecondary = doc.splitTextToSize(secondaryMessage.trim(), panelWidth - 44);
+      doc.text(splitSecondary, insideLeftCenterX, 65, { align: "center", lineHeightFactor: 1.5 });
+    }
   } else {
     // Decorative watermark / monogram when no secondary bilingual message
-    doc.setFont("times", "italic");
-    doc.setFontSize(28);
-    doc.setTextColor(230, 215, 215);
-    doc.text("♥", insideLeftCenterX, 85, { align: "center" });
+    drawVectorHeart(doc, insideLeftCenterX, 85, 8);
 
     doc.setFont("times", "italic");
     doc.setFontSize(10);
@@ -234,7 +344,6 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
   }
 
   // --- Inside Right Panel (x: 127 to 254) ---
-  const insideRightCenterX = centerFoldX + panelWidth / 2; // 190.5 mm
   const rightMargin = 16;
   const contentWidth = panelWidth - rightMargin * 2; // 95 mm
   const textStartX = centerFoldX + rightMargin;
@@ -246,16 +355,29 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
   doc.text(`Dearest ${recipientName},`, textStartX, 38);
 
   // Main Heartfelt Message
-  doc.setFont("times", "normal");
-  doc.setFontSize(10.5);
-  doc.setTextColor(50, 45, 45);
-
   const cleanMessage = message || "Thank you for bringing so much warmth and light into my life.";
-  const splitMessage = doc.splitTextToSize(cleanMessage, contentWidth);
-  doc.text(splitMessage, textStartX, 50, { lineHeightFactor: 1.5 });
+  let estimatedMessageHeight = 25;
+
+  if (containsIndicText(cleanMessage)) {
+    const panel = await renderIndicMessagePanel(cleanMessage, contentWidth, {
+      fontSizePt: 10.5,
+      color: "#322d2d",
+      align: "left",
+    });
+    if (panel) {
+      doc.addImage(panel.imgData, "JPEG", textStartX, 48, contentWidth, panel.heightMm);
+      estimatedMessageHeight = panel.heightMm;
+    }
+  } else {
+    doc.setFont("times", "normal");
+    doc.setFontSize(10.5);
+    doc.setTextColor(50, 45, 45);
+    const splitMessage = doc.splitTextToSize(cleanMessage, contentWidth);
+    doc.text(splitMessage, textStartX, 50, { lineHeightFactor: 1.5 });
+    estimatedMessageHeight = splitMessage.length * 5.5;
+  }
 
   // Calculate signature Y position
-  const estimatedMessageHeight = splitMessage.length * 5.5;
   const signoffY = Math.min(135, Math.max(85, 50 + estimatedMessageHeight + 10));
 
   doc.setFont("times", "italic");
@@ -278,8 +400,11 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
   }
 
   // Save / Trigger Download
-  const safeName = (recipientName || "keepsake").toLowerCase().replace(/[^a-z0-9]/g, "-");
-  doc.save(`lovewrit-foldable-card-${safeName}.pdf`);
+  if (download) {
+    const safeName = (recipientName || "keepsake").toLowerCase().replace(/[^a-z0-9]/g, "-");
+    doc.save(`lovewrit-foldable-card-${safeName}.pdf`);
+  }
+  return doc;
 }
 
 /** Fallback vector front cover if DOM capture is unavailable */

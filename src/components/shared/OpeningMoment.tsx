@@ -140,8 +140,8 @@ export default function OpeningMoment({
       >
         {/* Floating background ambient glow */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-rose-500/10 blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 sm:w-96 h-72 sm:h-96 max-w-full rounded-full bg-rose-500/10 blur-3xl animate-pulse" />
+          <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-64 sm:w-80 h-64 sm:h-80 max-w-full rounded-full bg-amber-500/10 blur-3xl" />
         </div>
 
         <motion.div

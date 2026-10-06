@@ -16,6 +16,7 @@ export type OccasionType =
   | "iftar"
   | "christening"
   | "wedding_blessing"
+  | "wedding_invite"
   | "blessing_ceremony";
 
 export const EVENT_INVITE_OCCASIONS: OccasionType[] = [
@@ -30,6 +31,7 @@ export const EVENT_INVITE_OCCASIONS: OccasionType[] = [
   "iftar",
   "christening",
   "wedding_blessing",
+  "wedding_invite",
   "blessing_ceremony",
 ];
 
@@ -47,6 +49,7 @@ export type ColorThemeKey =
   | "serene"
   | "festive"
   | "scroll"
+  | "vintage_parchment"
   | "modern"
   | "modern_gold"
   | "saffron"
@@ -282,6 +285,16 @@ export const COLOR_THEMES: Record<ColorThemeKey, ColorTheme> = {
     accentColor: "#991b1b", // Royal crimson wax seal
     borderStyle: "border-[#8c6227]/80 shadow-md",
     tagColor: "bg-[#8c6227]/20 text-[#6d4518] border-[#8c6227]/40",
+  },
+  vintage_parchment: {
+    id: "vintage_parchment",
+    name: "Vintage Parchment",
+    bgGradient: "from-[#25180f] via-[#382414] to-[#190f08]",
+    cardBg: "bg-[#fdfaf2] border-[#a0743b] text-[#2a170a] shadow-amber-950/40",
+    textColor: "text-[#381f0d]",
+    accentColor: "#881337", // Deep antique rose-crimson wax seal
+    borderStyle: "border-[#a0743b]/80 shadow-md",
+    tagColor: "bg-[#a0743b]/20 text-[#714516] border-[#a0743b]/40",
   },
   modern: {
     id: "modern",
@@ -905,8 +918,35 @@ export const TEMPLATES: TemplateDefinition[] = [
     revealType: "golden_invite",
     badge: "RSVP Enabled",
   },
+
+  // --- WEDDING INVITE (FAITH-NEUTRAL GRAND CELEBRATION PACK) ---
+  {
+    id: "wedding-invite",
+    name: "Royal Wedding Invitation",
+    subtitle: "Grand wedding celebration invite with love story, events schedule, personal note & interactive RSVP",
+    icon: "💍",
+    occasion: "wedding_invite",
+    category: "invites",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "champagne",
+    defaultShape: "oval",
+    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80",
+    ],
+    sampleSender: "The Vermas & The Sharmas",
+    sampleRecipient: "Honored Guest",
+    sampleMessage: "Together with our families, we joyfully invite you to celebrate our union in holy matrimony and shower us with your blessings.",
+    sampleLocation: "The Grand Heritage Palace, Udaipur",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "golden_invite",
+    badge: "RSVP & Story",
+  },
 ];
 
 export function getTemplateById(id: string): TemplateDefinition | undefined {
   return TEMPLATES.find((t) => t.id === id);
 }
+

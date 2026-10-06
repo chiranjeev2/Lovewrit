@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useRef, useEffect, use, useDeferredValue } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useRef, useEffect, use, useDeferredValue, useMemo } from "react";
+import { useRouter, useSearchParams, notFound } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
@@ -10,6 +10,10 @@ import PagePreview, { CollageLayoutStyle } from "@/components/editor/PagePreview
 import VoiceRecorder from "@/components/interactive/VoiceRecorder";
 import HindiPunjabiKeyboard from "@/components/editor/HindiPunjabiKeyboard";
 import DesktopEmojiPicker from "@/components/editor/DesktopEmojiPicker";
+import { SceneFlowEditor } from "@/components/scene-engine/customizer/SceneFlowEditor";
+import { SceneContainer } from "@/components/scene-engine/SceneContainer";
+import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
+import { SceneConfig } from "@/types/scenes";
 import { useApp } from "@/context/AppContext";
 import {
   TEMPLATES,
@@ -32,6 +36,7 @@ import {
 } from "@/lib/currency";
 import { BUILTIN_AUDIO_TRACKS } from "@/lib/audio-tracks";
 import { LanguageCode, LANGUAGES, TRANSLATIONS } from "@/lib/i18n";
+import { trackFunnelStep } from "@/lib/consent";
 import {
   Heart,
   Sparkles,
@@ -93,10 +98,14 @@ export default function CreateLovewritPage({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { currency, setCurrency, region, language, setLanguage, t } = useApp();
 
   const templateId = resolvedParams.templateId;
-  const template = getTemplateById(templateId) || TEMPLATES[0];
+  const template = getTemplateById(templateId);
+  if (!template) {
+    notFound();
+  }
 
   // Selected format & tier (respects template's primary format: CARD or PAGE)
   const [productType, setProductType] = useState<"CARD" | "PAGE">(
@@ -163,6 +172,20 @@ export default function CreateLovewritPage({
   const [showOmMotif, setShowOmMotif] = useState<boolean>(false);
   const [showBismillah, setShowBismillah] = useState<boolean>(true);
   const [isAdSupported, setIsAdSupported] = useState<boolean>(true);
+
+  // Scene Engine State (Phase 3)
+  const [scenes, setScenes] = useState<SceneConfig[]>(() =>
+    getDefaultScenesForOccasion(template.occasion, {
+      senderName: template.sampleSender,
+      recipientName: template.sampleRecipient,
+      letter: template.sampleMessage,
+      samplePhotos: template.samplePhotos,
+      templateId: template.id,
+      location: template.sampleLocation,
+    })
+  );
+  const [previewSceneIndex, setPreviewSceneIndex] = useState<number | undefined>(undefined);
+  const [previewMode, setPreviewMode] = useState<"scene" | "page">("scene");
 
   // Founder Master Pass (Free All-Access)
   const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
@@ -264,6 +287,32 @@ export default function CreateLovewritPage({
               setIsFounderFree(true);
             }
           } catch {}
+        }
+
+        // Track customizer funnel step
+        trackFunnelStep({
+          step: "customizer",
+          templateId: template.id,
+        });
+
+        // Auto-detect referral code from query param or 30-day attribution cookie
+        const refParam = searchParams.get("ref");
+        const cookieRef = typeof document !== "undefined"
+          ? document.cookie.split("; ").find((row) => row.startsWith("lovewrit_referral_code="))?.split("=")[1]
+          : null;
+        const activeRef = refParam || cookieRef;
+        if (activeRef) {
+          const cleanCode = activeRef.trim().toUpperCase();
+          setReferralCodeInput(cleanCode);
+          fetch(`/api/referral?code=${encodeURIComponent(cleanCode)}`)
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.valid) {
+                setAppliedReferralCode(cleanCode);
+                setReferralMessage(data.message || `Referral code ${cleanCode} applied!`);
+              }
+            })
+            .catch(() => {});
         }
       });
     }
@@ -459,6 +508,17 @@ export default function CreateLovewritPage({
     } else if (matchingTemplate?.sampleMessage) {
       setMessage(matchingTemplate.sampleMessage);
     }
+
+    setScenes(
+      getDefaultScenesForOccasion(newOccasion, {
+        senderName,
+        recipientName,
+        letter: promptForOccasion || matchingTemplate?.sampleMessage || message,
+        samplePhotos: matchingTemplate?.samplePhotos,
+        templateId: matchingTemplate?.id,
+        location: matchingTemplate?.sampleLocation,
+      })
+    );
   };
 
   // Photo arranging and reordering handlers
@@ -671,6 +731,13 @@ export default function CreateLovewritPage({
 
     setIsSubmitting(true);
 
+    trackFunnelStep({
+      step: "checkout",
+      templateId: template.id,
+      productType,
+      tier,
+    });
+
     try {
       const currentTrack =
         musicOption === "builtin"
@@ -752,6 +819,8 @@ export default function CreateLovewritPage({
           showBismillah,
           isAdSupported: isFreeAdPage,
           language: selectedLanguage,
+          scenesJson: JSON.stringify(scenes),
+          scenes,
         },
       };
 
@@ -783,7 +852,11 @@ export default function CreateLovewritPage({
       : null;
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-rose-500 selection:text-white">
+    <div
+      data-template-id={template.id}
+      data-occasion={template.occasion}
+      className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-rose-500 selection:text-white"
+    >
       <Navbar />
 
       {/* Founder Test Mode Active Notice */}
@@ -809,9 +882,9 @@ export default function CreateLovewritPage({
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link
             href="/#templates"
-            className="flex items-center space-x-1.5 text-xs text-neutral-400 hover:text-white transition"
+            className="flex items-center space-x-2 text-xs text-neutral-400 hover:text-white transition min-h-[44px] py-1"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
+            <ArrowLeft className="h-4 w-4" />
             <span>Back to Templates</span>
           </Link>
 
@@ -828,24 +901,24 @@ export default function CreateLovewritPage({
       <div className="md:hidden flex border-b border-neutral-900 bg-neutral-900/90 sticky top-[57px] z-30">
         <button
           onClick={() => setMobileTab("edit")}
-          className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center space-x-1.5 border-b-2 transition ${
+          className={`flex-1 min-h-[44px] py-3 text-xs font-semibold flex items-center justify-center space-x-1.5 border-b-2 transition ${
             mobileTab === "edit"
               ? "border-rose-500 text-rose-400"
               : "border-transparent text-neutral-400 hover:text-white"
           }`}
         >
-          <Sliders className="h-3.5 w-3.5" />
+          <Sliders className="h-4 w-4" />
           <span>Customize Form</span>
         </button>
         <button
           onClick={() => setMobileTab("preview")}
-          className={`flex-1 py-3 text-xs font-semibold flex items-center justify-center space-x-1.5 border-b-2 transition ${
+          className={`flex-1 min-h-[44px] py-3 text-xs font-semibold flex items-center justify-center space-x-1.5 border-b-2 transition ${
             mobileTab === "preview"
               ? "border-rose-500 text-rose-400"
               : "border-transparent text-neutral-400 hover:text-white"
           }`}
         >
-          <Eye className="h-3.5 w-3.5" />
+          <Eye className="h-4 w-4" />
           <span>Live Preview</span>
         </button>
       </div>
@@ -1002,7 +1075,7 @@ export default function CreateLovewritPage({
                 <button
                   type="button"
                   onClick={() => setProductType("CARD")}
-                  className={`rounded-xl border py-2.5 px-3 text-center text-xs font-semibold transition ${
+                  className={`rounded-xl border py-2.5 px-3 min-h-[44px] flex items-center justify-center text-center text-xs font-semibold transition ${
                     productType === "CARD"
                       ? "border-neutral-400 bg-neutral-800 text-white"
                       : "border-neutral-800 bg-neutral-950 text-neutral-400"
@@ -1013,7 +1086,7 @@ export default function CreateLovewritPage({
                 <button
                   type="button"
                   onClick={() => setProductType("PAGE")}
-                  className={`rounded-xl border py-2.5 px-3 text-center text-xs font-semibold transition ${
+                  className={`rounded-xl border py-2.5 px-3 min-h-[44px] flex items-center justify-center text-center text-xs font-semibold transition ${
                     productType === "PAGE"
                       ? "border-neutral-400 bg-neutral-800 text-white"
                       : "border-neutral-800 bg-neutral-950 text-neutral-400"
@@ -1109,15 +1182,18 @@ export default function CreateLovewritPage({
                   <button
                     type="button"
                     onClick={() => setShowOmMotif(!showOmMotif)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      showOmMotif ? "bg-amber-500" : "bg-neutral-800"
-                    }`}
+                    aria-label="Toggle Om Motif"
+                    className="relative p-2.5 -m-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center cursor-pointer"
                   >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        showOmMotif ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
+                    <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                      showOmMotif ? "bg-amber-500" : "bg-neutral-800"
+                    }`}>
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          showOmMotif ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </span>
                   </button>
                 </div>
               )}
@@ -1137,15 +1213,18 @@ export default function CreateLovewritPage({
                   <button
                     type="button"
                     onClick={() => setShowBismillah(!showBismillah)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                      showBismillah ? "bg-emerald-500" : "bg-neutral-800"
-                    }`}
+                    aria-label="Toggle Bismillah Invocation"
+                    className="relative p-2.5 -m-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center cursor-pointer"
                   >
-                    <span
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                        showBismillah ? "translate-x-5" : "translate-x-0"
-                      }`}
-                    />
+                    <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                      showBismillah ? "bg-emerald-500" : "bg-neutral-800"
+                    }`}>
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          showBismillah ? "translate-x-5" : "translate-x-0"
+                        }`}
+                      />
+                    </span>
                   </button>
                 </div>
               )}
@@ -1229,6 +1308,18 @@ export default function CreateLovewritPage({
                 </div>
               )}
             </div>
+
+            {/* Scene Engine Story Flow Customizer */}
+            {(productType === "PAGE" || isBundle) && (
+              <SceneFlowEditor
+                scenes={scenes}
+                onChange={setScenes}
+                onPreviewSceneIndex={(idx) => {
+                  setPreviewSceneIndex(idx);
+                  setPreviewMode("scene");
+                }}
+              />
+            )}
 
             {/* Step 2: Names, Language & Occasion */}
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900/70 p-6 shadow-xl space-y-4">
@@ -1530,6 +1621,7 @@ export default function CreateLovewritPage({
                 <button
                   type="button"
                   role="switch"
+                  aria-label="Toggle Reveal Countdown"
                   aria-checked={enableRevealCountdown}
                   onClick={() => {
                     const nextState = !enableRevealCountdown;
@@ -1538,15 +1630,17 @@ export default function CreateLovewritPage({
                       applyDatePreset("tonight");
                     }
                   }}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                    enableRevealCountdown ? "bg-rose-500" : "bg-neutral-800"
-                  }`}
+                  className="relative p-2.5 -m-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center cursor-pointer"
                 >
-                  <span
-                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
-                      enableRevealCountdown ? "translate-x-5" : "translate-x-0"
-                    }`}
-                  />
+                  <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    enableRevealCountdown ? "bg-rose-500" : "bg-neutral-800"
+                  }`}>
+                    <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                        enableRevealCountdown ? "translate-x-5" : "translate-x-0"
+                      }`}
+                    />
+                  </span>
                 </button>
               </div>
 
@@ -1834,7 +1928,7 @@ export default function CreateLovewritPage({
                       key={shape.id}
                       type="button"
                       onClick={() => setPhotoShape(shape.id)}
-                      className={`rounded-xl border py-2 text-center text-xs font-medium transition ${
+                      className={`rounded-xl border py-2.5 px-2 min-h-[44px] flex items-center justify-center text-center text-xs font-medium transition ${
                         photoShape === shape.id
                           ? "border-rose-500 bg-rose-500/20 text-rose-300"
                           : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
@@ -1863,7 +1957,7 @@ export default function CreateLovewritPage({
                         setCardPhoto("");
                         setHasUserPhotos(true);
                       }}
-                      className="text-[11px] text-neutral-500 hover:text-red-400 transition"
+                      className="text-xs text-neutral-500 hover:text-red-400 transition min-h-[44px] px-2.5 inline-flex items-center"
                     >
                       Clear All
                     </button>
@@ -1910,10 +2004,10 @@ export default function CreateLovewritPage({
                         <button
                           type="button"
                           onClick={() => removePhoto(idx)}
-                          className="absolute top-1.5 right-1.5 rounded-lg bg-black/70 hover:bg-red-600 text-white p-1 transition shadow-md"
+                          className="absolute top-1.5 right-1.5 rounded-lg bg-black/70 hover:bg-red-600 text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center transition shadow-md"
                           title="Remove Photo"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
 
@@ -1923,14 +2017,14 @@ export default function CreateLovewritPage({
                           type="button"
                           onClick={() => movePhoto(idx, "left")}
                           disabled={idx === 0}
-                          className="flex items-center space-x-1 rounded-lg border border-neutral-800 bg-neutral-900 px-2 py-1 text-[10px] font-medium text-neutral-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+                          className="flex items-center justify-center space-x-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-medium text-neutral-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition min-h-[44px]"
                           title="Move Left (Earlier in sequence)"
                         >
-                          <ChevronLeft className="h-3 w-3" />
+                          <ChevronLeft className="h-4 w-4" />
                           <span>Left</span>
                         </button>
 
-                        <span className="text-[9px] text-neutral-500 font-mono">
+                        <span className="text-[10px] text-neutral-500 font-mono">
                           #{idx + 1}
                         </span>
 
@@ -1938,11 +2032,11 @@ export default function CreateLovewritPage({
                           type="button"
                           onClick={() => movePhoto(idx, "right")}
                           disabled={idx === pagePhotos.length - 1}
-                          className="flex items-center space-x-1 rounded-lg border border-neutral-800 bg-neutral-900 px-2 py-1 text-[10px] font-medium text-neutral-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition"
+                          className="flex items-center justify-center space-x-1 rounded-lg border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs font-medium text-neutral-300 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition min-h-[44px]"
                           title="Move Right (Later in sequence)"
                         >
                           <span>Right</span>
-                          <ChevronRight className="h-3 w-3" />
+                          <ChevronRight className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
@@ -2073,18 +2167,18 @@ export default function CreateLovewritPage({
                       badge: "Authentic Scroll",
                     },
                     {
-                      id: "modern" as ColorThemeKey,
-                      name: "Modern Manuscript (Silver)",
-                      desc: "Contemporary slate manuscript with brushed platinum rails & sleek silver seal",
-                      accent: "#94a3b8",
-                      badge: "Silver Lining",
+                      id: "vintage_parchment" as ColorThemeKey,
+                      name: "Vintage Parchment",
+                      desc: "Warm deckle-edge antique stationery, deep sepia ink & classic crimson seal",
+                      accent: "#881337",
+                      badge: "Deckle Paper",
                     },
                     {
-                      id: "modern_gold" as ColorThemeKey,
-                      name: "Modern Manuscript (Gold)",
-                      desc: "Contemporary obsidian manuscript with brushed gilded gold rails & gold wax seal",
-                      accent: "#f59e0b",
-                      badge: "Golden Lining",
+                      id: "modern" as ColorThemeKey,
+                      name: "Modern Manuscript",
+                      desc: "Contemporary slate manuscript with brushed platinum rails & sleek seal",
+                      accent: "#94a3b8",
+                      badge: "Modern Edition",
                     },
                   ].map((thm) => (
                     <button
@@ -2202,7 +2296,7 @@ export default function CreateLovewritPage({
                           key={b.id}
                           type="button"
                           onClick={() => setCardBorderStyle(b.id as CardBorderStyleKey)}
-                          className={`rounded-xl border py-2 px-2 text-center text-xs font-medium transition ${
+                          className={`rounded-xl border min-h-[44px] py-2 px-2 text-center text-xs font-medium flex items-center justify-center transition ${
                             cardBorderStyle === b.id
                               ? "border-rose-500 bg-rose-500/20 text-rose-300"
                               : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
@@ -2225,15 +2319,18 @@ export default function CreateLovewritPage({
                     <button
                       type="button"
                       onClick={() => setIsFlipReveal(!isFlipReveal)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                        isFlipReveal ? "bg-rose-500" : "bg-neutral-800"
-                      }`}
+                      aria-label="Toggle Flip Reveal"
+                      className="relative p-2.5 -m-2.5 min-h-[44px] min-w-[44px] inline-flex items-center justify-center cursor-pointer"
                     >
-                      <span
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                          isFlipReveal ? "translate-x-5" : "translate-x-0"
-                        }`}
-                      />
+                      <span className={`relative inline-flex h-6 w-11 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                        isFlipReveal ? "bg-rose-500" : "bg-neutral-800"
+                      }`}>
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            isFlipReveal ? "translate-x-5" : "translate-x-0"
+                          }`}
+                        />
+                      </span>
                     </button>
                   </div>
 
@@ -2260,7 +2357,7 @@ export default function CreateLovewritPage({
                                 type="button"
                                 onClick={() => handleAddSticker(stk.emoji)}
                                 title={stk.label}
-                                className="h-8 w-8 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
+                                className="h-11 w-11 min-h-[44px] min-w-[44px] rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-rose-500/50 flex items-center justify-center text-base hover:scale-110 active:scale-95 transition"
                               >
                                 {stk.emoji}
                               </button>
@@ -2314,7 +2411,7 @@ export default function CreateLovewritPage({
                           key={eff.id}
                           type="button"
                           onClick={() => setAmbientEffect(eff.id as AmbientEffectKey)}
-                          className={`rounded-xl border py-2 px-2 text-center text-xs font-medium transition ${
+                          className={`rounded-xl border py-2.5 px-2 min-h-[44px] flex items-center justify-center text-center text-xs font-medium transition ${
                             ambientEffect === eff.id
                               ? "border-rose-500 bg-rose-500/20 text-rose-300"
                               : "border-neutral-800 bg-neutral-950 text-neutral-400 hover:text-white"
@@ -2443,7 +2540,7 @@ export default function CreateLovewritPage({
                           <button
                             type="button"
                             onClick={(e) => toggleAudioPreview(track, e)}
-                            className={`flex h-8 w-8 items-center justify-center rounded-xl border transition shrink-0 ${
+                            className={`flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border transition shrink-0 ${
                               playingPreviewTrackId === track.id
                                 ? "border-rose-500 bg-rose-500 text-white shadow-md shadow-rose-500/30"
                                 : "border-neutral-700 bg-neutral-900 text-neutral-300 hover:border-rose-500 hover:text-white"
@@ -2560,12 +2657,12 @@ export default function CreateLovewritPage({
                       <button
                         type="button"
                         onClick={() => setShowCurrencyOverride(!showCurrencyOverride)}
-                        className="text-[10px] text-neutral-400 hover:text-rose-300 underline transition"
+                        className="text-xs text-neutral-400 hover:text-rose-300 underline transition min-h-[44px] inline-flex items-center"
                       >
                         {showCurrencyOverride ? "Hide currency options" : "Paying from another country? Change currency"}
                       </button>
                       {showCurrencyOverride && (
-                        <div className="mt-2 flex items-center justify-end space-x-1.5 animate-in fade-in">
+                        <div className="mt-2 flex items-center justify-end space-x-2 animate-in fade-in flex-wrap gap-1">
                           {(["INR", "USD", "EUR", "GBP"] as CurrencyCode[]).map((c) => (
                             <button
                               key={c}
@@ -2574,7 +2671,7 @@ export default function CreateLovewritPage({
                                 setCurrency(c);
                                 setShowCurrencyOverride(false);
                               }}
-                              className={`rounded-lg px-2 py-1 text-[10px] font-bold transition ${
+                              className={`rounded-xl px-3 py-2 text-xs font-bold transition min-h-[44px] min-w-[44px] flex items-center justify-center ${
                                 currency === c
                                   ? "bg-rose-500 text-white shadow-sm"
                                   : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
@@ -2688,7 +2785,7 @@ export default function CreateLovewritPage({
                       type="button"
                       onClick={handleValidateReferral}
                       disabled={isVerifyingReferral || !referralCodeInput.trim()}
-                      className="rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-3.5 py-2 text-xs font-semibold text-white transition disabled:opacity-50"
+                      className="rounded-xl bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 px-4 py-2.5 text-xs font-semibold text-white transition disabled:opacity-50 min-h-[44px] flex items-center justify-center"
                     >
                       {isVerifyingReferral ? "Checking..." : "Apply"}
                     </button>
@@ -2889,34 +2986,77 @@ export default function CreateLovewritPage({
                 showBismillah={showBismillah}
               />
             ) : (
-              <PagePreview
-                senderName={deferredSenderName}
-                recipientName={deferredRecipientName}
-                nickname={deferredNickname}
-                occasion={occasion}
-                letter={deferredMessage}
-                photoUrls={pagePhotos}
-                colorTheme={selectedTheme}
-                collageLayout={collageLayout}
-                fontFamily={pageFontFamily}
-                ambientEffect={ambientEffect}
-                milestoneVenue={deferredMilestoneVenue}
-                tipUpiId={tipUpiId}
-                tipPaypalUsername={tipPaypalUsername}
-                isProposal={isProposal && occasion === "proposal"}
-                proposalQuestion={proposalQuestion}
-                venueName={deferredVenueName}
-                venueAddress={deferredVenueAddress}
-                venueMapUrl={venueMapUrl}
-                eventDate={eventDate}
-                eventTime={eventTime}
-                voiceMessageUrl={voiceMemoUrl}
-                musicTrackName={activeTrackObj?.title}
-                previewOnly={true}
-                showOmMotif={showOmMotif}
-                showBismillah={showBismillah}
-                isAdSupported={isFreeAdPage}
-              />
+              <div className="space-y-3">
+                {/* Scene Flow Preview vs Classic Page Switcher */}
+                <div className="flex items-center space-x-1.5 p-1 rounded-2xl bg-neutral-900 border border-neutral-800">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("scene")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold transition ${
+                      previewMode === "scene"
+                        ? "bg-rose-500 text-white shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    ✨ Scene Flow
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreviewMode("page")}
+                    className={`flex-1 py-1.5 px-3 rounded-xl text-xs font-semibold transition ${
+                      previewMode === "page"
+                        ? "bg-rose-500 text-white shadow-sm"
+                        : "text-neutral-400 hover:text-white"
+                    }`}
+                  >
+                    📜 Full Page
+                  </button>
+                </div>
+
+                {previewMode === "scene" ? (
+                  <div className="w-full h-[580px] sm:h-[620px] rounded-3xl overflow-hidden border border-neutral-800 shadow-2xl relative bg-neutral-950">
+                    <SceneContainer
+                      scenes={scenes}
+                      senderName={deferredSenderName || "John"}
+                      recipientName={deferredRecipientName || "Snow"}
+                      letter={deferredMessage}
+                      colorTheme={selectedTheme}
+                      fontFamily={pageFontFamily}
+                      audioTrackUrl={activeTrackObj?.url || undefined}
+                      previewActiveIndex={previewSceneIndex}
+                    />
+                  </div>
+                ) : (
+                  <PagePreview
+                    senderName={deferredSenderName}
+                    recipientName={deferredRecipientName}
+                    nickname={deferredNickname}
+                    occasion={occasion}
+                    letter={deferredMessage}
+                    photoUrls={pagePhotos}
+                    colorTheme={selectedTheme}
+                    collageLayout={collageLayout}
+                    fontFamily={pageFontFamily}
+                    ambientEffect={ambientEffect}
+                    milestoneVenue={deferredMilestoneVenue}
+                    tipUpiId={tipUpiId}
+                    tipPaypalUsername={tipPaypalUsername}
+                    isProposal={isProposal && occasion === "proposal"}
+                    proposalQuestion={proposalQuestion}
+                    venueName={deferredVenueName}
+                    venueAddress={deferredVenueAddress}
+                    venueMapUrl={venueMapUrl}
+                    eventDate={eventDate}
+                    eventTime={eventTime}
+                    voiceMessageUrl={voiceMemoUrl}
+                    musicTrackName={activeTrackObj?.title}
+                    previewOnly={true}
+                    showOmMotif={showOmMotif}
+                    showBismillah={showBismillah}
+                    isAdSupported={isFreeAdPage}
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>

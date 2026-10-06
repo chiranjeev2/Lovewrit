@@ -2,11 +2,12 @@
 
 import React, { useEffect, useState, useRef, use } from "react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import CardPreview, { StickerItem } from "@/components/editor/CardPreview";
 import OpeningMoment from "@/components/shared/OpeningMoment";
 import CountdownReveal from "@/components/interactive/CountdownReveal";
 import QRCodeModal from "@/components/interactive/QRCodeModal";
-import { ColorThemeKey, PhotoShapeKey, TEMPLATES } from "@/lib/templates-data";
+import { ColorThemeKey, PhotoShapeKey, TEMPLATES, COLOR_THEMES } from "@/lib/templates-data";
 import {
   Download,
   Share2,
@@ -325,6 +326,10 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     );
   }
 
+  if (!loading && !order) {
+    notFound();
+  }
+
   const cardData: CardCustomData = order?.cardData || {
     senderName: "Dev",
     recipientName: "Ananya",
@@ -363,8 +368,14 @@ export default function CardSharePage({ params }: CardSharePageProps) {
     }
   };
 
+  const cardTheme = COLOR_THEMES[cardData.colorTheme as ColorThemeKey] || COLOR_THEMES.rose;
+
   return (
-    <div className="relative min-h-screen bg-neutral-950 text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8">
+    <div
+      data-template-id={order?.templateId || template.id}
+      data-occasion={order?.cardData?.occasion || template.occasion}
+      className={`relative min-h-screen bg-gradient-to-b ${cardTheme.bgGradient} text-neutral-100 flex flex-col items-center justify-between p-4 sm:p-8 overflow-x-hidden w-full max-w-full`}
+    >
       {/* QR Code Printable Modal */}
       <QRCodeModal
         url={currentUrl}
@@ -398,36 +409,36 @@ export default function CardSharePage({ params }: CardSharePageProps) {
       <header className="w-full max-w-2xl flex items-center justify-between py-2">
         <Link
           href="/"
-          className="flex items-center space-x-2 text-xs font-serif text-neutral-400 hover:text-white transition"
+          className="flex items-center space-x-2 text-xs font-serif text-neutral-400 hover:text-white transition min-h-[44px] min-w-[44px] py-1"
         >
-          <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-rose-500 text-white">
-            <Heart className="h-3.5 w-3.5 fill-white" />
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-500 text-white">
+            <Heart className="h-4 w-4 fill-white" />
           </div>
-          <span className="font-bold">Lovewrit</span>
+          <span className="font-bold text-sm">Lovewrit</span>
         </Link>
 
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowQRModal(true)}
-            className="flex items-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition"
+            className="flex items-center justify-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-3.5 py-2.5 text-xs font-medium text-neutral-300 hover:text-white transition min-h-[44px] min-w-[44px]"
             title="Generate QR Code"
           >
-            <QrCode className="h-3.5 w-3.5 text-rose-400" />
+            <QrCode className="h-4 w-4 text-rose-400" />
             <span className="hidden sm:inline">QR Code</span>
           </button>
 
           <button
             onClick={copyLink}
-            className="flex items-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-3.5 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition"
+            className="flex items-center justify-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-4 py-2.5 text-xs font-medium text-neutral-300 hover:text-white transition min-h-[44px] min-w-[44px]"
           >
             {copied ? (
               <>
-                <Check className="h-3.5 w-3.5 text-emerald-400" />
+                <Check className="h-4 w-4 text-emerald-400" />
                 <span>Copied Link</span>
               </>
             ) : (
               <>
-                <Share2 className="h-3.5 w-3.5" />
+                <Share2 className="h-4 w-4" />
                 <span>Share</span>
               </>
             )}
@@ -494,7 +505,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           <button
             onClick={() => handleDownloadImage("png")}
             disabled={isDownloading || isExportingPdf}
-            className="inline-flex items-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition disabled:opacity-50"
+            className="inline-flex items-center justify-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition disabled:opacity-50 min-h-[44px]"
           >
             {isDownloading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -507,7 +518,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           <button
             onClick={handleDownloadPdf}
             disabled={isDownloading || isExportingPdf}
-            className="inline-flex items-center space-x-2 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/20 px-5 py-3 text-xs font-bold text-amber-200 hover:bg-amber-500/30 hover:text-white shadow-lg shadow-amber-500/15 hover:scale-105 active:scale-95 transition disabled:opacity-50"
+            className="inline-flex items-center justify-center space-x-2 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/20 via-rose-500/15 to-amber-500/20 px-5 py-3 text-xs font-bold text-amber-200 hover:bg-amber-500/30 hover:text-white shadow-lg shadow-amber-500/15 hover:scale-105 active:scale-95 transition disabled:opacity-50 min-h-[44px]"
             title="Download a foldable 2-page duplex greeting card PDF (5x7 standard) with front cover, inside note, and back panel QR code"
           >
             {isExportingPdf ? (
@@ -521,7 +532,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           <button
             onClick={() => handleDownloadImage("print")}
             disabled={isDownloading || isExportingPdf}
-            className="inline-flex items-center space-x-2 rounded-2xl border border-rose-500/40 bg-neutral-900/90 px-5 py-3 text-xs font-bold text-rose-300 hover:bg-neutral-800 hover:text-white shadow-lg shadow-rose-500/10 hover:scale-105 active:scale-95 transition disabled:opacity-50"
+            className="inline-flex items-center justify-center space-x-2 rounded-2xl border border-rose-500/40 bg-neutral-900/90 px-5 py-3 text-xs font-bold text-rose-300 hover:bg-neutral-800 hover:text-white shadow-lg shadow-rose-500/10 hover:scale-105 active:scale-95 transition disabled:opacity-50 min-h-[44px]"
             title="Export high-resolution 300 DPI image suited for physical 4x6 / 5x7 prints"
           >
             <Printer className="h-4 w-4 text-rose-400" />
@@ -531,7 +542,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           <button
             onClick={() => handleDownloadImage("jpeg")}
             disabled={isDownloading || isExportingPdf}
-            className="inline-flex items-center space-x-2 rounded-2xl border border-neutral-800 bg-neutral-900/80 px-5 py-3 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition disabled:opacity-50"
+            className="inline-flex items-center justify-center space-x-2 rounded-2xl border border-neutral-800 bg-neutral-900/80 px-5 py-3 text-xs font-medium text-neutral-300 hover:text-white hover:bg-neutral-800 transition disabled:opacity-50 min-h-[44px]"
           >
             <span>Download JPG</span>
           </button>
@@ -547,7 +558,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
             <button
               type="button"
               onClick={() => setDownloadError(null)}
-              className="ml-2 text-red-400 hover:text-white"
+              className="ml-2 text-red-400 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
               ✕
             </button>
@@ -570,7 +581,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
             </div>
             <button
               onClick={copyReferralCode}
-              className="px-3.5 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-200 flex items-center space-x-1.5 transition"
+              className="px-4 py-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs font-medium text-neutral-200 flex items-center justify-center space-x-1.5 transition min-h-[44px]"
             >
               {copiedReferral ? (
                 <>
@@ -603,7 +614,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
           </p>
           <Link
             href={`/create/be-my-girlfriend?to=${encodeURIComponent(cardData.senderName || "")}&replyTo=${slug}&discount=REGIFT50`}
-            className="inline-flex items-center justify-center space-x-2 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 px-6 py-3 text-xs font-bold text-white shadow-lg shadow-rose-500/30 hover:scale-105 active:scale-95 transition"
+            className="inline-flex items-center justify-center space-x-2 rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-amber-500 px-6 py-3.5 text-xs font-bold text-white shadow-lg shadow-rose-500/30 hover:scale-105 active:scale-95 transition min-h-[44px]"
           >
             <Heart className="h-4 w-4 fill-white" />
             <span>Reply to {cardData.senderName || "Them"} (50% OFF)</span>

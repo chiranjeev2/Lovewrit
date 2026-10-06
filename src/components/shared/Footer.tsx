@@ -79,6 +79,16 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <a
+                  href={process.env.NEXT_PUBLIC_FEEDBACK_URL || "mailto:founder@lovewrit.com?subject=Lovewrit%20Beta%20Feedback"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-amber-300 text-amber-400/90 transition flex items-center gap-1"
+                >
+                  <span>Beta Feedback ↗</span>
+                </a>
+              </li>
+              <li>
                 <Link href="/admin" className="hover:text-rose-400 transition">
                   Founder Dashboard
                 </Link>

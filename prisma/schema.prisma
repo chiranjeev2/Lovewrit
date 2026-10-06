@@ -100,6 +100,8 @@ model PageData {
   isAdSupported            Boolean          @default(false)
   requireGuestbookApproval Boolean          @default(false)
   language                 String           @default("en")
+  scenesJson               String?          // Serialized SceneConfig[] array
+  sceneEngineEnabled       Boolean          @default(false) // Default false for existing rows, true for new orders
   createdAt                DateTime         @default(now())
 
   guestbookEntries         GuestbookEntry[]

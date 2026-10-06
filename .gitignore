@@ -47,5 +47,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# local test scripts & scratch artifacts
-/scripts/
+# local test scratch artifacts
+/scripts/*.png
+/scripts/*_downloads/
+/qa-screenshots/
+/qa-pdf-pages/
+qa-run.log
+/qa-logs/

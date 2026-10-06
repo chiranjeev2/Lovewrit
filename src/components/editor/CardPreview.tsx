@@ -19,6 +19,7 @@ import {
   RotateCw,
 } from "lucide-react";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
+import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 export interface StickerItem {
   id: string;
@@ -83,6 +84,14 @@ const CardPreview = React.memo(function CardPreview({
   const theme = COLOR_THEMES[colorTheme] || COLOR_THEMES.rose;
   const [isFlipped, setIsFlipped] = useState(false);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handlePhotoClick = (index: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   // Active photos list (fall back to photoUrl if photoUrls is empty or contains blank values)
   const activePhotos = (photoUrls || [])
@@ -161,7 +170,9 @@ const CardPreview = React.memo(function CardPreview({
   const isChristian = occasion === "christening" || occasion === "wedding_blessing";
   const isSecular = occasion === "blessing_ceremony";
   const isLetter = occasion === "letter_to_dear_one";
-  const isScrollTheme = colorTheme === "scroll";
+  const isVintageParchment = colorTheme === "vintage_parchment";
+  const isScrollTheme = colorTheme === "scroll" || isVintageParchment;
+  const hasWoodenRods = colorTheme === "scroll";
   const isModernTheme = colorTheme === "modern";
   const isModernGoldTheme = colorTheme === "modern_gold";
   const isAnyModern = isModernTheme || isModernGoldTheme;
@@ -216,7 +227,7 @@ const CardPreview = React.memo(function CardPreview({
         }
       >
         {/* Medieval Scroll Turned Wood & Gilded End Rods */}
-        {isScrollTheme && (
+        {hasWoodenRods && (
           <>
             {/* Top Rod */}
             <div className="absolute top-0 inset-x-3 h-2.5 bg-gradient-to-r from-[#45270f] via-[#c49b52] to-[#45270f] rounded-b-md shadow-md border-b border-[#2e1706]/70 z-20 flex items-center justify-center">
@@ -240,6 +251,22 @@ const CardPreview = React.memo(function CardPreview({
               </div>
             </div>
           </>
+        )}
+
+        {/* Vintage Parchment Deckle Stationery Margin Frame */}
+        {isVintageParchment && isLetter && (
+          <div className="absolute inset-3 rounded-[24px] border border-[#a0743b]/35 pointer-events-none z-10 flex flex-col justify-between p-2.5">
+            <div className="flex justify-between text-[#a0743b]/70 text-[10px] select-none">
+              <span>✤</span>
+              <span className="tracking-[0.25em] font-serif text-[8px] uppercase text-[#a0743b]/60">VINTAGE PARCHMENT</span>
+              <span>✤</span>
+            </div>
+            <div className="flex justify-between text-[#a0743b]/70 text-[10px] select-none">
+              <span>✤</span>
+              <span className="tracking-[0.25em] font-serif text-[8px] uppercase text-[#a0743b]/60">ANNO MMXXVI</span>
+              <span>✤</span>
+            </div>
+          </div>
         )}
 
         {/* Modern Scroll Brushed Silver / Platinum Rails & Margin Frame */}
@@ -297,8 +324,8 @@ const CardPreview = React.memo(function CardPreview({
         )}
 
         {/* Subtle background ambient glow */}
-        <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-48 h-48 rounded-full bg-black/20 blur-2xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full bg-black/20 blur-2xl pointer-events-none" />
 
         {/* Decorative floral corner accents when floral border active */}
         {borderStyle === "floral" && (
@@ -575,7 +602,9 @@ const CardPreview = React.memo(function CardPreview({
                 </div>
               ) : displayPhotos.length === 1 ? (
                 <div
-                  className={`relative w-40 h-40 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 ${getShapeClass(
+                  onClick={(e) => handlePhotoClick(0, e)}
+                  title="Click to view full photo"
+                  className={`relative w-40 h-40 sm:w-52 sm:h-52 overflow-hidden border-2 shadow-2xl transition-all duration-300 cursor-pointer hover:scale-[1.02] ${getShapeClass(
                     photoShape
                   )} ${
                     isScrollTheme
@@ -606,7 +635,9 @@ const CardPreview = React.memo(function CardPreview({
               ) : displayPhotos.length === 2 ? (
                 <div className="flex items-center justify-center -space-x-4 sm:-space-x-6 py-2">
                   <div
-                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(0, e)}
+                    title="Click to view full photo"
+                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl -rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-10 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -618,7 +649,9 @@ const CardPreview = React.memo(function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(1, e)}
+                    title="Click to view full photo"
+                    className={`relative w-28 h-28 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-xl rotate-3 transition duration-300 hover:rotate-0 hover:scale-105 z-20 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -633,7 +666,9 @@ const CardPreview = React.memo(function CardPreview({
               ) : (
                 <div className="flex items-center justify-center -space-x-3 sm:-space-x-5 py-2">
                   <div
-                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(0, e)}
+                    title="Click to view full photo"
+                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg -rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -645,7 +680,9 @@ const CardPreview = React.memo(function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-26 h-26 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(1, e)}
+                    title="Click to view full photo"
+                    className={`relative w-26 h-26 sm:w-36 sm:h-36 overflow-hidden border-2 shadow-2xl rotate-0 transition duration-300 hover:scale-110 z-20 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -657,7 +694,9 @@ const CardPreview = React.memo(function CardPreview({
                     />
                   </div>
                   <div
-                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 ${getShapeClass(
+                    onClick={(e) => handlePhotoClick(2, e)}
+                    title="Click to view full photo"
+                    className={`relative w-22 h-22 sm:w-32 sm:h-32 overflow-hidden border-2 shadow-lg rotate-6 transition duration-300 hover:rotate-0 hover:scale-105 z-10 cursor-pointer ${getShapeClass(
                       photoShape
                     )} ${isScrollTheme ? "border-[#8c6227]" : theme.borderStyle}`}
                   >
@@ -1102,6 +1141,14 @@ const CardPreview = React.memo(function CardPreview({
           </a>
         </div>
       )}
+
+      {/* Lightbox for full-size photo viewing with pinch/double-tap zoom & swipe */}
+      <ImageLightboxModal
+        isOpen={lightboxOpen}
+        photos={displayPhotos}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 });

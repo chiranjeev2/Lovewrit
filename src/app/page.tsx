@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useApp } from "@/context/AppContext";
 import { TEMPLATES } from "@/lib/templates-data";
 import { PRICING_TIERS } from "@/lib/currency";
 import Navbar from "@/components/shared/Navbar";
 import Footer from "@/components/shared/Footer";
+import { OccasionCountdownBanner } from "@/components/growth/OccasionCountdownBanner";
+import { TrustStrip } from "@/components/growth/TrustStrip";
+import { ConsentBanner } from "@/components/growth/ConsentBanner";
+import { trackFunnelStep } from "@/lib/consent";
 import {
   Heart,
   Sparkles,
@@ -32,6 +36,10 @@ export default function HomePage() {
 
   const pricing = PRICING_TIERS[region];
 
+  useEffect(() => {
+    trackFunnelStep({ step: "visit" });
+  }, []);
+
   // Filter templates
   const filteredTemplates = TEMPLATES.filter((template) => {
     const matchesCategory =
@@ -43,6 +51,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col selection:bg-rose-500 selection:text-white">
+      <OccasionCountdownBanner />
       <Navbar />
 
       <main className="flex-1">
@@ -626,7 +635,9 @@ export default function HomePage() {
         </section>
       </main>
 
+      <TrustStrip />
       <Footer />
+      <ConsentBanner />
     </div>
   );
 }

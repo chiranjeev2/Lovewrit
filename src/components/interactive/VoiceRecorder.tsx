@@ -170,7 +170,7 @@ export default function VoiceRecorder({
             <button
               type="button"
               onClick={stopRecording}
-              className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-500 transition shadow-lg"
+              className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl bg-red-600 text-white hover:bg-red-500 transition shadow-lg"
               title="Stop Recording"
             >
               <Square className="h-4 w-4" />
@@ -184,7 +184,7 @@ export default function VoiceRecorder({
             <button
               type="button"
               onClick={togglePreview}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md hover:bg-emerald-400 transition"
+              className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-emerald-500 text-white shadow-md hover:bg-emerald-400 transition"
               title={isPlayingPreview ? "Pause" : "Listen"}
             >
               {isPlayingPreview ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 translate-x-0.5" />}
@@ -205,9 +205,9 @@ export default function VoiceRecorder({
             <button
               type="button"
               onClick={resetRecording}
-              className="inline-flex items-center space-x-1 rounded-lg border border-neutral-700 bg-neutral-900 px-2.5 py-1.5 text-xs text-neutral-300 hover:text-white transition"
+              className="inline-flex items-center space-x-1.5 rounded-xl border border-neutral-700 bg-neutral-900 px-3.5 py-2.5 text-xs text-neutral-300 hover:text-white transition min-h-[44px]"
             >
-              <RotateCcw className="h-3 w-3" />
+              <RotateCcw className="h-3.5 w-3.5" />
               <span>Re-record</span>
             </button>
           </div>
@@ -218,7 +218,7 @@ export default function VoiceRecorder({
           <button
             type="button"
             onClick={startRecording}
-            className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-rose-600/25 hover:scale-105 active:scale-95 transition"
+            className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-3 text-xs font-bold text-white shadow-lg shadow-rose-600/25 hover:scale-105 active:scale-95 transition min-h-[44px]"
           >
             <Mic className="h-4 w-4 text-white animate-pulse" />
             <span>Record Voice Memo (Mic)</span>

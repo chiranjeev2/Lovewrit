@@ -32,6 +32,7 @@ import {
 import confetti from "canvas-confetti";
 import VoiceMessagePlayer from "@/components/interactive/VoiceMessagePlayer";
 import AdBanner from "@/components/shared/AdBanner";
+import { ImageLightboxModal } from "@/components/shared/ImageLightboxModal";
 
 export type CollageLayoutStyle = "masonry" | "timeline" | "filmstrip";
 
@@ -290,7 +291,13 @@ const PagePreview = React.memo(function PagePreview({
   const [isSendingReaction, setIsSendingReaction] = useState(false);
 
   // Lightbox Zoom State
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
+  const handlePhotoClick = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   // Floating Love Button Counter
   const [loveCount, setLoveCount] = useState(0);
@@ -616,11 +623,20 @@ const PagePreview = React.memo(function PagePreview({
             </p>
 
             {timeline[timelineIndex]?.photoUrl && (
-              <div className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg">
+              <div
+                onClick={() => {
+                  const url = timeline[timelineIndex]?.photoUrl;
+                  if (!url) return;
+                  const idx = photos.indexOf(url);
+                  handlePhotoClick(idx >= 0 ? idx : 0);
+                }}
+                title="Click to view full photo"
+                className="mt-4 aspect-[16/10] w-full max-w-md rounded-2xl overflow-hidden border border-white/10 shadow-lg cursor-pointer group"
+              >
                 <img
                   src={timeline[timelineIndex]?.photoUrl}
                   alt={timeline[timelineIndex]?.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
                 />
               </div>
             )}
@@ -679,7 +695,8 @@ const PagePreview = React.memo(function PagePreview({
               return (
                 <div
                   key={i}
-                  onClick={() => setLightboxImage(img)}
+                  onClick={() => handlePhotoClick(i)}
+                  title="Click to view full photo"
                   className={`group relative cursor-pointer overflow-hidden rounded-3xl border ${theme.borderStyle} bg-neutral-900/80 p-2 shadow-2xl transition duration-300 hover:scale-[1.03] hover:z-20 ${rotation} hover:rotate-0`}
                 >
                   <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-neutral-950">
@@ -721,7 +738,8 @@ const PagePreview = React.memo(function PagePreview({
                     }`}
                   >
                     <div
-                      onClick={() => setLightboxImage(img)}
+                      onClick={() => handlePhotoClick(i)}
+                      title="Click to view full photo"
                       className="w-full sm:w-1/2 cursor-pointer group relative overflow-hidden rounded-3xl border border-white/20 bg-neutral-900/90 p-2 shadow-xl hover:scale-[1.02] transition"
                     >
                       <div className="aspect-[4/3] w-full overflow-hidden rounded-2xl">
@@ -787,7 +805,8 @@ const PagePreview = React.memo(function PagePreview({
                 {photos.map((img, i) => (
                   <div
                     key={i}
-                    onClick={() => setLightboxImage(img)}
+                    onClick={() => handlePhotoClick(i)}
+                    title="Click to view full photo"
                     className="flex-none w-64 sm:w-72 snap-center cursor-pointer group rounded-xl border border-neutral-800 bg-[#141418] p-2.5 hover:border-amber-500/70 transition duration-300 shadow-2xl relative"
                   >
                     {/* Top frame stencil code */}
@@ -879,41 +898,13 @@ const PagePreview = React.memo(function PagePreview({
         </div>
       )}
 
-      {/* Fullscreen Lightbox Modal */}
-      {lightboxImage && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4 backdrop-blur-md animate-in fade-in"
-          onClick={() => setLightboxImage(null)}
-        >
-          <div
-            className="relative max-w-3xl w-full"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setLightboxImage(null)}
-              className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900/80 text-white backdrop-blur hover:bg-neutral-800 transition"
-            >
-              <X className="h-5 w-5" />
-            </button>
-            <img
-              src={lightboxImage}
-              alt="Zoomed Moment"
-              className="max-h-[80vh] w-auto max-w-full rounded-2xl object-contain mx-auto"
-            />
-            <div className="p-3 text-center">
-              <span className="font-serif text-xs text-neutral-300">
-                A moment frozen in time • Lovewrit Keepsake
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {/* Heartfelt Message / Letter Section */}
       <div
         id="preview-section-letter"
         className={`relative z-10 mx-auto max-w-2xl rounded-3xl border p-6 sm:p-10 shadow-2xl my-10 scroll-mt-20 ${
-          colorTheme === "scroll"
+          colorTheme === "scroll" || colorTheme === "vintage_parchment"
             ? "border-2 border-[#8c6227]/90 text-[#2a170a]"
             : colorTheme === "modern_gold"
             ? "border-2 border-amber-500/60 bg-gradient-to-b from-neutral-900/95 via-stone-900/95 to-neutral-950/95 text-amber-50 shadow-[0_25px_50px_-12px_rgba(245,158,11,0.25)]"
@@ -922,7 +913,7 @@ const PagePreview = React.memo(function PagePreview({
             : "border-white/10 bg-white/5 backdrop-blur-xl text-neutral-100"
         }`}
         style={
-          colorTheme === "scroll"
+          colorTheme === "scroll" || colorTheme === "vintage_parchment"
             ? {
                 background:
                   "radial-gradient(ellipse at 50% 45%, #fcf8ee 0%, #f6eacf 45%, #ebd7ab 75%, #cea970 100%)",
@@ -932,15 +923,15 @@ const PagePreview = React.memo(function PagePreview({
             : undefined
         }
       >
-        {colorTheme === "scroll" && (
+        {(colorTheme === "scroll" || colorTheme === "vintage_parchment") && (
           <div className="absolute inset-3 rounded-[24px] border border-[#8c6227]/30 pointer-events-none flex flex-col justify-between p-2">
             <div className="flex justify-between text-[#8c6227]/60 text-xs">
-              <span>❦</span>
-              <span>❦</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
             </div>
             <div className="flex justify-between text-[#8c6227]/60 text-xs">
-              <span>❦</span>
-              <span>❦</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
+              <span>{colorTheme === "vintage_parchment" ? "✤" : "❦"}</span>
             </div>
           </div>
         )}
@@ -973,8 +964,8 @@ const PagePreview = React.memo(function PagePreview({
 
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            {colorTheme === "scroll" ? (
-              <span className="text-base">📜</span>
+            {colorTheme === "scroll" || colorTheme === "vintage_parchment" ? (
+              <span className="text-base">{colorTheme === "vintage_parchment" ? "📜" : "📜"}</span>
             ) : colorTheme === "modern" || colorTheme === "modern_gold" ? (
               <span className="text-base">✉️</span>
             ) : (
@@ -982,7 +973,7 @@ const PagePreview = React.memo(function PagePreview({
             )}
             <span
               className={`text-xs uppercase tracking-widest font-semibold ${
-                colorTheme === "scroll"
+                colorTheme === "scroll" || colorTheme === "vintage_parchment"
                   ? "text-[#7a481c] font-serif"
                   : colorTheme === "modern_gold"
                   ? "text-amber-300 font-sans"
@@ -993,6 +984,8 @@ const PagePreview = React.memo(function PagePreview({
             >
               {colorTheme === "scroll"
                 ? "A Sacred Letter • Hand-Inscribed"
+                : colorTheme === "vintage_parchment"
+                ? "Vintage Parchment • Deckle Paper"
                 : colorTheme === "modern_gold"
                 ? "A Modern Letter • Golden Edition"
                 : colorTheme === "modern"
@@ -1005,13 +998,15 @@ const PagePreview = React.memo(function PagePreview({
             </span>
           </div>
 
-          {colorTheme === "scroll" && (
+          {(colorTheme === "scroll" || colorTheme === "vintage_parchment") && (
             <div className="relative flex items-center justify-center">
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center shadow-md border border-[#f43f5e]/40"
                 style={{
                   background:
-                    "radial-gradient(circle at 35% 30%, #e11d48 0%, #991b1b 50%, #4c0519 100%)",
+                    colorTheme === "vintage_parchment"
+                      ? "radial-gradient(circle at 35% 30%, #be123c 0%, #881337 55%, #4c0519 100%)"
+                      : "radial-gradient(circle at 35% 30%, #e11d48 0%, #991b1b 50%, #4c0519 100%)",
                 }}
               >
                 <Heart className="h-2 w-2 text-amber-200 fill-amber-200" />
@@ -1052,7 +1047,7 @@ const PagePreview = React.memo(function PagePreview({
 
         <p
           className={`${getLetterFontClass(fontFamily)} leading-relaxed whitespace-pre-wrap ${
-            colorTheme === "scroll"
+            colorTheme === "scroll" || colorTheme === "vintage_parchment"
               ? "text-[#2a170a] font-medium"
               : colorTheme === "modern_gold"
               ? "text-amber-50 font-medium"
@@ -1066,7 +1061,7 @@ const PagePreview = React.memo(function PagePreview({
 
         <div
           className={`mt-6 pt-4 border-t flex items-center justify-between text-xs ${
-            colorTheme === "scroll"
+            colorTheme === "scroll" || colorTheme === "vintage_parchment"
               ? "border-[#8c6227]/30 text-[#6d4518]"
               : colorTheme === "modern_gold"
               ? "border-amber-500/40 text-amber-200"
@@ -1076,7 +1071,7 @@ const PagePreview = React.memo(function PagePreview({
           }`}
         >
           <span>
-            {colorTheme === "scroll"
+            {colorTheme === "scroll" || colorTheme === "vintage_parchment"
               ? "In Everlasting Devotion,"
               : colorTheme === "modern_gold" || colorTheme === "modern"
               ? "With Heartfelt Devotion,"
@@ -1086,7 +1081,7 @@ const PagePreview = React.memo(function PagePreview({
           </span>
           <span
             className={`font-serif italic font-semibold ${
-              colorTheme === "scroll"
+              colorTheme === "scroll" || colorTheme === "vintage_parchment"
                 ? "text-[#3b200b] underline decoration-[#8c6227]/60"
                 : colorTheme === "modern_gold"
                 ? "text-white underline decoration-amber-400"
@@ -1330,6 +1325,14 @@ const PagePreview = React.memo(function PagePreview({
       <div className="relative z-10 mt-12 text-center text-xs text-neutral-400">
         <p>Lovewrit • Personal Occasion Moments</p>
       </div>
+
+      {/* Lightbox for full-size photo viewing with pinch/double-tap zoom & swipe */}
+      <ImageLightboxModal
+        isOpen={lightboxOpen}
+        photos={photos}
+        initialIndex={lightboxIndex}
+        onClose={() => setLightboxOpen(false)}
+      />
     </div>
   );
 });
