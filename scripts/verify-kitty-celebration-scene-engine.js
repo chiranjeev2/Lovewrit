@@ -366,10 +366,11 @@ async function testKittyCelebrationPack() {
 
   await browser.close();
 
-  console.log(`\n=== ALL KITTY / CELEBRATION PACK VERIFICATION TESTS PASSED! (${passedAssertions} assertions verified) ===\n`);
+  const expectedAssertions = 16;
+  console.log(`\n=== ALL KITTY / CELEBRATION PACK VERIFICATION TESTS PASSED! (${passedAssertions} / ${expectedAssertions} assertions verified) ===\n`);
 
-  if (passedAssertions !== 16) {
-    console.error(`❌ Expected 16 assertions, but only ${passedAssertions} passed.`);
+  if (passedAssertions !== expectedAssertions) {
+    console.error(`❌ Expected ${expectedAssertions} assertions, but only ${passedAssertions} passed.`);
     process.exit(1);
   }
 }

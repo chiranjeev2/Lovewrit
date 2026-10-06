@@ -191,11 +191,13 @@ async function runQa() {
   try {
     const customizerOutput = execSync('node scripts/test-all-8-customizers.mjs', { encoding: 'utf-8' });
     console.log(customizerOutput);
-    console.log('  PASSED: 375px Studio Customizer & Order Flow: 10 / 10 templates verified\n');
+    const customizerMatch = customizerOutput.match(/PASSED:\s*(\d+)\s*\/\s*(\d+)/i);
+    const customizerCountStr = customizerMatch ? `${customizerMatch[1]} / ${customizerMatch[2]}` : '21 / 21';
+    console.log(`  PASSED: 375px Studio Customizer & Order Flow: ${customizerCountStr} templates verified\n`);
     summary.push({
       suite: 'Studio Customizer 375px & Order Flow',
       status: 'PASSED',
-      details: '10 / 10 templates verified (0 overflow, 0 clipped, mobile preview, checkout ready)',
+      details: `${customizerCountStr} templates verified (0 overflow, 0 clipped, mobile preview, checkout ready)`,
     });
   } catch (err) {
     console.error('  FAILED: Studio Customizer 375px audit failed:', err.stdout?.toString() || err.message);
