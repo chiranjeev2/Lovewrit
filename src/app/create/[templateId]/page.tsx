@@ -189,6 +189,7 @@ export default function CreateLovewritPage({
 
   // Founder Master Pass (Free All-Access)
   const [isFounderFree, setIsFounderFree] = useState<boolean>(false);
+  const [founderPassKey, setFounderPassKey] = useState<string>("");
 
   // Regift 50% discount & confirmed reply details
   const [replyToSlug, setReplyToSlug] = useState<string | null>(null);
@@ -264,28 +265,16 @@ export default function CreateLovewritPage({
             })
             .catch((err) => console.error("Error verifying reply regift:", err));
         }
-        if (
-          fKeyParam &&
-          (fKeyParam === "lovewrit_master_founder_secret_2026" ||
-            fKeyParam === "memoir_master_founder_secret_2026" ||
-            fKeyParam === "founder_master")
-        ) {
+        const activeFounderKey =
+          fKeyParam ||
+          (typeof window !== "undefined"
+            ? localStorage.getItem("lovewrit_founder_pass")
+            : null);
+        if (activeFounderKey && activeFounderKey.trim().length >= 20) {
+          setFounderPassKey(activeFounderKey.trim());
           setIsFounderFree(true);
           try {
-            localStorage.setItem("lovewrit_founder_pass", fKeyParam);
-          } catch {}
-        } else {
-          try {
-            const savedKey =
-              localStorage.getItem("lovewrit_founder_pass") ||
-              localStorage.getItem("memoir_founder_pass");
-            if (
-              savedKey === "lovewrit_master_founder_secret_2026" ||
-              savedKey === "memoir_master_founder_secret_2026" ||
-              savedKey === "founder_master"
-            ) {
-              setIsFounderFree(true);
-            }
+            localStorage.setItem("lovewrit_founder_pass", activeFounderKey.trim());
           } catch {}
         }
 
@@ -760,7 +749,7 @@ export default function CreateLovewritPage({
         isBundle,
         isAdSupported: isFreeAdPage,
         replyTo: replyToSlug || undefined,
-        masterKey: isFounderFree ? "lovewrit_master_founder_secret_2026" : undefined,
+        masterKey: isFounderFree && founderPassKey ? founderPassKey : undefined,
         customNotes: (tier === "CUSTOM" || tier === "RUSH") ? customNotes : undefined,
         pinCode: pinCode.trim() || undefined,
         nickname: nickname.trim() || undefined,

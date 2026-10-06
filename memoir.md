@@ -51,8 +51,8 @@ This is a **self-funded, bootstrapped** project built incrementally from Phase 1
    - Viral reply loop: recipient viewing their card/page can click *"Reply with Gift (50% OFF)"*.
    - Strictly locked against genuine paid orders in the database — no arbitrary promo code entry loopholes.
 4. **Founder VIP Master Pass**:
-   - Master key `lovewrit_master_founder_secret_2026` allows the founder to generate unlimited free test cards/pages with instant ₹0 bypass.
-   - Dedicated template launcher in `/admin` with persistent `localStorage` access.
+   - Configured via `ADMIN_MASTER_KEY` environment variable (minimum 20 characters); allows owner to generate free test cards/pages with instant bypass.
+   - Dedicated template launcher in `/admin` with session authentication.
 5. **Expanded Life Occasions**:
    - Birthdays: `festive-birthday` with balloon pop unboxing & celebratory music.
    - Memorials: `in-loving-memory` with serene candle-lighting reveal & pre-moderated condolence wall.

@@ -24,7 +24,7 @@ Lovewrit is a commercial web platform where customers create, personalize, and s
 - **Strictly Confirmed 50% Regift Reply Loop**:
   - Recipient can reply with their own gift and receive 50% off, verified strictly against completed paid orders in the database.
 - **Founder VIP Master Pass**:
-  - Founder secret key (`lovewrit_master_founder_secret_2026`) enables unlimited free testing with instant order bypass and dedicated template launcher in `/admin`.
+  - Configured via `ADMIN_MASTER_KEY` environment variable (minimum 20 characters); enables test orders and administrative access.
 - **Emotional Media**:
   - In-browser microphone voice recorder.
   - Timed countdown reveals for surprise moments.
@@ -38,7 +38,7 @@ Lovewrit is a commercial web platform where customers create, personalize, and s
 - **Framework**: Next.js 16 (App Router, Turbopack, React 19)
 - **Styling**: Tailwind CSS, Lucide Icons, Canvas Confetti
 - **Database**: Prisma ORM with SQLite (dev) / PostgreSQL (prod)
-- **Payments**: Stripe Checkout (multi-currency handling: INR, USD, EUR, GBP)
+- **Payments**: Multi-currency handling (INR, USD, EUR, GBP)
 - **Image Generation**: HTML-to-Image client rendering
 
 ---
@@ -63,12 +63,9 @@ Create `.env` in the root:
 
 ```env
 DATABASE_URL="file:./dev.db"
-ADMIN_MASTER_KEY="lovewrit_master_founder_secret_2026"
+# choose a long random passphrase yourself (20+ chars), never commit it.
+ADMIN_MASTER_KEY=""
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
-
-# Optional Stripe configuration (falls back to mock success in dev):
-STRIPE_SECRET_KEY="sk_test_..."
-STRIPE_WEBHOOK_SECRET="whsec_..."
 ```
 
 ### 4. Running the Development Server
@@ -84,7 +81,7 @@ Visit [http://localhost:3000](http://localhost:3000) in your browser.
 ## 🔒 Admin Dashboard & Founder Pass
 
 - **Admin URL**: `/admin`
-- **Master Key**: `lovewrit_master_founder_secret_2026`
+- **Master Key**: Owner-configured via `ADMIN_MASTER_KEY` in `.env` (20+ characters required)
 - Features:
   - Full order management & metrics
   - Founder order fulfillment queue for Custom & Rush tiers

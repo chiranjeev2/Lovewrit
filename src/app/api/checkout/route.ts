@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyAdminMasterKey } from "@/lib/admin-auth";
 import { stripe, isStripeConfigured } from "@/lib/stripe";
 import {
   PRICING_TIERS,
@@ -145,12 +146,7 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const isFounderPass = Boolean(
-      masterKey &&
-      (masterKey === process.env.ADMIN_MASTER_KEY ||
-       masterKey === "lovewrit_master_founder_secret_2026" ||
-       masterKey === "memoir_master_founder_secret_2026")
-    );
+    const isFounderPass = Boolean(masterKey && verifyAdminMasterKey(masterKey));
 
     const isFreeOrder = totalUnit === 0 && !isFounderPass;
 

@@ -11,6 +11,10 @@ if (!fs.existsSync(QA_SCREENSHOTS_DIR)) {
   fs.mkdirSync(QA_SCREENSHOTS_DIR, { recursive: true });
 }
 
+const crypto = require('crypto');
+const QA_TEST_ADMIN_KEY = process.env.ADMIN_MASTER_KEY || crypto.randomBytes(24).toString('hex');
+process.env.ADMIN_MASTER_KEY = QA_TEST_ADMIN_KEY;
+
 function checkServerListening() {
   return new Promise((resolve) => {
     const req = http.get('http://localhost:3000', (res) => {
@@ -36,7 +40,7 @@ async function ensureServerRunning() {
     detached: false,
     stdio: 'ignore',
     shell: true,
-    env: { ...process.env, VERCEL: '1' },
+    env: { ...process.env, VERCEL: '1', ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY },
   });
 
   for (let i = 0; i < 30; i++) {
@@ -128,6 +132,23 @@ async function runQa() {
   console.log('[Step 4/9] Ensuring server is ready for real browser suites...');
   spawnedServer = await ensureServerRunning();
   console.log();
+
+  // 4b. Admin Master Key & Timing-Safe Auth Security Test
+  console.log('[Step 4c/11] Running Admin Master Key Security & Timing-Safe Auth Audit...');
+  try {
+    const adminKeyOutput = execSync('node scripts/test-admin-key-security.mjs', {
+      encoding: 'utf-8',
+      env: { ...process.env, ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY },
+    });
+    const match = adminKeyOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : 'Passed';
+    console.log(`  ✅ Admin Master Key Security: ${countStr} Passed (timing-safe, zero leaks, fail-closed)\n`);
+    summary.push({ suite: 'Admin Master Key Security', status: 'PASSED', details: `${countStr} assertions green (timing-safe, zero leaks, fail-closed)` });
+  } catch (err) {
+    console.error('  ❌ Admin key security test failed:', err.message);
+    summary.push({ suite: 'Admin Master Key Security', status: 'FAILED', details: 'Admin key security test failed' });
+    process.exit(1);
+  }
 
   // 5. Referral & Atomic Candle Anti-Abuse Tests
   console.log('[Step 5/9] Running Referral Anti-Abuse & Atomic Candle Concurrency Tests...');

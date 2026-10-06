@@ -32,6 +32,7 @@ async function runTests() {
 
   // 3. Admin Authentication & Orders
   console.log("\n[3] Testing Admin Auth & Orders...");
+  const adminKey = process.env.ADMIN_MASTER_KEY || "";
   const badLogin = await fetch(`${BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -42,7 +43,7 @@ async function runTests() {
   const goodLogin = await fetch(`${BASE_URL}/api/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ masterKey: "lovewrit_master_founder_secret_2026" }),
+    body: JSON.stringify({ masterKey: adminKey }),
   });
   console.log(`Good admin login status: ${goodLogin.status} (Expected: 200)`);
   const adminCookie = goodLogin.headers.get("set-cookie");
@@ -50,7 +51,7 @@ async function runTests() {
   const ordersRes = await fetch(`${BASE_URL}/api/admin/orders`, {
     headers: {
       cookie: adminCookie || "",
-      "x-admin-key": "lovewrit_master_founder_secret_2026",
+      "x-admin-key": adminKey,
     },
   });
   const ordersData = await ordersRes.json();
