@@ -58,6 +58,14 @@ async function runQa() {
   const summary = [];
   let spawnedServer = null;
 
+  // 0. Port Guard Check: Fail immediately if port 3000 is occupied
+  const isPortOccupied = await checkServerListening();
+  if (isPortOccupied) {
+    console.error('  ❌ [FAIL] Port 3000 is already in use by an external server.');
+    console.error('            Please stop any running server before running QA so QA can manage its own isolated server instance.');
+    process.exit(1);
+  }
+
   // 1. TypeScript Typecheck
   console.log('[Step 1/7] Running TypeScript Compilation Check (npx tsc --noEmit)...');
   try {

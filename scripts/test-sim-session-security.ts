@@ -14,7 +14,7 @@ async function runSecurityTests() {
     // -------------------------------------------------------------------------
     // TEST 1: POST /api/checkout rejects simulated checkouts when NODE_ENV=production
     // -------------------------------------------------------------------------
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     const checkoutReq = new NextRequest('http://localhost:3000/api/checkout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -45,7 +45,7 @@ async function runSecurityTests() {
     // -------------------------------------------------------------------------
     // TEST 2: GET /api/checkout/verify rejects sim_ sessions when NODE_ENV=production
     // -------------------------------------------------------------------------
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     const verifyReqProd = new NextRequest('http://localhost:3000/api/checkout/verify?session_id=sim_order_hacked_999');
     const verifyResProd = await GET(verifyReqProd);
     assert.strictEqual(verifyResProd.status, 403, 'GET /api/checkout/verify must return 403 Forbidden for sim_ sessions in production');
@@ -59,7 +59,7 @@ async function runSecurityTests() {
     // -------------------------------------------------------------------------
     // TEST 3: GET /api/checkout/verify allows sim_ sessions when NODE_ENV != production
     // -------------------------------------------------------------------------
-    process.env.NODE_ENV = 'test';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'test';
     const verifyReqTest = new NextRequest('http://localhost:3000/api/checkout/verify?session_id=sim_order_test_123');
     const verifyResTest = await GET(verifyReqTest);
     // In test environment, it doesn't block with 403 (it proceeds to DB update; if order not found in mock/test DB, it returns 404 or succeeds, not 403)
@@ -68,7 +68,7 @@ async function runSecurityTests() {
 
     console.log('\nALL sim_ SESSION PRODUCTION SECURITY ASSERTIONS PASSED (3 / 3)\n');
   } finally {
-    process.env.NODE_ENV = originalNodeEnv;
+    (process.env as Record<string, string | undefined>).NODE_ENV = originalNodeEnv;
   }
 }
 
