@@ -236,3 +236,38 @@ The following closing lines are offered as presets in the Memorial & Sacred Trib
 - **Review Notice:** **Review by member of that faith required**
 - **Text:** *"May the Lord bless and keep them in His loving care. Rest in eternal peace, reunited with the saints in light and heavenly grace."*
 
+---
+
+## 7. Sikh Invitation & Scene Blessing Presets (Devotional Pack Review)
+
+### 7.1 Sikh Akhand Path Invitation Sample Text (`src/lib/templates-data.ts:sikh-akhand-path`)
+- **Template ID:** `sikh-akhand-path`
+- **Faith:** Sikh
+- **Review Notice:** **Review by member of that faith required**
+- **Recipient:** `Sadar Nimantran (ਸਤਿਕਾਰ ਸਹਿਤ ਸੱਦਾ)`
+- **Sample Message:**
+  ```text
+  ੴ ਸਤਿਨਾਮੁ ਵਾਹਿਗੁਰੂ ੴ
+  With the divine blessings of Sri Guru Granth Sahib Ji, we cordially invite you and your family to the Akhand Path Sahib and Kirtan Samagam. Guru Ka Langar will be served continuously.
+  ```
+- **Sample Location:** `Gurdwara Sri Guru Singh Sabha, Model Town`
+- **Status:** Requires review by recognized scholar or elder of the Sikh community prior to production promotion.
+
+### 7.2 Sikh Devotional Scene Blessing Presets (`src/lib/scene-defaults.ts`)
+- **Pack Type:** Devotional Scene Flow (`faith: "sikh"`)
+- **Review Notice:** **Review by member of that faith required**
+- **Opener Title:** `ੴ Sat Sri Akaal, ${recipient}`
+- **Opener Subtitle:** `Sadar Nimantran with the divine blessings of Sri Guru Granth Sahib Ji, from ${sender}`
+- **Significance Title:** `Akhand Path Sahib & Kirtan Samagam`
+- **Story Text:** `With humble hearts and boundless gratitude, we invite you to join our family for the sacred Akhand Path Sahib. Come sit in the divine presence of the Guru and partake in Sangat and Pangat.`
+- **Traditions:**
+  - Arambh of Sri Akhand Path Sahib
+  - Gurbani Kirtan by Ragi Jatha
+  - Samapti, Anand Sahib, Ardas & Hukamnama
+  - Guru Ka Langar served continuously
+- **Etiquette Note:** `Kindly cover your head with a rumal/dupatta and remove shoes before entering the Darbar Hall.`
+- **Ritual Type:** `shabad_ardas`
+- **Blessing Wish:** `Nanak Naam Chardi Kala, Tere Bhane Sarbat Da Bhala ੴ May Waheguru bless you and your family with peace and abundance.`
+- **Status:** Requires review by recognized scholar or elder of the Sikh community prior to production promotion.
+
+

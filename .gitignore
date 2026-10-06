@@ -52,3 +52,5 @@ next-env.d.ts
 /scripts/*_downloads/
 /qa-screenshots/
 /qa-pdf-pages/
+qa-run.log
+/qa-logs/
