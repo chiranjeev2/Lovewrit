@@ -16,6 +16,7 @@ export type OccasionType =
   | "iftar"
   | "christening"
   | "wedding_blessing"
+  | "wedding_invite"
   | "blessing_ceremony";
 
 export const EVENT_INVITE_OCCASIONS: OccasionType[] = [
@@ -30,6 +31,7 @@ export const EVENT_INVITE_OCCASIONS: OccasionType[] = [
   "iftar",
   "christening",
   "wedding_blessing",
+  "wedding_invite",
   "blessing_ceremony",
 ];
 
@@ -915,6 +917,32 @@ export const TEMPLATES: TemplateDefinition[] = [
     hasInteractiveDodging: false,
     revealType: "golden_invite",
     badge: "RSVP Enabled",
+  },
+
+  // --- WEDDING INVITE (FAITH-NEUTRAL GRAND CELEBRATION PACK) ---
+  {
+    id: "wedding-invite",
+    name: "Royal Wedding Invitation",
+    subtitle: "Grand wedding celebration invite with love story, events schedule, personal note & interactive RSVP",
+    icon: "💍",
+    occasion: "wedding_invite",
+    category: "invites",
+    supportedFormats: ["PAGE", "CARD"],
+    defaultTheme: "champagne",
+    defaultShape: "oval",
+    coverImage: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+    samplePhotos: [
+      "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80",
+      "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?w=800&q=80",
+    ],
+    sampleSender: "The Vermas & The Sharmas",
+    sampleRecipient: "Honored Guest",
+    sampleMessage: "Together with our families, we joyfully invite you to celebrate our union in holy matrimony and shower us with your blessings.",
+    sampleLocation: "The Grand Heritage Palace, Udaipur",
+    venueRequired: true,
+    hasInteractiveDodging: false,
+    revealType: "golden_invite",
+    badge: "RSVP & Story",
   },
 ];
 
