@@ -178,7 +178,7 @@ export default function PrivacyPolicyPage() {
                 4. Payment Processing
               </h2>
               <p>
-                All credit and debit card transactions are processed securely by Stripe. Lovewrit does not store or process raw credit card numbers or banking passwords on our servers.
+                All credit and debit card transactions are processed securely by Razorpay. Lovewrit does not store or process raw credit card numbers or banking passwords on our servers.
               </p>
             </section>
           </div>

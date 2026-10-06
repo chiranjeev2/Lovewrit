@@ -2928,7 +2928,7 @@ export default function CreateLovewritPage({
               </button>
 
               <p className="text-center text-[10px] text-neutral-500">
-                🔒 Safe 256-bit encrypted checkout via Stripe • Multi-currency regional pricing guaranteed
+                🔒 Safe 256-bit encrypted checkout via Razorpay • Multi-currency regional pricing guaranteed
               </p>
             </form>
           </div>

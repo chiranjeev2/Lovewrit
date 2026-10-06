@@ -75,7 +75,7 @@ async function runTests() {
   await db.order.create({
     data: {
       slug: selfEmailSlug,
-      stripeSessionId: `sim_${selfEmailSlug}`,
+      razorpayOrderId: `sim_${selfEmailSlug}`,
       customerEmail: creatorEmail, // matches creator email
       customerName: 'Self Referrer',
       productType: 'PAGE',
@@ -106,7 +106,7 @@ async function runTests() {
   await db.order.create({
     data: {
       slug: selfIpSlug,
-      stripeSessionId: `sim_${selfIpSlug}`,
+      razorpayOrderId: `sim_${selfIpSlug}`,
       customerEmail: 'different_email@test.com',
       customerName: 'Different Name',
       productType: 'PAGE',
@@ -137,7 +137,7 @@ async function runTests() {
   await db.order.create({
     data: {
       slug: selfDeviceSlug,
-      stripeSessionId: `sim_${selfDeviceSlug}`,
+      razorpayOrderId: `sim_${selfDeviceSlug}`,
       customerEmail: 'device_user@test.com',
       customerName: 'Device User',
       productType: 'PAGE',
@@ -167,7 +167,7 @@ async function runTests() {
   const freeOrder = await db.order.create({
     data: {
       slug: freeSlug,
-      stripeSessionId: `sim_${freeSlug}`,
+      razorpayOrderId: `sim_${freeSlug}`,
       customerEmail: 'legit_buyer@test.com',
       customerName: 'Legit Buyer',
       productType: 'PAGE',
@@ -199,7 +199,7 @@ async function runTests() {
   const paidOrder = await db.order.create({
     data: {
       slug: paidSlug,
-      stripeSessionId: `sim_${paidSlug}`,
+      razorpayOrderId: `sim_${paidSlug}`,
       customerEmail: `legit_buyer_${Date.now()}@test.com`,
       customerName: 'Legit Buyer One',
       productType: 'PAGE',
@@ -232,7 +232,7 @@ async function runTests() {
     await db.order.create({
       data: {
         slug: sSlug,
-        stripeSessionId: `sim_${sSlug}`,
+        razorpayOrderId: `sim_${sSlug}`,
         customerEmail: `spambuyer_${i}_${Date.now()}@test.com`,
         customerName: `Spam Buyer ${i}`,
         productType: 'PAGE',

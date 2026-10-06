@@ -24,7 +24,9 @@ model Order {
   currency            String    // "INR" | "USD" | "EUR" | "GBP"
   amountTotal         Int       // in cents / paise / pence
   region              String    // "asia_africa" | "americas" | "europe" | "uk"
-  stripeSessionId     String?
+  razorpayOrderId     String?   @unique
+  razorpayPaymentId   String?
+  paymentProvider     String    @default("razorpay") // "razorpay" | "founder_pass" | "free"
   ipAddress           String?
   isAdSupported       Boolean   @default(false)
   createdAt           DateTime  @default(now())

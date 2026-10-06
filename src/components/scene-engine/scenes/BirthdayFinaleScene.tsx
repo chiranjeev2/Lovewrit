@@ -272,7 +272,7 @@ export default function BirthdayFinaleScene({
 
               {/* Candle Body */}
               <div className="w-7 h-16 bg-gradient-to-b from-rose-200 via-rose-300 to-rose-400 rounded-md shadow-md border border-rose-400/40 relative overflow-hidden">
-                {/* Spiral decorative stripes */}
+                {/* Spiral decorative candy bands */}
                 <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.4)_50%,transparent_75%)] bg-[length:14px_14px]" />
               </div>
 
