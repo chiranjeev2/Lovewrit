@@ -80,8 +80,11 @@ async function renderIndicMessagePanel(
 
 export function wrapDocWithIndicGuard(doc: jsPDF): jsPDF {
   const rawText = doc.text.bind(doc);
-  (doc as any).text = function (text: any, x?: any, y?: any, options?: any, ...rest: any[]) {
-    const checkStr = (val: any) => {
+  (doc as unknown as { text: (text: string | string[], ...args: unknown[]) => jsPDF }).text = function (
+    text: string | string[],
+    ...args: unknown[]
+  ) {
+    const checkStr = (val: unknown) => {
       if (typeof val === "string" && /[\u0900-\u0A7F]/.test(val)) {
         throw new Error(
           `Cannot render Indic text with doc.text(): "${val}". jsPDF standard Type 1 fonts do not support Devanagari/Gurmukhi glyphs. Use renderIndicMessagePanel() or rasterized image rendering.`
@@ -92,7 +95,7 @@ export function wrapDocWithIndicGuard(doc: jsPDF): jsPDF {
       }
     };
     checkStr(text);
-    return rawText(text, x, y, options, ...rest);
+    return Reflect.apply(rawText, doc, [text, ...args]) as jsPDF;
   };
   return doc;
 }
@@ -341,7 +344,6 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
   }
 
   // --- Inside Right Panel (x: 127 to 254) ---
-  const insideRightCenterX = centerFoldX + panelWidth / 2; // 190.5 mm
   const rightMargin = 16;
   const contentWidth = panelWidth - rightMargin * 2; // 95 mm
   const textStartX = centerFoldX + rightMargin;

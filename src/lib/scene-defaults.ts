@@ -806,7 +806,7 @@ export function getDefaultScenesForOccasion(
     let eventDate = "Saturday, 24 October 2026";
     let eventTime = "7:30 PM Onwards";
     let venueAddress = "Civil Lines, Near Model Town";
-    let venueMapUrl = "https://maps.google.com";
+    const venueMapUrl = "https://maps.google.com";
     let ritualType: "diya_aarti" | "shabad_ardas" | "dua_blessing" | "choral_benediction" | "gratitude_reflection" = "diya_aarti";
     let blessingWish = "May the divine flame illuminate your life with infinite joy, good health, and peace.";
 

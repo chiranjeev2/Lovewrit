@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, use, useDeferredValue } from "react";
+import React, { useState, useRef, useEffect, use, useDeferredValue, useMemo } from "react";
 import { useRouter, useSearchParams, notFound } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/shared/Navbar";

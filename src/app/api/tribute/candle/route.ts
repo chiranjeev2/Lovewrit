@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     const setting = await db.platformSetting.findUnique({
       where: { key: `candle_count:${slug}` },
     });
-    let currentCount = setting?.value ? parseInt(setting.value, 10) || 1 : 1;
+    const currentCount = setting?.value ? parseInt(setting.value, 10) || 1 : 1;
 
     // 1. Device Check: If this device already lit a candle in the last 24h, return calm state (no error toast)
     if (hasDeviceCookie) {
