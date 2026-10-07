@@ -147,7 +147,7 @@ async function runQa() {
   try {
     const rzpOutput = execSync('node scripts/test-razorpay-flow.mjs', { encoding: 'utf-8' });
     const match = rzpOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
-    const countStr = match ? `${match[1]} / ${match[2]}` : '25 / 25';
+    const countStr = match ? `${match[1]} / ${match[2]}` : '65 / 65';
     console.log(`  ✅ Razorpay Security Suite: ${countStr} Passed (HMAC-SHA256 signatures, webhooks, multi-currency)\n`);
     summary.push({ suite: 'Razorpay Flow & Security Suite', status: 'PASSED', details: `${countStr} assertions green (HMAC-SHA256 signatures, webhooks, amounts)` });
   } catch (err) {

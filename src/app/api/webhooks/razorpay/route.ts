@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { verifyRazorpayWebhookSignature } from "@/lib/razorpay";
+import { creditReferrerForOrder } from "@/lib/referral-reward";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,18 +34,21 @@ export async function POST(req: NextRequest) {
       const razorpayPaymentId = paymentEntity?.id;
 
       if (razorpayOrderId) {
-        const order = await db.order.findUnique({
+        let order = await db.order.findUnique({
           where: { razorpayOrderId },
         });
 
-        if (order && order.status !== "PAID") {
-          await db.order.update({
-            where: { id: order.id },
-            data: {
-              status: "PAID",
-              razorpayPaymentId: razorpayPaymentId || order.razorpayPaymentId,
-            },
-          });
+        if (order) {
+          if (order.status !== "PAID") {
+            order = await db.order.update({
+              where: { id: order.id },
+              data: {
+                status: "PAID",
+                razorpayPaymentId: razorpayPaymentId || order.razorpayPaymentId,
+              },
+            });
+          }
+          await creditReferrerForOrder(order, req);
         }
       }
     } else if (eventType === "payment.failed") {

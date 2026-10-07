@@ -4,13 +4,17 @@ import crypto from "crypto";
 const keyId = process.env.RAZORPAY_KEY_ID || "";
 const keySecret = process.env.RAZORPAY_KEY_SECRET || "";
 
-export const razorpay =
+export let razorpay: Razorpay | null =
   keyId && keySecret
     ? new Razorpay({
         key_id: keyId,
         key_secret: keySecret,
       })
     : null;
+
+export function setRazorpayClient(client: Razorpay | null) {
+  razorpay = client;
+}
 
 export function isRazorpayConfigured(): boolean {
   return Boolean(

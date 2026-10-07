@@ -362,36 +362,51 @@ export async function POST(req: NextRequest) {
 
     // 1. Production / Live Razorpay Mode
     if (isRazorpayConfigured() && razorpay) {
-      const razorpayOrder = await razorpay.orders.create({
-        amount: totalUnit,
-        currency: currency.toUpperCase(),
-        receipt: `rcpt_${order.id.slice(-10)}`,
-        notes: {
+      try {
+        const razorpayOrder = await razorpay.orders.create({
+          amount: totalUnit,
+          currency: currency.toUpperCase(),
+          receipt: `rcpt_${order.id.slice(-10)}`,
+          notes: {
+            orderId: order.id,
+            slug,
+            tier,
+            adminToken: adminToken || "",
+          },
+        });
+
+        await db.order.update({
+          where: { id: order.id },
+          data: {
+            razorpayOrderId: razorpayOrder.id,
+            paymentProvider: "razorpay",
+          },
+        });
+
+        return NextResponse.json({
+          razorpayOrderId: razorpayOrder.id,
+          keyId: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
+          amount: totalUnit,
+          currency: currency.toUpperCase(),
           orderId: order.id,
           slug,
-          tier,
-          adminToken: adminToken || "",
-        },
-      });
-
-      await db.order.update({
-        where: { id: order.id },
-        data: {
-          razorpayOrderId: razorpayOrder.id,
-          paymentProvider: "razorpay",
-        },
-      });
-
-      return NextResponse.json({
-        razorpayOrderId: razorpayOrder.id,
-        keyId: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "",
-        amount: totalUnit,
-        currency: currency.toUpperCase(),
-        orderId: order.id,
-        slug,
-        adminToken,
-        price: `${symbol}${displayPrice}`,
-      });
+          adminToken,
+          price: `${symbol}${displayPrice}`,
+        });
+      } catch (rzpErr: unknown) {
+        const errObj = rzpErr as { error?: { code?: string; description?: string }; message?: string; statusCode?: number };
+        const errorCode = errObj?.error?.code || errObj?.statusCode || "GATEWAY_ERROR";
+        const errorDesc = errObj?.error?.description || errObj?.message || "Failed to initiate payment gateway order";
+        console.error(`[Razorpay Order Error] Failed to create order in currency ${currency}. Code: ${errorCode}. Detail: ${errorDesc}`);
+        return NextResponse.json(
+          {
+            error: `Payment gateway error for ${currency}: ${errorDesc}`,
+            code: errorCode,
+            currency: currency.toUpperCase(),
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // 2. Dev / Simulation Mode (Strictly disabled in production)
