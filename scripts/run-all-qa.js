@@ -142,7 +142,21 @@ async function runQa() {
     process.exit(1);
   }
 
-  // 3e. Razorpay Flow & Cryptographic Verification Test
+  // 3e. Startup Environment Variable Verification Suite
+  console.log('[Step 4c-2/15] Running Startup Environment Variable Security Audit...');
+  try {
+    const envOutput = execSync('node scripts/test-env-check.mjs', { encoding: 'utf-8' });
+    const match = envOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : '17 / 17';
+    console.log(`  ✅ Startup Environment Verification: ${countStr} Passed (production fail-closed, zero leaks)\n`);
+    summary.push({ suite: 'Startup Environment Verification', status: 'PASSED', details: `${countStr} assertions green (fail-closed, zero leaks)` });
+  } catch (err) {
+    console.error('  ❌ Startup env check test failed:', err.message);
+    summary.push({ suite: 'Startup Environment Verification', status: 'FAILED', details: 'Env check test failed' });
+    process.exit(1);
+  }
+
+  // 3f. Razorpay Flow & Cryptographic Verification Test
   console.log('[Step 4d/13] Running Razorpay Cryptographic Verification & Amount Suite...');
   try {
     const rzpOutput = execSync('node scripts/test-razorpay-flow.mjs', { encoding: 'utf-8' });

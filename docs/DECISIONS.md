@@ -105,5 +105,20 @@ This document records architectural, security, and verification decisions made d
 - Verified all schema types use standard cross-engine primitives (`String`, `Int`, `Boolean`, `DateTime`, `cuid()`, foreign key cascade deletes). No SQLite-only extensions or pragmas are used.
 - Created comprehensive PostgreSQL / Supabase provisioning, configuration, connection pooling (`pgbouncer`), and data migration runbook in `docs/DATABASE.md`.
 
+---
+
+## 5. Startup Environment Variable Verification
+
+### Next.js Server Startup Hook (`src/instrumentation.ts` & `src/lib/env-check.ts`)
+- Integrated Next.js server instrumentation (`register()`) to validate runtime environment at process boot.
+- **Production Guard (`NODE_ENV=production`)**: Validates presence and non-emptiness of 7 mission-critical variables:
+  `DATABASE_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `ADMIN_MASTER_KEY`, `ADMIN_SESSION_SECRET`.
+  If any are missing, process startup aborts with a clear fatal error listing variable NAMES ONLY.
+- **Zero Secret Leaks**: Error outputs and logs strictly print variable names and never leak connection strings, passwords, or secret tokens.
+- **Development/QA Resilience**: In non-production environments (`development`, `test`), missing variables output informative warnings without crashing, enabling offline development and mock unit testing.
+- **Documented Environment Template (`.env.example`)**: Updated with every environment variable, empty values (`""`), and single-line descriptive comments.
+- **Automated Verification**: Enforced in `scripts/test-env-check.mjs` and wired into `scripts/run-all-qa.js`.
+
+
 
 
