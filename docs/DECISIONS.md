@@ -119,6 +119,20 @@ This document records architectural, security, and verification decisions made d
 - **Documented Environment Template (`.env.example`)**: Updated with every environment variable, empty values (`""`), and single-line descriptive comments.
 - **Automated Verification**: Enforced in `scripts/test-env-check.mjs` and wired into `scripts/run-all-qa.js`.
 
+---
+
+## 6. Production Deployment Runbook & Operational Runbook
+
+### Operational Checklist (`docs/DEPLOY_CHECKLIST.md`)
+- Authored chronological production checklist explicitly differentiating non-automatable owner dashboard actions (`[Owner Action]`) from CI/CD pipeline automation (`[Automated]`).
+- **Core Operations Covered**:
+  1. PostgreSQL / Supabase provisioning, transaction connection pooler (port 6543) and direct connection (port 5432).
+  2. Local owner secret generation via masked CLI tool (`npm run admin:set-key`).
+  3. Vercel project import, build script integration (`prisma migrate deploy && next build`), and environment variable population.
+  4. Razorpay dashboard webhook configuration (endpoint URL, active events `payment.captured`, `order.paid`, `payment.failed`, shared HMAC secret).
+  5. Post-deployment smoke test: Android 375px viewport audit, test payment transaction verification, and guestbook host moderation.
+
+
 
 
 
