@@ -83,4 +83,27 @@ This document records architectural, security, and verification decisions made d
   6. **Fail-Closed Protection**: Any moderation attempt with an invalid token or missing credentials strictly fails closed with HTTP 403 Forbidden.
   7. **Admin Login Hardening**: Rate limiting enforces max 5 failed attempts per 15 minutes (HTTP 429), timing-safe SHA-256 comparison prevents timing side-channels, and error responses never leak key values.
 
+---
+
+## 4. Database Migrations & PostgreSQL Readiness
+
+### Transition to Proper Prisma Migrations
+- Replaced informal `prisma db push` with formal Prisma migration tracking.
+- Created initial migration: `prisma/migrations/20261007000000_init_schema/migration.sql` capturing the full 8-model relational schema (`Order`, `CardData`, `PageData`, `RecipientReaction`, `ReferralRecord`, `GuestbookEntry`, `RateLimitEvent`, `PlatformSetting`).
+- Recorded `prisma/migrations/migration_lock.toml`.
+- Reconciled existing local development database using `npx prisma migrate resolve --applied 20261007000000_init_schema`, ensuring existing dev database records remain intact with zero crashes.
+
+### Vercel Deployment & Build Script Hardening
+- Updated `build` script in `package.json` to:
+  `prisma generate && prisma migrate deploy && next build`
+- Added explicit npm lifecycle scripts:
+  - `npm run db:migrate` -> `prisma migrate dev` (for local development schema changes)
+  - `npm run db:deploy` -> `prisma migrate deploy` (for CI/CD automated execution)
+- Verified `npx prisma migrate deploy` exits with code 0 idempotently when all migrations are already applied.
+
+### PostgreSQL & Supabase Readiness
+- Verified all schema types use standard cross-engine primitives (`String`, `Int`, `Boolean`, `DateTime`, `cuid()`, foreign key cascade deletes). No SQLite-only extensions or pragmas are used.
+- Created comprehensive PostgreSQL / Supabase provisioning, configuration, connection pooling (`pgbouncer`), and data migration runbook in `docs/DATABASE.md`.
+
+
 
