@@ -132,6 +132,27 @@ This document records architectural, security, and verification decisions made d
   4. Razorpay dashboard webhook configuration (endpoint URL, active events `payment.captured`, `order.paid`, `payment.failed`, shared HMAC secret).
   5. Post-deployment smoke test: Android 375px viewport audit, test payment transaction verification, and guestbook host moderation.
 
+---
+
+## 7. Handover Documentation Update
+
+### Architectural Handover (`HANDOVER.md`)
+- Rewrote `HANDOVER.md` reflecting the completion of the Razorpay payments integration, merged feature branches (`feature/scene-engine` and `feature/razorpay`), and the current production state of `main`.
+- **Section 4 Non-Negotiables**: Strictly preserved without any weakening:
+  - Sacred memorial isolation (zero ads, CTAs, confetti, or commercial banners).
+  - Server-side pricing authority (client-sent amount/currency strictly ignored).
+  - Zero tolerance for hardcoded or fallback secrets, with permanent blacklist hashing.
+  - Production lock on simulated sessions (`sim_`).
+  - Timing-safe cryptographic comparison across all tokens and webhook signatures.
+  - Mobile 375px viewport containment.
+- **Updated Technical Sections**:
+  - Section 5: Razorpay order lifecycle, verification, dual-event webhooks, and shared atomic referral crediting.
+  - Section 6: Owner-chosen admin passphrase tool, 256-bit random session secret, and rate-limited authentication.
+  - Section 8: Prisma migrations (`prisma/migrations/`) and PostgreSQL / Supabase architecture.
+  - Section 9: Server instrumentation startup environment checks (`src/instrumentation.ts`).
+  - Section 11: Production operations and references to `docs/DEPLOY_CHECKLIST.md`.
+
+
 
 
 
