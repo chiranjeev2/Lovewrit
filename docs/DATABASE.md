@@ -110,3 +110,4 @@ The Vercel deployment pipeline is configured in [`package.json`](file:///d:/proj
   ```bash
   npx prisma studio
   ```
+

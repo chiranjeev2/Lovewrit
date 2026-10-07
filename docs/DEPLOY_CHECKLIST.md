@@ -143,3 +143,4 @@ Items requiring manual human intervention in external dashboards are explicitly 
    - Access the published keepsakes `/p/[slug]` and card view `/c/[slug]`.
    - Post a test RSVP to the guestbook; verify host approval using the keepsake's secret admin link.
    - Visit `https://<YOUR_DOMAIN>/admin` and test login with `ADMIN_MASTER_KEY`.
+

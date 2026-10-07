@@ -165,3 +165,4 @@ CREATE UNIQUE INDEX "PageData_orderId_key" ON "PageData"("orderId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ReferralRecord_code_key" ON "ReferralRecord"("code");
+

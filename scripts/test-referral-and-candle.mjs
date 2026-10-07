@@ -225,7 +225,7 @@ async function runTests() {
 
   // Test 1h: Buyer IP Daily Rate Limit (Max 3 referral grants per IP per 24 hours)
   console.log('\n  Testing: Buyer IP Daily Rate Limit (Max 3/day)...');
-  const spamIp = `198.51.100.${Math.floor(Math.random() * 50) + 200}`;
+  const spamIp = `198.51.${Math.floor(Math.random() * 200) + 10}.${Math.floor(Math.random() * 200) + 10}`;
   let spamGrantedCount = 0;
   for (let i = 0; i < 5; i++) {
     const sSlug = `slug-spam-${i}-${Date.now()}`;

@@ -152,6 +152,27 @@ This document records architectural, security, and verification decisions made d
   - Section 9: Server instrumentation startup environment checks (`src/instrumentation.ts`).
   - Section 11: Production operations and references to `docs/DEPLOY_CHECKLIST.md`.
 
+---
+
+## 8. Dependency Security Audit & Safe Version Upgrades
+
+### Initial Audit Findings (`npm audit --omit=dev`)
+- Initial scan logged 4 advisories across production dependencies:
+  1. `dompurify` (<= 3.4.15): GHSA-p98j-92pf-mc4p, GHSA-6688-9rhm-gjv2
+  2. `sharp` (< 0.35.5): GHSA-wq5f-xc86-pv6w
+  3. `source-map-js` (1.0.0 - 1.2.1): GHSA-68fv-2mgg-jv7q
+  4. `next` (16.2.0 - 16.3.5): GHSA-vcvr-r3jv-pc5j (Critical severity)
+
+### Safe Remediation (Zero `--force`)
+- Ran `npm audit fix` without `--force` to resolve `sharp` -> `0.35.5`, `source-map-js` -> `1.2.2`, and `dompurify` -> `3.4.16`.
+- Upgraded `next` and `eslint-config-next` in `package.json` from `16.3.5` to `16.4.0` to resolve GHSA-vcvr-r3jv-pc5j.
+- Re-ran `npm audit --omit=dev` -> verified `found 0 vulnerabilities` across all production dependencies.
+
+### Verification of Upgraded Packages
+- Executed `npm run build`: compiled cleanly with Turbopack, static page generation 26/26, zero errors.
+- Executed `npm run qa`: all 15 test suites passed cleanly with zero failures.
+
+
 
 
 
