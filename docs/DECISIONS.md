@@ -58,3 +58,29 @@ This document records architectural, security, and verification decisions made d
 7. **Non-INR Gateway Rejections**:
    - When Razorpay orders API returns an error for non-INR currencies, the error code and description are logged server-side, a clear error message is returned to the buyer, and the currency is preserved without silently converting to INR.
 
+---
+
+## 3. Admin & Key Management Architecture
+
+### Git History Audit of Legacy Master Keys
+- Ran `git log --all -S <blacklisted-hash> --name-only` to audit historical presence of default master keys.
+- **Finding**: Legacy default keys existed in commits prior to `2fc055e`. They were fully purged from active code, templates, tests, and environment documentation in commit `2fc055e`.
+- **Compromise Status & Remediation**: All legacy default keys are treated as compromised. Their SHA-256 digests (`aa007f...`, `e14b05...`, `39d127...`) are hardcoded into `BLACKLISTED_KEY_HASHES` across `src/lib/admin-auth.ts` and `scripts/set-admin-secrets.mjs`. Any configuration using these keys fails closed immediately (HTTP 503).
+
+### Owner Secret Generation Tool (`scripts/set-admin-secrets.mjs`)
+- Added npm command: `npm run admin:set-key` -> `node scripts/set-admin-secrets.mjs`.
+- **Interactive Security**: Prompts for master key using masked terminal input (no character echoing). Prompts twice for confirmation. Requires a minimum length of 20 characters. Refuses any key whose SHA-256 digest matches blacklisted legacy defaults.
+- **Session Secret Generation**: Generates a high-entropy 256-bit `ADMIN_SESSION_SECRET` via `crypto.randomBytes(32).toString("hex")`.
+- **Storage Safety**: Asserts that `.env` is ignored by Git using `git check-ignore .env` before writing. Updates `.env` locally without printing or logging secret values.
+
+### Guestbook Authorization & Moderation Model
+- Validated and tested in `scripts/test-guestbook-auth.mjs`:
+  1. **Public Posting**: `POST /api/guestbook` is completely open to all guests. No admin token or session cookie is required.
+  2. **Public Viewing**: `GET /api/guestbook` returns approved entries for all visitors. Pending entries are shielded from public view when `requireGuestbookApproval=true`.
+  3. **Host Moderation**: Hosts approve or delete entries using their keepsake's secret `order.adminToken` via `PATCH /api/guestbook`. No master admin session is required for hosts to moderate their own guestbook.
+  4. **Community Flagging**: Any visitor can flag an abusive entry (`action: "FLAG"`) without authentication.
+  5. **Master Admin Oversight**: Authenticated master admin sessions can approve or delete entries across any keepsake without requiring the host's token.
+  6. **Fail-Closed Protection**: Any moderation attempt with an invalid token or missing credentials strictly fails closed with HTTP 403 Forbidden.
+  7. **Admin Login Hardening**: Rate limiting enforces max 5 failed attempts per 15 minutes (HTTP 429), timing-safe SHA-256 comparison prevents timing side-channels, and error responses never leak key values.
+
+

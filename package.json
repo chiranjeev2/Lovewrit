@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "qa": "node scripts/run-all-qa.js",
+    "admin:set-key": "node scripts/set-admin-secrets.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {

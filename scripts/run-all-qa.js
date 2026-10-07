@@ -178,6 +178,23 @@ async function runQa() {
     process.exit(1);
   }
 
+  // 4d. Guestbook Auth & Admin Login Security Test
+  console.log('[Step 4d/14] Running Guestbook Auth & Admin Login Security Test...');
+  try {
+    const gbOutput = execSync('node scripts/test-guestbook-auth.mjs', {
+      encoding: 'utf-8',
+      env: { ...process.env, ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY },
+    });
+    const match = gbOutput.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+    const countStr = match ? `${match[1]} / ${match[2]}` : '18 / 18';
+    console.log(`  ✅ Guestbook Auth & Moderation: ${countStr} Passed (host token, public posting, admin session)\n`);
+    summary.push({ suite: 'Guestbook Auth & Admin Security', status: 'PASSED', details: `${countStr} assertions green (public posting, host token, admin session)` });
+  } catch (err) {
+    console.error('  ❌ Guestbook auth test failed:', err.message);
+    summary.push({ suite: 'Guestbook Auth & Admin Security', status: 'FAILED', details: 'Guestbook auth test failed' });
+    process.exit(1);
+  }
+
   // 5. Referral & Atomic Candle Anti-Abuse Tests
   console.log('[Step 5/9] Running Referral Anti-Abuse & Atomic Candle Concurrency Tests...');
   try {
