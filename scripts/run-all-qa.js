@@ -102,6 +102,7 @@ const EXPECTED_SUITE_IDS = [
   'policy-compliance',
   'public-api-safety',
   'security-headers',
+  'error-empty-states',
 ];
 
 const SUITE_REGISTRY = [
@@ -495,6 +496,23 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (CSP, HSTS, PII redaction, guest safety)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Security headers & privacy suite failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'error-empty-states',
+    name: 'Error Boundaries & Empty States Suite',
+    command: 'node scripts/test-error-and-empty-states.mjs',
+    requiresServer: false,
+    minAssertions: 30,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 30) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (error boundaries, 404, loading, PIN lockout, scene fallbacks)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Error & empty states suite failed or assertions below minimum' };
     },
   },
 ];

@@ -93,9 +93,25 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   // PIN Protection state
   const [enteredPin, setEnteredPin] = useState("");
   const [pinError, setPinError] = useState(false);
+  const [pinAttempts, setPinAttempts] = useState(0);
+  const [lockoutTimer, setLockoutTimer] = useState(0);
   const [isPinUnlocked, setIsPinUnlocked] = useState(false);
 
   const cardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (lockoutTimer <= 0) return;
+    const interval = setInterval(() => {
+      setLockoutTimer((prev) => {
+        if (prev <= 1) {
+          setPinAttempts(0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lockoutTimer]);
 
   useEffect(() => {
     async function loadCard() {
@@ -127,11 +143,18 @@ export default function CardSharePage({ params }: CardSharePageProps) {
 
   const handleUnlockPin = (e: React.FormEvent) => {
     e.preventDefault();
+    if (lockoutTimer > 0) return;
     if (order?.pinCode && enteredPin.trim() === order.pinCode.trim()) {
       setIsPinUnlocked(true);
       setPinError(false);
+      setPinAttempts(0);
     } else {
+      const nextAttempts = pinAttempts + 1;
+      setPinAttempts(nextAttempts);
       setPinError(true);
+      if (nextAttempts >= 5) {
+        setLockoutTimer(30);
+      }
     }
   };
 
@@ -301,24 +324,30 @@ export default function CardSharePage({ params }: CardSharePageProps) {
               type="password"
               maxLength={6}
               value={enteredPin}
+              disabled={lockoutTimer > 0}
               onChange={(e) => {
                 setEnteredPin(e.target.value);
                 setPinError(false);
               }}
               placeholder="Enter numeric PIN"
-              className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3 rounded-xl bg-neutral-950 border border-neutral-700 text-white focus:outline-none focus:border-rose-500"
+              className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3 rounded-xl bg-neutral-950 border border-neutral-700 text-white focus:outline-none focus:border-rose-500 disabled:opacity-50"
               autoFocus
             />
-            {pinError && (
-              <p className="text-xs text-rose-400 font-medium">
-                Incorrect PIN. Please check with the sender.
+            {lockoutTimer > 0 ? (
+              <p className="text-xs text-amber-400 font-medium">
+                Too many incorrect attempts. Please wait {lockoutTimer}s before retrying.
               </p>
-            )}
+            ) : pinError ? (
+              <p className="text-xs text-rose-400 font-medium">
+                Incorrect PIN ({Math.max(0, 5 - pinAttempts)} attempts remaining).
+              </p>
+            ) : null}
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 transition"
+              disabled={lockoutTimer > 0}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white text-xs font-bold shadow-lg shadow-rose-500/25 hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Unlock Keepsake
+              {lockoutTimer > 0 ? `Locked (${lockoutTimer}s)` : "Unlock Keepsake"}
             </button>
           </form>
         </div>

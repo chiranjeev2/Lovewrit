@@ -329,3 +329,40 @@ This document records architectural, security, and verification decisions made d
 ### Test Suite
 - Added `scripts/test-security-headers-and-privacy.mjs` verifying 29 assertions covering headers, CSP, PII redaction, and guest sanitization.
 - Registered `security-headers` (28 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 15. Step 4: Error Boundaries, Not-Found & Empty States
+
+### Route Error Boundaries & Not-Found Handlers
+- Created `src/app/not-found.tsx`:
+  - Renders a serene, calm "Gift Not Found or Link Expired" screen.
+  - Strictly avoids celebratory graphics, confetti, or emojis, ensuring solemn respect when visitors open missing memorial or tribute links.
+  - Offers clear navigation affordances: "Return to Homepage" and "Create a New Keepsake".
+  - Zero internal stack traces or database errors exposed.
+- Created `src/app/error.tsx`:
+  - Client error boundary capturing route-level exceptions.
+  - Renders a clean "Something went wrong" message without leaking error stacks.
+  - Offers a retry button (`reset()`) and a link back home.
+- Created `src/app/global-error.tsx`:
+  - Catches errors occurring in root layout.
+  - Renders valid root `<html>` and `<body>` shell with reload button.
+- Created `src/app/loading.tsx`:
+  - Minimalist dark aesthetic loading skeleton with subtle spinning ring indicator.
+
+### PIN Lockout and Retry-After Timer
+- Enhanced PIN protection in `src/app/p/[slug]/page.tsx` and `src/app/c/[slug]/page.tsx`:
+  - Tracks consecutive incorrect PIN attempts (`pinAttempts`).
+  - Upon reaching 5 consecutive failures, activates a 30-second lockout timer (`lockoutTimer`).
+  - During lockout, disables numeric PIN input and submit button, and displays a countdown timer.
+  - Resets attempt counter once timer expires, preventing brute-force PIN guessing.
+
+### Graceful Fallbacks
+- Verified Scene Engine fallback:
+  - Honors `prefers-reduced-motion: reduce` by rendering `FallbackStaticScroll` immediately.
+  - `SceneErrorBoundary` catches any scene rendering failure and falls back to static scroll rather than a blank screen.
+  - Audio autoplay rejections are handled silently without crashing the experience.
+
+### Test Suite
+- Added `scripts/test-error-and-empty-states.mjs` verifying 30 assertions.
+- Registered `error-empty-states` (30 minAssertions) in `scripts/run-all-qa.js`.
