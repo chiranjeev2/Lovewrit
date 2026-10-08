@@ -189,6 +189,23 @@ This document records architectural, security, and verification decisions made d
 3. Jain content probe (`git grep -in jain -- src docs scripts`): Confirmed empty output (`qa-logs/step9-grep-jain.log`).
 4. Tracked secrets & SQLite databases (`git ls-files | Select-String '\.env$|\.db$|sqlite'`): Confirmed empty output (`qa-logs/step9-tracked-secrets.log`). No secrets or database files are tracked by Git.
 
+---
+
+## 10. QA Integrity & Runner Restoration (`fix/qa-integrity`)
+
+### Runner Overhaul & Dynamic Assertion Parsing
+1. Removed all hardcoded summary text from `scripts/run-all-qa.js`. Every suite's status, pass/fail result, and assertion counts are dynamically evaluated from the child process exit code and parsed stdout/stderr.
+2. Built a centralized `SUITE_REGISTRY` of all 21 test suites, specifying explicit `minAssertions` and per-suite output parsers.
+3. Added `EXPECTED_SUITE_IDS` guard: if any suite is deleted from the registry or omitted during execution, the runner outputs a failing summary and exits non-zero immediately.
+4. Dynamically calculated template count from `src/lib/templates-data.ts` (`TEMPLATES.length` = 21), computing layout checks as `21 * 3 * 4 = 252`.
+5. Clarified Phase C1 count: Phase C1 has 6 high-level feature sections containing 15 granular assertions (`passedAssertions++`); runner strictly verifies 15 assertions.
+6. Removed any unverified fixed claims such as "WCAG 2.1 AA".
+
+### Negative Proofs
+1. **Missing Suite Negative Proof**: Removed `tsc` from `SUITE_REGISTRY`; executed runner -> caught by registry guard, printed failing summary table, and exited code 1 (`qa-logs/step1-negative-missing-suite.log`). Reverted by manual edit.
+2. **Failing Suite Negative Proof**: Modified `tsc` command to exit 1 (`node -e "process.exit(1)"`); executed runner -> caught failure, printed failing summary table with FAILED status, and exited code 1 (`qa-logs/step1-negative-exit1.log`). Reverted by manual edit.
+
+
 
 
 

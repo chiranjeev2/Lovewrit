@@ -88,7 +88,7 @@ async function testRealBrowserExports() {
     }
   }
 
-  console.log('\n✅ ALL REAL-BROWSER EXPORT TESTS PASSED (PNG, JPG, 300 DPI, PDF)!');
+  console.log(`\n✅ ALL REAL-BROWSER EXPORT TESTS PASSED (${downloaded.length} / 4 exports verified: PNG, JPG, 300 DPI, PDF)!`);
   await browser.close();
 }
 

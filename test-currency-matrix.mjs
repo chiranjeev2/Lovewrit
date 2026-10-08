@@ -13,12 +13,16 @@ const REGIONS = [
 ];
 
 let failed = 0;
+let passedAssertions = 0;
+let totalAssertions = 0;
 
 function assert(condition, message) {
+  totalAssertions++;
   if (!condition) {
     console.error(`❌ FAILED: ${message}`);
     failed++;
   } else {
+    passedAssertions++;
     console.log(`✅ PASSED: ${message}`);
   }
 }
@@ -110,7 +114,7 @@ for (const { key, expectedCurrency, expectedSymbol } of REGIONS) {
 
 console.log("\n=================================================");
 if (failed === 0) {
-  console.log("🎉 ALL CURRENCY & TIER AUDIT CHECKS PASSED WITH 0 ERRORS!");
+  console.log(`🎉 ALL CURRENCY & TIER AUDIT CHECKS PASSED WITH 0 ERRORS! (${passedAssertions} / ${totalAssertions} assertions verified)`);
 } else {
   console.error(`⚠️ AUDIT COMPLETED WITH ${failed} FAILURES.`);
   process.exit(1);
