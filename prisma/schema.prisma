@@ -41,6 +41,10 @@ model Order {
 
   cardData            CardData?
   pageData            PageData?
+
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@index([myReferralCode])
 }
 
 model CardData {
@@ -111,24 +115,29 @@ model PageData {
 }
 
 model RecipientReaction {
-  id         String   @id @default(cuid())
-  pageDataId String
-  pageData   PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
-  senderName String
-  reactionType String @default("text") // "text" | "voice" | "emoji"
-  message    String?
-  voiceUrl   String?
-  createdAt  DateTime @default(now())
+  id           String   @id @default(cuid())
+  pageDataId   String
+  pageData     PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
+  senderName   String
+  reactionType String   @default("text") // "text" | "voice" | "emoji"
+  message      String?
+  voiceUrl     String?
+  createdAt    DateTime @default(now())
+
+  @@index([pageDataId])
+  @@index([createdAt])
 }
 
 model ReferralRecord {
-  id              String   @id @default(cuid())
-  code            String   @unique
-  ownerEmail      String
-  ownerName       String
-  creditBalance   Int      @default(0) // in cents / paise
-  timesUsed       Int      @default(0)
-  createdAt       DateTime @default(now())
+  id            String   @id @default(cuid())
+  code          String   @unique
+  ownerEmail    String
+  ownerName     String
+  creditBalance Int      @default(0) // in cents / paise
+  timesUsed     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([ownerEmail])
 }
 
 model GuestbookEntry {
@@ -141,16 +150,22 @@ model GuestbookEntry {
   headcount  Int      @default(1)
   status     String   @default("APPROVED") // "PENDING" | "APPROVED" | "FLAGGED"
   createdAt  DateTime @default(now())
+
+  @@index([pageDataId])
+  @@index([createdAt])
 }
 
 model RateLimitEvent {
-  id         String   @id @default(cuid())
-  ipAddress  String
-  email      String?
-  action     String   // "FREE_ORDER_CREATION"
-  allowed    Boolean
-  reason     String?
-  createdAt  DateTime @default(now())
+  id        String   @id @default(cuid())
+  ipAddress String
+  email     String?
+  action    String   // "FREE_ORDER_CREATION"
+  allowed   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([action, ipAddress, createdAt])
+  @@index([createdAt])
 }
 
 model PlatformSetting {

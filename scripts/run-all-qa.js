@@ -105,6 +105,7 @@ const EXPECTED_SUITE_IDS = [
   'error-empty-states',
   'a11y-mobile',
   'performance-bundles',
+  'db-readiness',
 ];
 
 const SUITE_REGISTRY = [
@@ -549,6 +550,23 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (static assets < 300KB, build manifest, scene efficiency)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Performance & bundle audit failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'db-readiness',
+    name: 'Database & PostgreSQL Readiness Audit',
+    command: 'node scripts/test-schema-postgres-readiness.mjs',
+    requiresServer: false,
+    minAssertions: 15,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 15) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (Prisma schema, indexes, CUID portability, data inventory)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Database readiness audit failed or assertions below minimum' };
     },
   },
 ];

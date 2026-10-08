@@ -413,3 +413,28 @@ This document records architectural, security, and verification decisions made d
 ### Test Suite
 - Added `scripts/test-performance-and-bundles.mjs` verifying asset size limits and build manifests.
 - Registered `performance-bundles` (5 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 18. Step 7: Database Readiness & Data Inventory
+
+### B-Tree Index Additions in `prisma/schema.prisma`
+- Added performance and look-up B-tree indexes:
+  - `Order`: `@@index([customerEmail])`, `@@index([createdAt])`, `@@index([myReferralCode])`.
+  - `ReferralRecord`: `@@index([ownerEmail])`.
+  - `GuestbookEntry`: `@@index([pageDataId])`, `@@index([createdAt])`.
+  - `RecipientReaction`: `@@index([pageDataId])`, `@@index([createdAt])`.
+  - `RateLimitEvent`: `@@index([action, ipAddress, createdAt])`, `@@index([createdAt])`.
+
+### Database Portability & PostgreSQL Readiness
+- Zero SQLite-specific extensions or functions (`strftime`, `rowid`, `sqlite_master`).
+- Primary keys use portable CUID strings (`@default(cuid())`), completely eliminating autoincrement sequence assumptions.
+- Complex JSON structures (`photoUrls`, `scenesJson`, `timelineJson`, `secretNotesJson`, `stickersJson`) are stored as serialized strings, ensuring seamless migration between SQLite, PostgreSQL, and MySQL without requiring dialect-specific JSONB operations.
+- All email lookups normalize casing via `.toLowerCase()` in code before querying, ensuring identical behavior across case-insensitive (SQLite) and case-sensitive (Postgres) collation.
+
+### Data Inventory Documentation
+- Authored `docs/DATA_INVENTORY.md` covering all 8 tables and 60+ columns with PII classifications, retention schedules, business purposes, and buyer/guest associations.
+
+### Test Suite
+- Added `scripts/test-schema-postgres-readiness.mjs` verifying schema portability, index coverage, and data inventory completeness.
+- Registered `db-readiness` (15 minAssertions) in `scripts/run-all-qa.js`.
