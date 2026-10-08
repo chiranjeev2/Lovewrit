@@ -23,11 +23,12 @@ export default function NotFound() {
         </div>
 
         <div className="space-y-2">
+          <p className="text-xs uppercase tracking-widest text-neutral-500 font-mono">404 — Not Found</p>
           <h1 className="text-2xl font-serif font-bold text-neutral-100">
             Gift Not Found or Link Expired
           </h1>
           <p className="text-sm text-neutral-400 max-w-sm mx-auto leading-relaxed">
-            This keepsake link is either unavailable, has expired, or the address was mistyped.
+            This keepsake link could not be found, is unavailable, has expired, or the address was mistyped.
           </p>
         </div>
 
