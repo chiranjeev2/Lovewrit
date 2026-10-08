@@ -1,6 +1,6 @@
 # Lovewrit System Handover & Technical Architecture State
 
-**Last Updated:** October 2026 (QA Integrity & Payments Hardening)  
+**Last Updated:** October 8, 2026 (QA Integrity & Payments Hardening)  
 **Target Branch:** `main` (Production Canonical)
 
 ---
@@ -105,11 +105,11 @@ In production (`NODE_ENV === "production"`), the server startup hook in [`src/in
 
 ### Verified by Automated Logs:
 The following suites are verified with clean exits (code 0) in automated QA logs (`qa-logs/`):
-- **Static Typing**: `npx tsc --noEmit` - 0 errors (`qa-logs/step9-tsc.log`).
-- **Code Linting**: `npx eslint . --max-warnings 0` - 0 warnings, 0 errors (`qa-logs/step9-eslint.log`).
-- **Build**: `npm run build` - Prisma client generated, migrations deployed, 26/26 pages statically/dynamically generated (`qa-logs/step9-build.log`).
-- **Dependency Audit**: `npm audit --omit=dev` - 0 vulnerabilities in production dependencies (`qa-logs/step8-audit-prod-clean.log`).
-- **Pre-Merge QA Suites**: `npm run qa` - All 21 test suites passed dynamically:
+- **Static Typing**: `npx tsc --noEmit` - 0 errors (`qa-logs/step5-tsc.log`).
+- **Code Linting**: `npx eslint . --max-warnings 0` - 0 warnings, 0 errors (`qa-logs/step5-eslint.log`).
+- **Build**: `npm run build` - Prisma client generated, migrations deployed, 26/26 pages statically/dynamically generated (`qa-logs/step5-build.log` and `qa-logs/step6-build-main.log`).
+- **Dependency Audit**: `npm audit --omit=dev` - 0 vulnerabilities in production dependencies (`qa-logs/step5-audit.log`).
+- **Pre-Merge QA Suites**: `npm run qa` - All 21 test suites passed dynamically (`qa-logs/step5-qa.log`):
   1. TypeScript Typecheck (0 errors)
   2. Currency Matrix Audit (86 / 86 assertions across 4 regions)
   3. Guest Security & Sanitization (10 / 10 assertions)
@@ -136,3 +136,30 @@ The following suites are verified with clean exits (code 0) in automated QA logs
 - **Real Razorpay Payments**: Gateway orders, signatures, and webhooks have been verified against simulated client HTTP boundaries. No live financial credit card or UPI transaction has been charged against a live merchant account.
 - **Real Vercel Deployment**: Builds have been verified locally with Turbopack and staging flags; no live deployment to a production Vercel project or Supabase PostgreSQL instance has been executed.
 - **Domain Setup**: Custom domain registration and DNS propagation are planned on/after 21 Oct 2026.
+
+---
+
+## 9. Owner Actions Checklist Before Production Go-Live
+
+The project owner must execute the following operations prior to accepting live customer payments and traffic:
+
+1. **Rotate Master Admin Key**: Run `npm run admin:set-key` locally to set a fresh, secret `ADMIN_MASTER_KEY` (minimum 20 characters). This automatically generates a matching cryptographically random `ADMIN_SESSION_SECRET`.
+2. **Configure Vercel Environment Variables**: Populate the 7 required production variables in the Vercel dashboard:
+   - `DATABASE_URL`
+   - `RAZORPAY_KEY_ID`
+   - `RAZORPAY_KEY_SECRET`
+   - `RAZORPAY_WEBHOOK_SECRET`
+   - `NEXT_PUBLIC_RAZORPAY_KEY_ID`
+   - `ADMIN_MASTER_KEY`
+   - `ADMIN_SESSION_SECRET`
+3. **Configure Razorpay Test & Live Keys**: Create Razorpay API keys in the Razorpay Dashboard. Configure the webhook endpoint `/api/webhooks/razorpay` subscribing to the three critical events:
+   - `payment.captured`
+   - `order.paid`
+   - `payment.failed`
+4. **Enable International Currencies in Razorpay**: Check and enable multi-currency support (USD, EUR, GBP) in the Razorpay Dashboard to accept international card payments.
+5. **Perform Real Test-Mode Payment on Mobile**: Execute at least one real test-mode payment on an actual physical Android phone at 375px viewport to verify modal responsiveness, native UPI intent handling, and keyboard behavior.
+6. **Migrate to PostgreSQL / Supabase**: Provision a managed production PostgreSQL database (e.g. Supabase), run `prisma migrate deploy`, and verify connection pooling (`pgbouncer`) on port 6543 / direct URL on port 5432.
+7. **Conduct Cultural & Faith Reviews**: Have devotional templates reviewed by appropriate faith practitioners (Hindu, Muslim, Sikh, Christian) to ensure ongoing reverence and scriptural accuracy.
+8. **Native Indic Typography Review**: Have a native Hindi and Punjabi reader review exported PDF sample prints to ensure accurate conjunct ligatures and aesthetic standards.
+9. **Legal Review**: Complete lawyer review of Terms of Service, Privacy Policy, PCPNDT Act compliance, and the digital goods no-refund policy.
+10. **Enable Live Mode**: Switch Razorpay keys from test mode to live mode only after the production domain is live on/after 21 Oct 2026.

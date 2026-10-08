@@ -184,10 +184,10 @@ This document records architectural, security, and verification decisions made d
 5. `npm run qa`: Executed all 21 test suites (`qa-logs/step9-qa.log`), resulting in 100% pass across all assertions (including 252 layout/viewport checks, 65 Razorpay flow assertions, 28 admin security assertions, 18 guestbook auth assertions, 24 referral anti-abuse assertions, and all regional template assertions).
 
 ### Mandatory Negative & Hygiene Probes
-1. Legacy gateway check: Confirmed isolated only to historical documentation in `docs/payments.md` (`qa-logs/step5-grep-legacy-gateway.log`). No active code paths reference legacy gateway.
-2. Template aliases probe: Confirmed empty output (`qa-logs/step5-grep-aliases.log`).
-3. Religious exclusion probe: Confirmed empty output across src, docs, and scripts (`qa-logs/step5-grep-religious-exclusion.log`).
-4. Tracked secrets & SQLite databases probe: Confirmed empty output (`qa-logs/step5-tracked-secrets.log`). No secrets or database files are tracked by Git.
+1. Stripe check (`git grep -il stripe -- src scripts package.json`): Confirmed isolated only to historical documentation in `docs/payments.md` (`qa-logs/stripe.log`). No active code paths reference Stripe.
+2. Template aliases (`git grep -n "TEMPLATE_ALIASES" -- src scripts`): Confirmed empty output (`qa-logs/TEMPLATE_ALIASES.log`).
+3. Jain content probe (`git grep -in jain -- src scripts`): Confirmed empty output (`qa-logs/jain.log`).
+4. Tracked secrets & SQLite databases (`git ls-files | Select-String '\.env$|\.db$|sqlite'`): Confirmed empty output (`qa-logs/secrets.log`). No secrets or database files are tracked by Git.
 
 ---
 
