@@ -240,6 +240,34 @@ This document records architectural, security, and verification decisions made d
 - **Reason**: The client secret leak scanner (`scripts/test-client-secret-leak.mjs`) scans all files for substring `rzp_live_` to prevent accidental commit of live API keys.
 - **Integrity**: The actual environment variable value in `.env.example` was already empty (`""`). Removing the substring from the comment description satisfied the strict automated leak scanner without hiding any vulnerability.
 
+---
+
+## 12. Review of Payment Code & Production Guard Locking
+
+### 1. Elimination of Production Test Hooks
+- **Injectable Client Guard**: Locked `setRazorpayClient` in `src/lib/razorpay.ts` (lines 15-18) so that invoking it when `process.env.NODE_ENV === "production"` immediately throws an error (`"setRazorpayClient is strictly prohibited when NODE_ENV=production"`).
+- **Proved in Integration Suite**: Added Section 11 to `scripts/test-razorpay-flow.mjs` verifying that with `NODE_ENV=production`:
+  1. `setRazorpayClient` throws an exception and is blocked.
+  2. Real route handler `POST /api/checkout` returns 500 (`"Simulated checkouts are strictly disabled in production"`).
+  3. Real route handler `GET /api/checkout/verify` with `sim_` session returns 403 Forbidden (`"Simulated sessions are strictly forbidden in production."`).
+
+### 2. Code Confirmations (Verified in Diffs)
+1. **Amount & Currency Computed Server-Side**:
+   - `src/app/api/checkout/route.ts` lines 64-73: currency strictly mapped server-side.
+   - `src/app/api/checkout/route.ts` lines 136-147: `totalUnit` calculated server-side via `calculateOrderTotal`; client-sent amounts are ignored.
+   - `src/app/api/checkout/route.ts` lines 367-368: `amount: totalUnit, currency: currency.toUpperCase()` passed directly to gateway.
+2. **Timing-Safe HMAC-SHA256 Signatures**:
+   - `src/lib/razorpay.ts` lines 44-49: payment signature verified via `crypto.timingSafeEqual(a, b)`.
+   - `src/lib/razorpay.ts` lines 66-71: webhook raw-body signature verified via `crypto.timingSafeEqual(a, b)`.
+3. **Verify Route Mismatch Guards**:
+   - `src/app/api/checkout/verify/route.ts` lines 166-171: checks `order.razorpayOrderId !== razorpay_order_id`.
+   - `src/app/api/checkout/verify/route.ts` lines 174-179: checks `Number(amount) !== order.amountTotal`.
+   - `src/app/api/checkout/verify/route.ts` lines 182-187: checks `currency.toUpperCase() !== order.currency?.toUpperCase()`.
+4. **Single Referral Credit Per Order**:
+   - `src/lib/referral-reward.ts` lines 30-36: checks `action: "REFERRAL_CREDITED:${currentOrder.id}"` before awarding credit.
+   - `src/lib/referral-reward.ts` lines 163-171: records audit log idempotency token.
+
+
 
 
 

@@ -562,6 +562,65 @@ async function runPaymentIntegrationTests() {
     razorpayModule.setRazorpayClient(originalRazorpay);
   }
 
+  // --------------------------------------------------------------------------
+  // 11. Production Security: setRazorpayClient & Real Handlers in NODE_ENV=production
+  // --------------------------------------------------------------------------
+  console.log("\n[11] Testing Production Security: setRazorpayClient & Real Handlers in NODE_ENV=production...");
+  const origNodeEnv = process.env.NODE_ENV;
+  try {
+    process.env.NODE_ENV = "production";
+
+    // 11a. setRazorpayClient is strictly prohibited in production
+    let setClientThrew = false;
+    try {
+      razorpayModule.setRazorpayClient(null);
+    } catch (e) {
+      setClientThrew = true;
+      assert(
+        e.message.includes("setRazorpayClient is strictly prohibited when NODE_ENV=production"),
+        "setRazorpayClient throws expected error in production"
+      );
+    }
+    assert(setClientThrew, "Calling setRazorpayClient in production is strictly blocked");
+
+    // 11b. Real checkoutPOST handler strictly rejects simulated checkouts in production
+    const prodCheckoutReq = new NextRequest("http://localhost:3000/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        productType: "CARD",
+        templateId: "forever-proposal",
+        customerName: "Prod Security Tester",
+        customerEmail: "prod_tester@example.com",
+      }),
+    });
+    const prodCheckoutRes = await checkoutPOST(prodCheckoutReq);
+    assert(
+      prodCheckoutRes.status === 500,
+      "Real checkoutPOST returns status 500 when simulated checkout attempted in production"
+    );
+    const prodCheckoutData = await prodCheckoutRes.json();
+    assert(
+      prodCheckoutData.error && prodCheckoutData.error.includes("strictly disabled in production"),
+      "Real checkoutPOST explicitly errors that simulated checkouts are disabled in production"
+    );
+
+    // 11c. Real verifyGET handler strictly rejects sim_ sessions with 403 Forbidden in production
+    const prodVerifyReq = new NextRequest("http://localhost:3000/api/checkout/verify?session_id=sim_fake_session_123");
+    const prodVerifyRes = await verifyGET(prodVerifyReq);
+    assert(
+      prodVerifyRes.status === 403,
+      "Real verifyGET returns 403 Forbidden for sim_ session in production"
+    );
+    const prodVerifyData = await prodVerifyRes.json();
+    assert(
+      prodVerifyData.error && prodVerifyData.error.includes("strictly forbidden in production"),
+      "Real verifyGET explicitly errors that sim_ sessions are forbidden in production"
+    );
+  } finally {
+    process.env.NODE_ENV = origNodeEnv;
+  }
+
   console.log(`\n=== RAZORPAY TEST SUITE COMPLETE: ${passedAssertions} / ${totalAssertions} assertions green ===\n`);
 }
 
