@@ -62,3 +62,4 @@ export default function RootError({ error, reset }: ErrorProps) {
     </main>
   );
 }
+

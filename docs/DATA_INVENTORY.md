@@ -192,3 +192,4 @@ Internal system configuration and feature flags.
 | `key` | String | Setting key (e.g. `candle_count:slug`) | No | Permanent | System configuration | System |
 | `value` | String | Serialized string or numeric count | No | Permanent | System configuration | System |
 | `updatedAt` | DateTime | Last updated timestamp | No | Permanent | Operational audit | System |
+

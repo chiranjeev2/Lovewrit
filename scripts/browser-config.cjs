@@ -34,3 +34,4 @@ function getBrowserExecutablePath() {
 }
 
 module.exports = { getBrowserExecutablePath };
+

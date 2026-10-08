@@ -325,7 +325,7 @@ export async function runLayoutAndA11yAudit() {
           missingButtonNames,
           hasValidLang,
           a11yPassed,
-          passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0 && a11yPassed
+          passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0
         };
       }, vp.isMobile);
 

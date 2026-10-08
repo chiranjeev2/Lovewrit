@@ -135,6 +135,9 @@ export async function POST(req: NextRequest) {
         where: { key: `referral_owner:${finalCode}` },
         update: {
           value: JSON.stringify({
+            ownerEmail: cleanEmail,
+            creatorIp,
+            creatorFingerprint,
             ip: creatorIp,
             fingerprint: creatorFingerprint,
             email: cleanEmail,
@@ -144,6 +147,9 @@ export async function POST(req: NextRequest) {
         create: {
           key: `referral_owner:${finalCode}`,
           value: JSON.stringify({
+            ownerEmail: cleanEmail,
+            creatorIp,
+            creatorFingerprint,
             ip: creatorIp,
             fingerprint: creatorFingerprint,
             email: cleanEmail,
@@ -159,7 +165,8 @@ export async function POST(req: NextRequest) {
       success: true,
       code: newRecord.code,
       ownerName: newRecord.ownerName,
-      message: `Your share code is ${newRecord.code}! Give friends ₹49 off, earn ₹49 credits.`,
+      record: newRecord,
+      message: `Your referral code ${newRecord.code} has been created!`,
     });
   } catch (err: unknown) {
     console.error("Referral creation note:", err instanceof Error ? err.name : "Unknown");
