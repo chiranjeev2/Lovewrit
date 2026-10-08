@@ -293,3 +293,39 @@ This document records architectural, security, and verification decisions made d
 ### Test Suite
 - Added `scripts/test-public-api-safety.mjs` verifying 31 assertions against live route handlers: malformed JSON, 10MB declared payloads, hostile unknown fields, script tags, SQL injection strings, path traversal slugs, invalid upload signatures, and rate limiting triggers.
 - Registered `public-api-safety` (30 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 14. Step 3: Security Headers, CSP, Privacy & PII Protection
+
+### HTTP Security Headers in `next.config.ts`
+- Added comprehensive global HTTP security headers on `/:path*`:
+  - `X-Content-Type-Options: nosniff` to prevent MIME-type sniffing attacks.
+  - `Referrer-Policy: strict-origin-when-cross-origin` to protect query strings in referrers across origins.
+  - `X-Frame-Options: SAMEORIGIN` to prevent clickjacking while allowing trusted internal frames.
+  - `Permissions-Policy: camera=(), microphone=(self), geolocation=()` restricting camera and geolocation while allowing microphone access scoped strictly to `(self)` for buyer voice memos.
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains` (HSTS).
+  - `Content-Security-Policy`:
+    - `default-src 'self'`
+    - `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com` (no `'unsafe-eval'` in production)
+    - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
+    - `img-src 'self' blob: data: https://images.unsplash.com https://*.unsplash.com https://checkout.razorpay.com`
+    - `font-src 'self' data: https://fonts.gstatic.com`
+    - `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com`
+    - `frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com`
+    - `media-src 'self' blob: data:`
+    - `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`
+
+### Cookie Hardening
+- Enforced `secure: process.env.NODE_ENV === "production"` across application cookies (`tribute_candle_${slug}`, `lovewrit_referral_code`).
+- Verified existing admin auth cookie configuration: `httpOnly: true`, `secure: isProd`, `sameSite: "strict"`.
+
+### PII Protection & Safe Redacting Logger
+- Created `src/lib/logger.ts` (`safeLogger`, `redactSensitiveData`) automatically stripping buyer/guest PII (emails, phone numbers, bearer authorization tokens, passwords/keys) from console output.
+- Audited all `console.log` and `console.error` calls across `src/` to confirm zero PII leaks.
+- Verified `?guest=` parameter is sanitized via `sanitizeGuestName` and never reflected unescaped into HTML (React auto-escapes all JSX interpolations).
+- Verified analytics respects Do Not Track (DNT) and explicit user consent via `src/lib/consent.ts`.
+
+### Test Suite
+- Added `scripts/test-security-headers-and-privacy.mjs` verifying 29 assertions covering headers, CSP, PII redaction, and guest sanitization.
+- Registered `security-headers` (28 minAssertions) in `scripts/run-all-qa.js`.

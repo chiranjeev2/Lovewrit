@@ -101,6 +101,7 @@ const EXPECTED_SUITE_IDS = [
   'growth-phase-c1',
   'policy-compliance',
   'public-api-safety',
+  'security-headers',
 ];
 
 const SUITE_REGISTRY = [
@@ -477,6 +478,23 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (hostile input, rate limits, schema safety)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Public API safety suite failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'security-headers',
+    name: 'Security Headers, CSP & Privacy Suite',
+    command: 'node scripts/test-security-headers-and-privacy.mjs',
+    requiresServer: false,
+    minAssertions: 28,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 28) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (CSP, HSTS, PII redaction, guest safety)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Security headers & privacy suite failed or assertions below minimum' };
     },
   },
 ];
