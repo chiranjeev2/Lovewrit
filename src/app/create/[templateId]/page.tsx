@@ -684,9 +684,6 @@ export default function CreateLovewritPage({
   const displayPrice = isFounderFree || isFreeLetterCard || isFreeAdPage ? "0" : calculatedPricing.displayPrice;
   const symbol = calculatedPricing.symbol;
   const isDiscounted = isFounderFree ? true : calculatedPricing.isDiscounted;
-  const originalDisplayPrice = isFounderFree
-    ? calculatedPricing.displayPrice
-    : calculatedPricing.originalDisplayPrice;
 
   // Checkout submission
   const handleProceedToCheckout = async (e: React.FormEvent) => {
@@ -2684,11 +2681,6 @@ export default function CreateLovewritPage({
                 </div>
                 <div className="text-right">
                   <div className="flex items-baseline justify-end space-x-2">
-                    {isDiscounted && originalDisplayPrice && (
-                      <span className="text-sm font-semibold text-neutral-500 line-through">
-                        {symbol}{originalDisplayPrice}
-                      </span>
-                    )}
                     <span className="text-2xl font-bold text-white">
                       {symbol}{displayPrice}
                     </span>

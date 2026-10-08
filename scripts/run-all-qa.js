@@ -99,6 +99,13 @@ const EXPECTED_SUITE_IDS = [
   'pack-kitty',
   'pack-devotional',
   'growth-phase-c1',
+  'policy-compliance',
+  'public-api-safety',
+  'security-headers',
+  'error-empty-states',
+  'a11y-mobile',
+  'performance-bundles',
+  'db-readiness',
 ];
 
 const SUITE_REGISTRY = [
@@ -442,6 +449,124 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions verified` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Phase C1 Growth suite failed' };
+    },
+  },
+  {
+    id: 'policy-compliance',
+    name: 'Policy Compliance Suite',
+    command: 'node scripts/test-policy-compliance.mjs',
+    requiresServer: false,
+    minAssertions: 18,
+    parse: (output, exitCode) => {
+      const match = output.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+      const passed = match ? parseInt(match[1], 10) : 0;
+      const total = match ? parseInt(match[2], 10) : 0;
+      if (exitCode === 0 && match && passed >= 18) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (11 non-negotiables enforced)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Policy compliance suite failed' };
+    },
+  },
+  {
+    id: 'public-api-safety',
+    name: 'Public API Safety & Hostile Input Suite',
+    command: 'node scripts/test-public-api-safety.mjs',
+    requiresServer: false,
+    minAssertions: 30,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 30) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (hostile input, rate limits, schema safety)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Public API safety suite failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'security-headers',
+    name: 'Security Headers, CSP & Privacy Suite',
+    command: 'node scripts/test-security-headers-and-privacy.mjs',
+    requiresServer: false,
+    minAssertions: 28,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 28) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (CSP, HSTS, PII redaction, guest safety)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Security headers & privacy suite failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'error-empty-states',
+    name: 'Error Boundaries & Empty States Suite',
+    command: 'node scripts/test-error-and-empty-states.mjs',
+    requiresServer: false,
+    minAssertions: 30,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 30) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (error boundaries, 404, loading, PIN lockout, scene fallbacks)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Error & empty states suite failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'a11y-mobile',
+    name: 'Accessibility & Mobile Standards Audit',
+    command: 'node scripts/test-accessibility-and-mobile.mjs',
+    requiresServer: false,
+    minAssertions: 10,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 10) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (WCAG 2.1 contrast, reduced motion, focus-visible, 44px tap targets)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Accessibility & mobile standards audit failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'performance-bundles',
+    name: 'Performance & Bundle Efficiency Audit',
+    command: 'node scripts/test-performance-and-bundles.mjs',
+    requiresServer: false,
+    minAssertions: 5,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 5) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (static assets < 300KB, build manifest, scene efficiency)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Performance & bundle audit failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'db-readiness',
+    name: 'Database & PostgreSQL Readiness Audit',
+    command: 'node scripts/test-schema-postgres-readiness.mjs',
+    requiresServer: false,
+    minAssertions: 15,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 15) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (Prisma schema, indexes, CUID portability, data inventory)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Database readiness audit failed or assertions below minimum' };
     },
   },
 ];

@@ -23,6 +23,7 @@ export async function GET(
       maxAge: 60 * 60 * 24 * 30, // 30 days
       httpOnly: false, // Accessible to client-side checkout
       sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
     });
   }
 

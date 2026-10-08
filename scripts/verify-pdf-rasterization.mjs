@@ -1,8 +1,9 @@
 import puppeteer from 'puppeteer-core';
 import fs from 'fs';
 import path from 'path';
+import { getBrowserExecutablePath } from './browser-config.cjs';
 
-const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const EDGE_PATH = getBrowserExecutablePath();
 const DOWNLOAD_DIR = path.resolve('scripts/export_verification_downloads');
 const PDF_PATH = path.join(DOWNLOAD_DIR, 'lovewrit-foldable-card-ananya.pdf');
 const OUT_DIR = path.resolve('qa-pdf-pages');

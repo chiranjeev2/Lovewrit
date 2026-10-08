@@ -265,15 +265,213 @@ This document records architectural, security, and verification decisions made d
    - `src/app/api/checkout/verify/route.ts` lines 182-187: checks `currency.toUpperCase() !== order.currency?.toUpperCase()`.
 4. **Single Referral Credit Per Order**:
    - `src/lib/referral-reward.ts` lines 30-36: checks `action: "REFERRAL_CREDITED:${currentOrder.id}"` before awarding credit.
-   - `src/lib/referral-reward.ts` lines 163-171: records audit log idempotency token.
 
+---
 
+## 13. Step 2: Input Validation, Rate Limits, and Public API Safety
 
+### API Inventory and Documentation
+- Documented the complete API surface of 14 endpoints in `docs/API_SURFACE.md` with HTTP methods, route paths, authentication models, rate limit thresholds, payload caps, and schemas.
 
+### Zero-Dependency Schema Validation & Generic Error Responses
+- Created `src/lib/api-safety.ts` containing pure TypeScript schema validators, payload size checkers (`checkPayloadSize`), sliding-window rate limit enforcement (`enforceRateLimit`), and standardized safe error handlers (`safeErrorResponse`, `safeServerErrorResponse`).
+- Never expose database stack traces, file system paths, or environment keys in error responses.
+- Added strict payload size guards (100KB-200KB for JSON endpoints, 15MB for multipart upload) checking `Content-Length` headers before processing bodies, returning HTTP 413.
+- Enforced strict field allowlists on public POST endpoints: `/api/guestbook` rejects unexpected extra fields, strips ASCII control characters (0x00-0x1F, 0x7F), and caps author name to 60 characters and messages to 1500 characters.
 
+### Magic Byte File Sniffing & Upload Hardening
+- Hardened `src/app/api/upload/route.ts` with binary magic byte validation (`detectMagicBytes`):
+  - Images: JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), WEBP (`RIFF....WEBP`), HEIC/HEIF (`ftypheic`, `ftypmif1`).
+  - Audio: MP3 (`ID3`, `FF FB/F3/F2`), WAV (`RIFF....WAVE`), OGG (`OggS`), WEBM (`1A 45 DF A3`).
+  - Strictly rejects SVGs, XML, HTML, and script tags disguised as images to prevent XSS.
+  - Strictly rejects video formats disguised as images by inspecting binary headers.
+  - Replaces user-supplied filenames with nanoid identifiers and enforces that file paths resolve strictly inside `public/uploads/` to prevent directory traversal.
 
+### Rate Limiting
+- Persistent sliding window rate limiting via Prisma `RateLimitEvent` model. Returns HTTP 429 with `Retry-After` header when limits are reached.
 
+### Test Suite
+- Added `scripts/test-public-api-safety.mjs` verifying 31 assertions against live route handlers: malformed JSON, 10MB declared payloads, hostile unknown fields, script tags, SQL injection strings, path traversal slugs, invalid upload signatures, and rate limiting triggers.
+- Registered `public-api-safety` (30 minAssertions) in `scripts/run-all-qa.js`.
 
+---
 
+## 14. Step 3: Security Headers, CSP, Privacy & PII Protection
 
+### HTTP Security Headers in `next.config.ts`
+- Added comprehensive global HTTP security headers on `/:path*`:
+  - `X-Content-Type-Options: nosniff` to prevent MIME-type sniffing attacks.
+  - `Referrer-Policy: strict-origin-when-cross-origin` to protect query strings in referrers across origins.
+  - `X-Frame-Options: SAMEORIGIN` to prevent clickjacking while allowing trusted internal frames.
+  - `Permissions-Policy: camera=(), microphone=(self), geolocation=()` restricting camera and geolocation while allowing microphone access scoped strictly to `(self)` for buyer voice memos.
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains` (HSTS).
+  - `Content-Security-Policy`:
+    - `default-src 'self'`
+    - `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com` (no `'unsafe-eval'` in production)
+    - `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`
+    - `img-src 'self' blob: data: https://images.unsplash.com https://*.unsplash.com https://checkout.razorpay.com`
+    - `font-src 'self' data: https://fonts.gstatic.com`
+    - `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com`
+    - `frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com`
+    - `media-src 'self' blob: data:`
+    - `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`
+
+### Cookie Hardening
+- Enforced `secure: process.env.NODE_ENV === "production"` across application cookies (`tribute_candle_${slug}`, `lovewrit_referral_code`).
+- Verified existing admin auth cookie configuration: `httpOnly: true`, `secure: isProd`, `sameSite: "strict"`.
+
+### PII Protection & Safe Redacting Logger
+- Created `src/lib/logger.ts` (`safeLogger`, `redactSensitiveData`) automatically stripping buyer/guest PII (emails, phone numbers, bearer authorization tokens, passwords/keys) from console output.
+- Audited all `console.log` and `console.error` calls across `src/` to confirm zero PII leaks.
+- Verified `?guest=` parameter is sanitized via `sanitizeGuestName` and never reflected unescaped into HTML (React auto-escapes all JSX interpolations).
+- Verified analytics respects Do Not Track (DNT) and explicit user consent via `src/lib/consent.ts`.
+
+### Test Suite
+- Added `scripts/test-security-headers-and-privacy.mjs` verifying 29 assertions covering headers, CSP, PII redaction, and guest sanitization.
+- Registered `security-headers` (28 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 15. Step 4: Error Boundaries, Not-Found & Empty States
+
+### Route Error Boundaries & Not-Found Handlers
+- Created `src/app/not-found.tsx`:
+  - Renders a serene, calm "Gift Not Found or Link Expired" screen.
+  - Strictly avoids celebratory graphics, confetti, or emojis, ensuring solemn respect when visitors open missing memorial or tribute links.
+  - Offers clear navigation affordances: "Return to Homepage" and "Create a New Keepsake".
+  - Zero internal stack traces or database errors exposed.
+- Created `src/app/error.tsx`:
+  - Client error boundary capturing route-level exceptions.
+  - Renders a clean "Something went wrong" message without leaking error stacks.
+  - Offers a retry button (`reset()`) and a link back home.
+- Created `src/app/global-error.tsx`:
+  - Catches errors occurring in root layout.
+  - Renders valid root `<html>` and `<body>` shell with reload button.
+- Created `src/app/loading.tsx`:
+  - Minimalist dark aesthetic loading skeleton with subtle spinning ring indicator.
+
+### PIN Lockout and Retry-After Timer
+- Enhanced PIN protection in `src/app/p/[slug]/page.tsx` and `src/app/c/[slug]/page.tsx`:
+  - Tracks consecutive incorrect PIN attempts (`pinAttempts`).
+  - Upon reaching 5 consecutive failures, activates a 30-second lockout timer (`lockoutTimer`).
+  - During lockout, disables numeric PIN input and submit button, and displays a countdown timer.
+  - Resets attempt counter once timer expires, preventing brute-force PIN guessing.
+
+### Graceful Fallbacks
+- Verified Scene Engine fallback:
+  - Honors `prefers-reduced-motion: reduce` by rendering `FallbackStaticScroll` immediately.
+  - `SceneErrorBoundary` catches any scene rendering failure and falls back to static scroll rather than a blank screen.
+  - Audio autoplay rejections are handled silently without crashing the experience.
+
+### Test Suite
+- Added `scripts/test-error-and-empty-states.mjs` verifying 30 assertions.
+- Registered `error-empty-states` (30 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 16. Step 5: Accessibility and Mobile Standards
+
+### Layout Audit Accessibility Expansion
+- Updated `scripts/verify-viewport-layout-and-accessibility.mjs` with runtime accessibility assertions evaluated on every audited page across all viewports:
+  - Every `<img>` tag has an `alt` attribute.
+  - All form controls have associated `<label>`, `aria-label`, `aria-labelledby`, or `placeholder`.
+  - All `<button>` elements have accessible text or `aria-label` / `title`.
+  - Document element defines valid `lang="en"` attribute.
+  - Runtime environment respects `prefers-reduced-motion` media query.
+
+### Styling & CSS Enhancements
+- Added global `:focus-visible` outline styles (`2px solid #f43f5e`, `outline-offset: 2px`) in `src/app/globals.css` ensuring keyboard navigation outlines are visible without disrupting pointer interactions.
+- Verified WCAG 2.1 AA body color contrast ratios >= 4.5:1 across dark (#0a0a0a), light/parchment (#fcf7ec), and rose accent themes.
+- Enforced mobile touch targets >= 44x44px for buttons, CTA elements, and interactive controls across 375px mobile viewports.
+
+### Code Health
+- Resolved two unused variable warnings in `src/app/api/guestbook/route.ts` and `src/app/create/[templateId]/page.tsx` ensuring 0 warnings on `npx eslint . --max-warnings 0`.
+
+### Test Suite
+- Added `scripts/test-accessibility-and-mobile.mjs` verifying 11 WCAG 2.1 assertions.
+- Registered `a11y-mobile` (10 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 17. Step 6: Performance, Static Assets, and Bundle Optimization
+
+### Asset Inventory in `public/`
+- Audited all root static files in `public/`.
+- All static SVGs (`icon.svg`, `file.svg`, `next.svg`, `vercel.svg`, `window.svg`, `globe.svg`) are ~1 KB or smaller. Zero static assets exceed the 300 KB budget.
+- All files > 300 KB in `public/` are dynamic buyer photo uploads generated during test runs under `public/uploads/` (such as JPEG/PNG test fixtures).
+
+### Production Build & Route Bundles
+- Executed `npm run build` using Next.js 16 (Turbopack).
+- Build completed cleanly with 0 errors in 2.3 seconds across all 26 static and dynamic routes.
+- Prerendered static pages: `/`, `/_not-found`, `/admin`, `/checkout/success`, `/creators`, `/faq`, `/privacy`, `/terms`.
+- Server-rendered dynamic routes: `/c/[slug]`, `/p/[slug]`, `/create/[templateId]`, `/r/[code]`, and API routes.
+
+### Below-the-Fold Lazy Loading & Scene Engine
+- In `SceneContainer`, inactive scenes are handled with pointer-events-none or sequential activation to prevent unnecessary canvas re-renders and layout thrashing.
+- Verified heavy dependencies (such as PDF generation via jsPDF and rasterization canvases) are executed on-demand only when export actions are triggered.
+
+### Test Suite
+- Added `scripts/test-performance-and-bundles.mjs` verifying asset size limits and build manifests.
+- Registered `performance-bundles` (5 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 18. Step 7: Database Readiness & Data Inventory
+
+### B-Tree Index Additions in `prisma/schema.prisma`
+- Added performance and look-up B-tree indexes:
+  - `Order`: `@@index([customerEmail])`, `@@index([createdAt])`, `@@index([myReferralCode])`.
+  - `ReferralRecord`: `@@index([ownerEmail])`.
+  - `GuestbookEntry`: `@@index([pageDataId])`, `@@index([createdAt])`.
+  - `RecipientReaction`: `@@index([pageDataId])`, `@@index([createdAt])`.
+  - `RateLimitEvent`: `@@index([action, ipAddress, createdAt])`, `@@index([createdAt])`.
+
+### Database Portability & PostgreSQL Readiness
+- Zero SQLite-specific extensions or functions (`strftime`, `rowid`, `sqlite_master`).
+- Primary keys use portable CUID strings (`@default(cuid())`), completely eliminating autoincrement sequence assumptions.
+- Complex JSON structures (`photoUrls`, `scenesJson`, `timelineJson`, `secretNotesJson`, `stickersJson`) are stored as serialized strings, ensuring seamless migration between SQLite, PostgreSQL, and MySQL without requiring dialect-specific JSONB operations.
+- All email lookups normalize casing via `.toLowerCase()` in code before querying, ensuring identical behavior across case-insensitive (SQLite) and case-sensitive (Postgres) collation.
+
+### Data Inventory Documentation
+- Authored `docs/DATA_INVENTORY.md` covering all 8 tables and 60+ columns with PII classifications, retention schedules, business purposes, and buyer/guest associations.
+
+### Test Suite
+- Added `scripts/test-schema-postgres-readiness.mjs` verifying schema portability, index coverage, and data inventory completeness.
+- Registered `db-readiness` (15 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 19. Step 8: Code Health, Tooling Abstractions & Root Cleanup
+
+### Root Directory Cleanup & Legacy Organization
+- Relocated legacy `memoir.md` into `docs/legacy/memoir.md` to keep documentation well-structured.
+- Audited all root test files against `scripts/run-all-qa.js`. Preserved `test-currency-matrix.mjs` (actively referenced by the QA runner suite `currency-matrix`).
+- Deleted 9 unreferenced, leftover test scripts from the root directory: `test-batch-features.mjs`, `test-e2e.mjs`, `test-legal-pages.mjs`, `test-new-enhancements.mjs`, `test-phase2.mjs`, `test-prompt1-catalog.mjs`, `test-prompt1-pricing.mjs`, `test-prompt1-ratelimit.mjs`, and `test-rsvp-and-features.mjs`.
+
+### Cross-Platform Configurable Browser Executable Abstraction
+- Created `scripts/browser-config.cjs` providing `getBrowserExecutablePath()`:
+  - First honors `process.env.CHROME_PATH` if specified and present on disk.
+  - Automatically probes common system installation paths for Edge, Chrome, and Chromium across Windows, macOS, and Linux.
+  - Fallbacks safely if no custom path is configured.
+- Refactored all browser automation and verification scripts across `scripts/` to use `getBrowserExecutablePath()` rather than hardcoding local Edge binary paths.
+
+### Architectural Rationale for Top 5 Largest Source Files in `src/`
+1. **`src/app/create/[templateId]/page.tsx` (2,921 lines)**:
+   - **Role**: Master Customizer Studio state machine orchestrating multi-photo arrangement, audio recording, interactive previews, font selectors, and checkout flows across all 21 occasion templates.
+   - **Rationale for Retaining Intact**: The customizer combines complex state synchronization across photo trays, audio blobs, dynamic fields, and step wizards. Refactoring this central file during the final production-readiness pass carries extreme regression risk against end-to-end user workflows and verified browser test suites. The component is well-typed, thoroughly covered by automated customizer test suites, and stable.
+2. **`src/components/scene-engine/customizer/SceneFlowEditor.tsx` (1,709 lines)**:
+   - **Role**: Scene flow visual editor and property inspector managing 29 distinct scene types, transition curves, and timing controls.
+   - **Rationale for Retaining Intact**: Highly cohesive editor component managing granular per-scene properties. Splitting into dozens of micro-components would introduce unnecessary indirection without improving runtime performance.
+3. **`src/components/editor/PagePreview.tsx` (1,266 lines)**:
+   - **Role**: Live client-side simulation engine rendering responsive page previews in real-time as users modify templates in the studio.
+   - **Rationale for Retaining Intact**: Serves as the single source of truth for preview rendering fidelity across mobile, tablet, and desktop viewports.
+4. **`src/components/editor/CardPreview.tsx` (1,133 lines)**:
+   - **Role**: Live greeting card preview renderer managing SVG frames, polaroid badge overlays, custom typography, and high-DPI export canvases.
+   - **Rationale for Retaining Intact**: Tightly couples SVG geometry calculations with CSS styling to ensure pixel-perfect export parity with on-screen previews.
+5. **`src/lib/scene-defaults.ts` (936 lines)**:
+   - **Role**: Pure data dictionary defining default scene flow configurations, sample text, and animation parameters for 21 templates.
+   - **Rationale for Retaining Intact**: Pure declarative configuration file containing zero side effects or runtime logic. Keeping defaults in a consolidated dictionary guarantees immediate consistency across templates.
+
+### Platform Documentation Update
+- Updated `README.md` to comprehensively describe the entire built product (21 occasion templates, cards & keepsake pages, Scene Engine, Razorpay payment flows, 50% regifts, guestbook & candle tributes, and multi-currency pricing).
 

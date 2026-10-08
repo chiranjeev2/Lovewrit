@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { sanitizeGuestName, sanitizeText } from "@/lib/sanitize";
 import { isRequestAdminAuthorized } from "@/lib/admin-auth";
+import { sanitizeGuestName, sanitizeText } from "@/lib/sanitize";
+import {
+  checkPayloadSize,
+  enforceRateLimit,
+  validateGuestbookInput,
+  safeErrorResponse,
+  safeServerErrorResponse,
+} from "@/lib/api-safety";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const slug = searchParams.get("slug");
-    const token = searchParams.get("token");
+    const slug = searchParams.get("slug")?.trim();
+    const token = searchParams.get("token")?.trim();
     const format = searchParams.get("format");
 
     if (!slug) {
-      return NextResponse.json({ error: "Missing page slug" }, { status: 400 });
+      return safeErrorResponse("Missing slug parameter", 400);
     }
 
     const order = await db.order.findUnique({
@@ -20,12 +27,14 @@ export async function GET(req: NextRequest) {
     });
 
     if (!order || !order.pageData) {
-      return NextResponse.json({ entries: [], stats: { attendingCount: 0, headcountTotal: 0, regretsCount: 0, totalResponses: 0 } });
+      return safeErrorResponse("Page not found", 404);
     }
 
-    const isCreator = Boolean(token && order.adminToken && token === order.adminToken);
+    const isMasterAdmin = isRequestAdminAuthorized(req).authorized;
+    const isCreator = Boolean(
+      (token && order.adminToken && token === order.adminToken) || isMasterAdmin
+    );
 
-    // If creator, fetch all entries (including PENDING). Otherwise, only APPROVED.
     const entries = await db.guestbookEntry.findMany({
       where: {
         pageDataId: order.pageData.id,
@@ -34,29 +43,26 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    // Compute live RSVP stats (based on approved entries for public, or all non-flagged for creator)
     const validEntries = isCreator ? entries.filter((e) => e.status !== "FLAGGED") : entries;
-    const attendingEntries = validEntries.filter((e) => e.attendance === "ATTENDING");
-    const regretsEntries = validEntries.filter((e) => e.attendance === "REGRETS");
-    const headcountTotal = attendingEntries.reduce((acc, curr) => acc + (curr.headcount || 1), 0);
 
     const stats = {
-      attendingCount: attendingEntries.length,
-      headcountTotal,
-      regretsCount: regretsEntries.length,
+      attendingCount: validEntries.filter((e) => e.attendance === "ATTENDING").length,
+      headcountTotal: validEntries
+        .filter((e) => e.attendance === "ATTENDING")
+        .reduce((sum, e) => sum + (e.headcount || 1), 0),
+      regretsCount: validEntries.filter((e) => e.attendance === "REGRETS").length,
       totalResponses: validEntries.length,
     };
 
-    // Return CSV export if requested
-    if (format === "csv") {
-      const csvHeader = ["Date", "Guest Name", "RSVP Status", "Headcount", "Blessing / Note", "Status"].join(",");
-      const csvRows = entries.map((e) => {
-        const dateStr = new Date(e.createdAt).toISOString().split("T")[0];
-        const safeName = `"${(e.authorName || "").replace(/"/g, '""')}"`;
-        const rsvpStatus = e.attendance || "ATTENDING";
-        const count = e.headcount || 1;
-        const safeMsg = `"${(e.message || "").replace(/"/g, '""')}"`;
-        const status = e.status;
+    if (format === "csv" && isCreator) {
+      const csvHeader = "Date,Guest Name,RSVP Status,Headcount,Message,Status";
+      const csvRows = entries.map((entry) => {
+        const dateStr = new Date(entry.createdAt).toISOString().split("T")[0];
+        const safeName = `"${entry.authorName.replace(/"/g, '""')}"`;
+        const safeMsg = `"${entry.message.replace(/"/g, '""')}"`;
+        const rsvpStatus = entry.attendance || "ATTENDING";
+        const count = entry.headcount || 1;
+        const status = entry.status;
         return [dateStr, safeName, rsvpStatus, count, safeMsg, status].join(",");
       });
       const csvContent = [csvHeader, ...csvRows].join("\n");
@@ -77,24 +83,34 @@ export async function GET(req: NextRequest) {
       requireApproval: order.pageData.requireGuestbookApproval,
     });
   } catch (err: unknown) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to fetch entries" },
-      { status: 500 }
-    );
+    console.error("Guestbook fetch note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { slug, authorName, message, attendance = "ATTENDING", headcount = 1 } = body;
+    const sizeErr = checkPayloadSize(req, 200 * 1024);
+    if (sizeErr) return sizeErr;
 
-    if (!slug || !authorName || !message) {
-      return NextResponse.json(
-        { error: "Name and message are required" },
-        { status: 400 }
-      );
+    const rateLimit = await enforceRateLimit(req, "GUESTBOOK_POST", 15, 60);
+    if (!rateLimit.allowed && rateLimit.response) {
+      return rateLimit.response;
     }
+
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return safeErrorResponse("Malformed JSON in request body", 400);
+    }
+
+    const validation = validateGuestbookInput(rawBody);
+    if (!validation.success || !validation.data) {
+      return safeErrorResponse(validation.error || "Invalid guestbook entry data", 400);
+    }
+
+    const { slug, authorName, message, attendance, headcount } = validation.data;
 
     const order = await db.order.findUnique({
       where: { slug },
@@ -102,25 +118,18 @@ export async function POST(req: NextRequest) {
     });
 
     if (!order || !order.pageData) {
-      return NextResponse.json({ error: "Page not found" }, { status: 404 });
+      return safeErrorResponse("Page not found", 404);
     }
 
-    const requireApproval = order.pageData.requireGuestbookApproval;
+    const isMemorial = order.pageData.occasion === "memorial" || order.templateId === "sacred-tribute" || order.templateId === "memorial-candle" || order.templateId === "condolence-letter";
+    const requireApproval = Boolean(order.pageData.requireGuestbookApproval || isMemorial);
     const initialStatus = requireApproval ? "PENDING" : "APPROVED";
-
-    const parsedHeadcount = Math.max(1, Math.min(50, parseInt(String(headcount), 10) || 1));
-    const validAttendance = ["ATTENDING", "REGRETS", "MESSAGE_ONLY"].includes(attendance)
-      ? attendance
-      : "ATTENDING";
 
     const cleanAuthor = sanitizeGuestName(authorName, 60);
     const cleanMessage = sanitizeText(message, 1500);
 
     if (!cleanAuthor || !cleanMessage) {
-      return NextResponse.json(
-        { error: "Valid name and message are required" },
-        { status: 400 }
-      );
+      return safeErrorResponse("Valid name and message are required", 400);
     }
 
     const entry = await db.guestbookEntry.create({
@@ -128,8 +137,8 @@ export async function POST(req: NextRequest) {
         pageDataId: order.pageData.id,
         authorName: cleanAuthor,
         message: cleanMessage,
-        attendance: validAttendance,
-        headcount: validAttendance === "ATTENDING" ? parsedHeadcount : 1,
+        attendance,
+        headcount: attendance === "ATTENDING" ? headcount : 1,
         status: initialStatus,
       },
     });
@@ -140,21 +149,35 @@ export async function POST(req: NextRequest) {
       isPending: initialStatus === "PENDING",
     });
   } catch (err: unknown) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to post message" },
-      { status: 500 }
-    );
+    console.error("Guestbook submission note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }
 
 // Creator moderation (Approve / Flag / Delete)
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { entryId, action, token } = body; // action: "APPROVE" | "FLAG" | "DELETE"
+    const sizeErr = checkPayloadSize(req, 50 * 1024);
+    if (sizeErr) return sizeErr;
+
+    const rateLimit = await enforceRateLimit(req, "GUESTBOOK_MOD", 20, 60);
+    if (!rateLimit.allowed && rateLimit.response) {
+      return rateLimit.response;
+    }
+
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return safeErrorResponse("Malformed JSON in request body", 400);
+    }
+
+    const entryId = typeof body.entryId === "string" ? body.entryId.trim() : "";
+    const action = typeof body.action === "string" ? body.action.trim() : "";
+    const token = typeof body.token === "string" ? body.token.trim() : "";
 
     if (!entryId || !action) {
-      return NextResponse.json({ error: "Missing entryId or action" }, { status: 400 });
+      return safeErrorResponse("Missing entryId or action", 400);
     }
 
     if (action === "FLAG") {
@@ -175,7 +198,7 @@ export async function PATCH(req: NextRequest) {
     });
 
     if (!entry) {
-      return NextResponse.json({ error: "Entry not found" }, { status: 404 });
+      return safeErrorResponse("Entry not found", 404);
     }
 
     const isCreator = Boolean(
@@ -183,7 +206,7 @@ export async function PATCH(req: NextRequest) {
     );
 
     if (!isMasterAdmin && !isCreator) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+      return safeErrorResponse("Unauthorized", 403);
     }
 
     if (action === "APPROVE") {
@@ -199,12 +222,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: true, message: "Entry deleted" });
     }
 
-    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+    return safeErrorResponse("Invalid moderation action", 400);
   } catch (err: unknown) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Moderation action failed" },
-      { status: 500 }
-    );
+    console.error("Guestbook moderation note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }
-
