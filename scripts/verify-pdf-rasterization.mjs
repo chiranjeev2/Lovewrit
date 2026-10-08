@@ -585,7 +585,7 @@ async function verifyPdfRasterization() {
   await browser.close();
 
   console.log('\n================================================================');
-  console.log('ALL PDF RASTERIZATION & SHARPNESS CHECKS PASSED (>= 150 DPI)!');
+  console.log('ALL PDF RASTERIZATION & SHARPNESS CHECKS PASSED: (2 / 2 pages non-blank, effective photo DPI >= 150 DPI)!');
   console.log(`Saved images to: ${OUT_DIR}`);
   console.log('================================================================\n');
 }

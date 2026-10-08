@@ -447,7 +447,7 @@ async function testDevotionalPack() {
   await browser.close();
 
   console.log('\n=================================================');
-  console.log(`🎉 ALL B5 DEVOTIONAL ASSERTIONS PASSED: ${passedAssertions} / 20`);
+  console.log(`🎉 ALL B5 DEVOTIONAL ASSERTIONS PASSED: (${passedAssertions} / 20 assertions verified)`);
   console.log('=================================================');
 
   if (passedAssertions !== 20) {

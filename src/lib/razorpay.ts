@@ -13,6 +13,9 @@ export let razorpay: Razorpay | null =
     : null;
 
 export function setRazorpayClient(client: Razorpay | null) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("setRazorpayClient is strictly prohibited when NODE_ENV=production");
+  }
   razorpay = client;
 }
 
