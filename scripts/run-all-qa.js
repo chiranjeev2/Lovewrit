@@ -17,10 +17,22 @@ function getRepoTemplateCount() {
   const tsContent = fs.readFileSync(tsPath, 'utf-8');
   const templatesSection = tsContent.split('export const TEMPLATES')[1]?.split('export function getTemplateById')[0] || '';
   const matches = templatesSection.match(/^\s{4}id:\s*['"][^'"]+['"]/gm);
-  if (!matches || matches.length === 0) {
-    throw new Error('Unable to extract template count from src/lib/templates-data.ts');
+  const regexCount = matches ? matches.length : 0;
+
+  // Real TEMPLATES.length evaluated dynamically via tsx
+  const tsxOut = execSync('npx tsx -e "import { TEMPLATES } from \'./src/lib/templates-data\'; console.log(TEMPLATES.length)"', {
+    cwd: path.resolve(__dirname, '..'),
+    encoding: 'utf-8',
+  }).trim();
+  const realCount = parseInt(tsxOut, 10);
+
+  if (isNaN(realCount) || realCount <= 0) {
+    throw new Error('Unable to evaluate real TEMPLATES.length via tsx');
   }
-  return matches.length;
+  if (regexCount !== realCount) {
+    throw new Error(`Template count mismatch: regex parsed ${regexCount} but real TEMPLATES.length is ${realCount}`);
+  }
+  return realCount;
 }
 
 const TEMPLATE_COUNT = getRepoTemplateCount();
