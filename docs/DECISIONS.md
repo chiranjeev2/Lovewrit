@@ -265,15 +265,31 @@ This document records architectural, security, and verification decisions made d
    - `src/app/api/checkout/verify/route.ts` lines 182-187: checks `currency.toUpperCase() !== order.currency?.toUpperCase()`.
 4. **Single Referral Credit Per Order**:
    - `src/lib/referral-reward.ts` lines 30-36: checks `action: "REFERRAL_CREDITED:${currentOrder.id}"` before awarding credit.
-   - `src/lib/referral-reward.ts` lines 163-171: records audit log idempotency token.
 
+---
 
+## 13. Step 2: Input Validation, Rate Limits, and Public API Safety
 
+### API Inventory and Documentation
+- Documented the complete API surface of 14 endpoints in `docs/API_SURFACE.md` with HTTP methods, route paths, authentication models, rate limit thresholds, payload caps, and schemas.
 
+### Zero-Dependency Schema Validation & Generic Error Responses
+- Created `src/lib/api-safety.ts` containing pure TypeScript schema validators, payload size checkers (`checkPayloadSize`), sliding-window rate limit enforcement (`enforceRateLimit`), and standardized safe error handlers (`safeErrorResponse`, `safeServerErrorResponse`).
+- Never expose database stack traces, file system paths, or environment keys in error responses.
+- Added strict payload size guards (100KB-200KB for JSON endpoints, 15MB for multipart upload) checking `Content-Length` headers before processing bodies, returning HTTP 413.
+- Enforced strict field allowlists on public POST endpoints: `/api/guestbook` rejects unexpected extra fields, strips ASCII control characters (0x00-0x1F, 0x7F), and caps author name to 60 characters and messages to 1500 characters.
 
+### Magic Byte File Sniffing & Upload Hardening
+- Hardened `src/app/api/upload/route.ts` with binary magic byte validation (`detectMagicBytes`):
+  - Images: JPEG (`FF D8 FF`), PNG (`89 50 4E 47`), WEBP (`RIFF....WEBP`), HEIC/HEIF (`ftypheic`, `ftypmif1`).
+  - Audio: MP3 (`ID3`, `FF FB/F3/F2`), WAV (`RIFF....WAVE`), OGG (`OggS`), WEBM (`1A 45 DF A3`).
+  - Strictly rejects SVGs, XML, HTML, and script tags disguised as images to prevent XSS.
+  - Strictly rejects video formats disguised as images by inspecting binary headers.
+  - Replaces user-supplied filenames with nanoid identifiers and enforces that file paths resolve strictly inside `public/uploads/` to prevent directory traversal.
 
+### Rate Limiting
+- Persistent sliding window rate limiting via Prisma `RateLimitEvent` model. Returns HTTP 429 with `Retry-After` header when limits are reached.
 
-
-
-
-
+### Test Suite
+- Added `scripts/test-public-api-safety.mjs` verifying 31 assertions against live route handlers: malformed JSON, 10MB declared payloads, hostile unknown fields, script tags, SQL injection strings, path traversal slugs, invalid upload signatures, and rate limiting triggers.
+- Registered `public-api-safety` (30 minAssertions) in `scripts/run-all-qa.js`.

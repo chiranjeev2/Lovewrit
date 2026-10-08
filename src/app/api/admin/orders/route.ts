@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
   } catch (err: unknown) {
     console.error("Admin orders fetch error:", err);
     return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to load orders" },
+      { error: "Failed to load orders" },
       { status: 500 }
     );
   }

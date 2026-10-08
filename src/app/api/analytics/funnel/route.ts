@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { FunnelStep } from "@/lib/consent";
+import {
+  checkPayloadSize,
+  enforceRateLimit,
+  validateFunnelStepInput,
+  safeErrorResponse,
+  safeServerErrorResponse,
+} from "@/lib/api-safety";
 
 interface FunnelMetrics {
   visit: number;
@@ -28,8 +35,8 @@ export async function GET() {
     if (setting?.value) {
       try {
         metrics = JSON.parse(setting.value);
-      } catch (e) {
-        console.warn("Could not parse analytics_funnel setting:", e);
+      } catch {
+        // Fallback to default metrics
       }
     }
 
@@ -49,45 +56,69 @@ export async function GET() {
       },
     });
   } catch (err: unknown) {
-    console.error("Funnel analytics query error:", err);
-    return NextResponse.json({ error: "Failed to load funnel analytics" }, { status: 500 });
+    console.error("Funnel query note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const step: FunnelStep = body.step;
+    const sizeErr = checkPayloadSize(req, 20 * 1024);
+    if (sizeErr) return sizeErr;
 
-    if (!["visit", "customizer", "checkout", "paid"].includes(step)) {
-      return NextResponse.json({ error: "Invalid funnel step" }, { status: 400 });
+    const rateLimit = await enforceRateLimit(req, "FUNNEL", 60, 60);
+    if (!rateLimit.allowed && rateLimit.response) {
+      return rateLimit.response;
     }
 
-    const setting = await db.platformSetting.findUnique({
-      where: { key: "analytics_funnel" },
-    });
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return safeErrorResponse("Malformed JSON in request body", 400);
+    }
 
-    let current: FunnelMetrics = DEFAULT_METRICS;
-    if (setting?.value) {
-      try {
-        current = JSON.parse(setting.value);
-      } catch {
-        current = DEFAULT_METRICS;
+    const validation = validateFunnelStepInput(rawBody);
+    if (!validation.success || !validation.data) {
+      return safeErrorResponse(validation.error || "Invalid funnel step", 400);
+    }
+
+    const step: FunnelStep = validation.data.step;
+
+    // Atomically increment funnel count in transaction
+    const updatedMetrics = await db.$transaction(async (tx) => {
+      const setting = await tx.platformSetting.findUnique({
+        where: { key: "analytics_funnel" },
+      });
+
+      let current: FunnelMetrics = DEFAULT_METRICS;
+      if (setting?.value) {
+        try {
+          current = JSON.parse(setting.value);
+        } catch {
+          // Fallback to default metrics
+        }
       }
-    }
 
-    current[step] = (current[step] || 0) + 1;
-    current.lastUpdated = new Date().toISOString();
+      current[step] = (current[step] || 0) + 1;
+      current.lastUpdated = new Date().toISOString();
 
-    await db.platformSetting.upsert({
-      where: { key: "analytics_funnel" },
-      update: { value: JSON.stringify(current) },
-      create: { key: "analytics_funnel", value: JSON.stringify(current) },
+      await tx.platformSetting.upsert({
+        where: { key: "analytics_funnel" },
+        update: { value: JSON.stringify(current) },
+        create: { key: "analytics_funnel", value: JSON.stringify(current) },
+      });
+
+      return current;
     });
 
-    return NextResponse.json({ success: true, recordedStep: step });
+    return NextResponse.json({
+      success: true,
+      step,
+      count: updatedMetrics[step],
+    });
   } catch (err: unknown) {
-    console.error("Funnel analytics record error:", err);
-    return NextResponse.json({ error: "Failed to record funnel step" }, { status: 500 });
+    console.error("Funnel tracking note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }

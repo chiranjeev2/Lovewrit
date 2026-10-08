@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getClientIp, getDeviceFingerprintLite } from "@/lib/security";
+import {
+  checkPayloadSize,
+  enforceRateLimit,
+  validateReferralCreateInput,
+  safeErrorResponse,
+  safeServerErrorResponse,
+} from "@/lib/api-safety";
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,10 +28,7 @@ export async function GET(req: NextRequest) {
       });
 
       if (!record) {
-        return NextResponse.json(
-          { valid: false, message: "Invalid referral code" },
-          { status: 404 }
-        );
+        return safeErrorResponse("Invalid referral code", 404);
       }
 
       return NextResponse.json({
@@ -46,33 +50,36 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ records });
     }
 
-    return NextResponse.json({ error: "Missing code or email parameter" }, { status: 400 });
+    return safeErrorResponse("Missing code or email parameter", 400);
   } catch (err: unknown) {
-    console.error("Referral query error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Referral query failed" },
-      { status: 500 }
-    );
+    console.error("Referral query note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const preferredCode = body.preferredCode || body.code;
-    const { name, email } = body;
+    const sizeErr = checkPayloadSize(req, 50 * 1024);
+    if (sizeErr) return sizeErr;
 
-    if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return NextResponse.json({ error: "Name must be at least 2 characters" }, { status: 400 });
+    const rateLimit = await enforceRateLimit(req, "REFERRAL_CREATE", 10, 60);
+    if (!rateLimit.allowed && rateLimit.response) {
+      return rateLimit.response;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email || !emailRegex.test(email.trim())) {
-      return NextResponse.json({ error: "Valid email address required" }, { status: 400 });
+    let rawBody: unknown;
+    try {
+      rawBody = await req.json();
+    } catch {
+      return safeErrorResponse("Malformed JSON in request body", 400);
     }
 
-    const cleanEmail = email.trim().toLowerCase();
-    const cleanName = name.trim();
+    const validation = validateReferralCreateInput(rawBody);
+    if (!validation.success || !validation.data) {
+      return safeErrorResponse(validation.error || "Invalid referral data", 400);
+    }
+
+    const { name: cleanName, email: cleanEmail, preferredCode } = validation.data;
 
     // Abuse Protection: Max 3 active codes created per email
     const existingCount = await db.referralRecord.count({
@@ -87,8 +94,8 @@ export async function POST(req: NextRequest) {
 
     // Generate or clean preferred code
     let finalCode = "";
-    if (preferredCode && typeof preferredCode === "string" && preferredCode.trim().length >= 3) {
-      const candidate = preferredCode.trim().toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+    if (preferredCode && preferredCode.length >= 3) {
+      const candidate = preferredCode.slice(0, 12);
       const existing = await db.referralRecord.findUnique({ where: { code: candidate } });
       if (!existing && candidate.length >= 3) {
         finalCode = candidate;
@@ -128,37 +135,34 @@ export async function POST(req: NextRequest) {
         where: { key: `referral_owner:${finalCode}` },
         update: {
           value: JSON.stringify({
-            ownerEmail: cleanEmail,
-            creatorIp,
-            creatorFingerprint,
-            updatedAt: new Date().toISOString(),
+            ip: creatorIp,
+            fingerprint: creatorFingerprint,
+            email: cleanEmail,
+            createdAt: new Date().toISOString(),
           }),
         },
         create: {
           key: `referral_owner:${finalCode}`,
           value: JSON.stringify({
-            ownerEmail: cleanEmail,
-            creatorIp,
-            creatorFingerprint,
+            ip: creatorIp,
+            fingerprint: creatorFingerprint,
+            email: cleanEmail,
             createdAt: new Date().toISOString(),
           }),
         },
       });
-    } catch (err) {
-      console.warn("Could not save referral owner audit metadata:", err);
+    } catch {
+      // Non-blocking setting write
     }
 
     return NextResponse.json({
       success: true,
-      record: newRecord,
-      message: `Your referral code ${newRecord.code} has been created!`,
+      code: newRecord.code,
+      ownerName: newRecord.ownerName,
+      message: `Your share code is ${newRecord.code}! Give friends ₹49 off, earn ₹49 credits.`,
     });
   } catch (err: unknown) {
-    console.error("Referral creation error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to create referral code" },
-      { status: 500 }
-    );
+    console.error("Referral creation note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }
-

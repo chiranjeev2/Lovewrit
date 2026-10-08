@@ -1,14 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getClientIp } from "@/lib/security";
+import {
+  checkPayloadSize,
+  safeErrorResponse,
+  safeServerErrorResponse,
+} from "@/lib/api-safety";
 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const slug = searchParams.get("slug")?.trim();
 
-    if (!slug) {
-      return NextResponse.json({ error: "Missing slug parameter" }, { status: 400 });
+    if (!slug || !/^[a-zA-Z0-9_\-]+$/.test(slug) || slug.length > 120) {
+      return safeErrorResponse("Missing or invalid slug parameter", 400);
     }
 
     // Read stored atomic count or initialize with default 1
@@ -26,18 +31,27 @@ export async function GET(req: NextRequest) {
       alreadyLit,
     });
   } catch (err: unknown) {
-    console.error("Failed to get candle count:", err);
+    console.error("Candle count query note:", err instanceof Error ? err.name : "Unknown");
     return NextResponse.json({ count: 1, alreadyLit: false });
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
-    const slug = (body.slug || "").trim();
+    const sizeErr = checkPayloadSize(req, 50 * 1024);
+    if (sizeErr) return sizeErr;
 
-    if (!slug) {
-      return NextResponse.json({ error: "Missing slug parameter" }, { status: 400 });
+    let body: Record<string, unknown>;
+    try {
+      body = await req.json();
+    } catch {
+      return safeErrorResponse("Malformed JSON in request body", 400);
+    }
+
+    const slug = typeof body.slug === "string" ? body.slug.trim() : "";
+
+    if (!slug || !/^[a-zA-Z0-9_\-]+$/.test(slug) || slug.length > 120) {
+      return safeErrorResponse("Missing or invalid slug parameter", 400);
     }
 
     const clientIp = getClientIp(req);
@@ -60,7 +74,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // 2. Server IP Rate Limit: Max 25 candle lights per IP per tribute per 24 hours (raised for families/shared networks)
+    // 2. Server IP Rate Limit: Max 25 candle lights per IP per tribute per 24 hours
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const ipLightsCount = await db.rateLimitEvent.count({
       where: {
@@ -70,14 +84,19 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (ipLightsCount >= 25 && clientIp !== "127.0.0.1") {
-      // Calm response without harsh errors
-      return NextResponse.json({
-        success: true,
-        count: currentCount,
-        alreadyLit: true,
-        message: "Sacred candles have already been kindled from this network today.",
-      });
+    if (ipLightsCount >= 25) {
+      return NextResponse.json(
+        {
+          success: true,
+          count: currentCount,
+          alreadyLit: true,
+          message: "Sacred candles have already been kindled from this network today.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": "86400" },
+        }
+      );
     }
 
     // 3. Atomically increment the counter via transaction
@@ -117,15 +136,12 @@ export async function POST(req: NextRequest) {
       maxAge: 24 * 60 * 60, // 24 hours
       path: "/",
       sameSite: "lax",
-      httpOnly: false, // Accessible to client JavaScript
+      httpOnly: false,
     });
 
     return response;
   } catch (err: unknown) {
-    console.error("Candle lighting error:", err);
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : "Failed to record candle lighting" },
-      { status: 500 }
-    );
+    console.error("Candle kindling note:", err instanceof Error ? err.name : "Unknown");
+    return safeServerErrorResponse();
   }
 }

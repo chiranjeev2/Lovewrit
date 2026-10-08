@@ -100,6 +100,7 @@ const EXPECTED_SUITE_IDS = [
   'pack-devotional',
   'growth-phase-c1',
   'policy-compliance',
+  'public-api-safety',
 ];
 
 const SUITE_REGISTRY = [
@@ -459,6 +460,23 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (11 non-negotiables enforced)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Policy compliance suite failed' };
+    },
+  },
+  {
+    id: 'public-api-safety',
+    name: 'Public API Safety & Hostile Input Suite',
+    command: 'node scripts/test-public-api-safety.mjs',
+    requiresServer: false,
+    minAssertions: 30,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 30) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (hostile input, rate limits, schema safety)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Public API safety suite failed or assertions below minimum' };
     },
   },
 ];
