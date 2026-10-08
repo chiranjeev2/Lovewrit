@@ -105,7 +105,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Page not found" }, { status: 404 });
     }
 
-    const requireApproval = order.pageData.requireGuestbookApproval;
+    const isMemorial = order.occasion === "memorial" || order.templateId === "sacred-tribute" || order.templateId === "memorial-candle" || order.templateId === "condolence-letter";
+    const requireApproval = Boolean(order.pageData.requireGuestbookApproval || isMemorial);
     const initialStatus = requireApproval ? "PENDING" : "APPROVED";
 
     const parsedHeadcount = Math.max(1, Math.min(50, parseInt(String(headcount), 10) || 1));

@@ -2684,11 +2684,6 @@ export default function CreateLovewritPage({
                 </div>
                 <div className="text-right">
                   <div className="flex items-baseline justify-end space-x-2">
-                    {isDiscounted && originalDisplayPrice && (
-                      <span className="text-sm font-semibold text-neutral-500 line-through">
-                        {symbol}{originalDisplayPrice}
-                      </span>
-                    )}
                     <span className="text-2xl font-bold text-white">
                       {symbol}{displayPrice}
                     </span>

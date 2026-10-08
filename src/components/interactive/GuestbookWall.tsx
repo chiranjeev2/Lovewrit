@@ -364,7 +364,7 @@ export default function GuestbookWall({
 
         <div className="flex items-center justify-between pt-1">
           <span className="text-[10px] text-neutral-400">
-            {requireApproval
+            {isMemorial || requireApproval
               ? "🔒 Entries are reviewed before displaying publicly."
               : "Publicly visible to visitors of this page."}
           </span>

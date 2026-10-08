@@ -99,6 +99,7 @@ const EXPECTED_SUITE_IDS = [
   'pack-kitty',
   'pack-devotional',
   'growth-phase-c1',
+  'policy-compliance',
 ];
 
 const SUITE_REGISTRY = [
@@ -442,6 +443,22 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions verified` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Phase C1 Growth suite failed' };
+    },
+  },
+  {
+    id: 'policy-compliance',
+    name: 'Policy Compliance Suite',
+    command: 'node scripts/test-policy-compliance.mjs',
+    requiresServer: false,
+    minAssertions: 18,
+    parse: (output, exitCode) => {
+      const match = output.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
+      const passed = match ? parseInt(match[1], 10) : 0;
+      const total = match ? parseInt(match[2], 10) : 0;
+      if (exitCode === 0 && match && passed >= 18) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (11 non-negotiables enforced)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Policy compliance suite failed' };
     },
   },
 ];

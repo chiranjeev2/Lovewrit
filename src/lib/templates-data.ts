@@ -746,7 +746,7 @@ export const TEMPLATES: TemplateDefinition[] = [
     ],
     sampleSender: "Tariq & Fatima Khan",
     sampleRecipient: "Respected Family & Friends",
-    sampleMessage: "By the grace and mercy of Allah (SWT), we have been blessed with a healthy baby boy. You are warmly invited to the Aqeeqah ceremony and lunch.",
+    sampleMessage: "By the grace and mercy of Allah (SWT), we have been blessed with a healthy baby. You are warmly invited to the Aqeeqah ceremony and lunch.",
     sampleLocation: "Al-Noor Banquet Lounge, Jubilee Hills",
     sampleEventDate: "Sunday, 8 November 2026",
     sampleEventTime: "1:00 PM",
