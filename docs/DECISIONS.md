@@ -390,3 +390,26 @@ This document records architectural, security, and verification decisions made d
 ### Test Suite
 - Added `scripts/test-accessibility-and-mobile.mjs` verifying 11 WCAG 2.1 assertions.
 - Registered `a11y-mobile` (10 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 17. Step 6: Performance, Static Assets, and Bundle Optimization
+
+### Asset Inventory in `public/`
+- Audited all root static files in `public/`.
+- All static SVGs (`icon.svg`, `file.svg`, `next.svg`, `vercel.svg`, `window.svg`, `globe.svg`) are ~1 KB or smaller. Zero static assets exceed the 300 KB budget.
+- All files > 300 KB in `public/` are dynamic buyer photo uploads generated during test runs under `public/uploads/` (such as JPEG/PNG test fixtures).
+
+### Production Build & Route Bundles
+- Executed `npm run build` using Next.js 16 (Turbopack).
+- Build completed cleanly with 0 errors in 2.3 seconds across all 26 static and dynamic routes.
+- Prerendered static pages: `/`, `/_not-found`, `/admin`, `/checkout/success`, `/creators`, `/faq`, `/privacy`, `/terms`.
+- Server-rendered dynamic routes: `/c/[slug]`, `/p/[slug]`, `/create/[templateId]`, `/r/[code]`, and API routes.
+
+### Below-the-Fold Lazy Loading & Scene Engine
+- In `SceneContainer`, inactive scenes are handled with pointer-events-none or sequential activation to prevent unnecessary canvas re-renders and layout thrashing.
+- Verified heavy dependencies (such as PDF generation via jsPDF and rasterization canvases) are executed on-demand only when export actions are triggered.
+
+### Test Suite
+- Added `scripts/test-performance-and-bundles.mjs` verifying asset size limits and build manifests.
+- Registered `performance-bundles` (5 minAssertions) in `scripts/run-all-qa.js`.

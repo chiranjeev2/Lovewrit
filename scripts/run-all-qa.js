@@ -104,6 +104,7 @@ const EXPECTED_SUITE_IDS = [
   'security-headers',
   'error-empty-states',
   'a11y-mobile',
+  'performance-bundles',
 ];
 
 const SUITE_REGISTRY = [
@@ -531,6 +532,23 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (WCAG 2.1 contrast, reduced motion, focus-visible, 44px tap targets)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Accessibility & mobile standards audit failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'performance-bundles',
+    name: 'Performance & Bundle Efficiency Audit',
+    command: 'node scripts/test-performance-and-bundles.mjs',
+    requiresServer: false,
+    minAssertions: 5,
+    parse: (output, exitCode) => {
+      const pMatch = output.match(/PASSED ASSERTIONS:\s*(\d+)/i);
+      const tMatch = output.match(/TOTAL ASSERTIONS:\s*(\d+)/i);
+      const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
+      const total = tMatch ? parseInt(tMatch[1], 10) : 0;
+      if (exitCode === 0 && passed >= 5) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (static assets < 300KB, build manifest, scene efficiency)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Performance & bundle audit failed or assertions below minimum' };
     },
   },
 ];
