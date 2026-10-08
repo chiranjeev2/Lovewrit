@@ -1,142 +1,138 @@
 # Lovewrit System Handover & Technical Architecture State
 
-**Last Updated:** October 2026 (Post-Razorpay Migration & Hardening Pass)  
-**Target Branch:** `main` (Production Ready)
+**Last Updated:** October 2026 (QA Integrity & Payments Hardening)  
+**Target Branch:** `main` (Production Canonical)
 
 ---
 
 ## 1. Executive Summary & Purpose
 
 Lovewrit is a high-craft platform for personal and devotional digital keepsakes. It allows buyers to create, personalize, preview, and share:
-- **Digital Greeting Cards** (`/c/[slug]`): Interactive folding cards with envelopes, bilingual messages, sacred motifs, photo reveals, and audio notes.
-- **Interactive Web Keepsakes** (`/p/[slug]`): Immersive multi-scene web experiences featuring music, proposal mechanics, photo masonry, milestone timelines, memory candles, and interactive guestbooks.
-- **Creation Studio** (`/create/[templateId]`): Real-time live customizer supporting 20 real templates across religious, cultural, romantic, and milestone occasions.
+- **Digital Greeting Cards** (`/c/[slug]`): Interactive folding keepsake cards with envelope reveals, bilingual typography, sacred motifs, photo keepsakes, and audio voice messages.
+- **Interactive Web Keepsakes** (`/p/[slug]`): Immersive multi-scene interactive web pages featuring background music, proposal game mechanics, milestone photo timelines, sacred memory candles, and guestbooks.
+- **Creation Studio** (`/create/[templateId]`): Mobile-first 375px responsive customizer covering all 21 templates in the repository across romantic, celebratory, memorial, and devotional occasions.
 
 ---
 
 ## 2. Technology Stack
 
-- **Framework**: Next.js 16 (App Router, Server Components, Route Handlers).
-- **Language**: TypeScript 5 (Strict mode, zero lint errors, zero ts-ignore).
-- **Styling**: Tailwind CSS 4 with custom emotion-tailored color palettes.
-- **Animation**: Framer Motion 13 + Canvas Confetti.
-- **Database & ORM**: Prisma ORM with SQLite in development and PostgreSQL (Supabase) in production.
-- **Payments**: Razorpay Standard Checkout & HMAC-SHA256 Server Webhooks.
-- **Export Engine**: Browser-rendered PDF rasterization (300 DPI print-ready), PNG, and JPG exports.
+- **Framework**: Next.js 16 (App Router, React Server Components, Route Handlers, Turbopack).
+- **Database & ORM**: Prisma ORM with SQLite (`dev.db`) in local development and PostgreSQL (Supabase with connection pooling) in production.
+- **Payments**: Razorpay Standard Checkout & HMAC-SHA256 Server Webhook processing.
+- **Hosting**: Vercel staging (`*.vercel.app`) with custom production domain planned on/after 21 Oct 2026.
+- **Language & Styling**: TypeScript 5 (strict mode, zero warnings, zero ts-ignore) and Tailwind CSS 4 with emotion-based palettes.
+- **Export Pipeline**: Real-browser Puppeteer print-ready (300 DPI) PDF rasterization, PNG, and JPG exports.
 
 ---
 
-## 3. Branch & Repository State
-
-- `feature/scene-engine`: Fully merged into `main`. Delivers dynamic multi-scene web keepsake rendering with fallback modes for reduced motion and legacy orders.
-- `feature/razorpay`: Fully merged into `main`. Replaced legacy Stripe packages with native Razorpay order creation, client modal integration, HMAC payment verification, and webhook handlers.
-- `main`: Canonical production branch with all migrations applied and all quality verification gates green.
-
----
-
-## 4. STRICT NON-NEGOTIABLES (Inviolable Product Rules)
+## 3. STRICT NON-NEGOTIABLES (Inviolable Product Rules)
 
 The following core rules are enforced across all components, APIs, and tests, and MUST NOT be bypassed or weakened:
 
-1. **Sacred Memorial Separation (Zero Commercialization)**:
-   - Memorial, tribute, and condolence pages (`isMemorial = true`) MUST NEVER display commercial banners, reply CTAs, upsell prompts, 50% discount offers, or celebratory confetti.
-   - Sacred motifs (Om, Bismillah, Ek Onkar, Cross) must only render on their respective culturally authentic templates.
-2. **Server-Side Pricing Authority**:
-   - Client-sent `amount` or `currency` parameters in checkout payloads are strictly ignored. The server computes the order total exclusively via `calculateOrderTotal` from `src/lib/currency.ts`.
-3. **Zero Hardcoded Secrets & Zero Secret Logging**:
-   - There must be no fallback, hardcoded, or default `ADMIN_MASTER_KEY` anywhere in source code, tests, documentation, or git history.
-   - All legacy default keys are permanently blacklisted by SHA-256 hash.
-   - Secret keys and connection strings MUST NEVER be logged, echoed, or included in API error responses.
-4. **Production Simulation Guard**:
-   - Simulated sessions (`sim_*`) are strictly forbidden when `NODE_ENV === "production"`. Any simulation attempt in production fails closed immediately with HTTP 500 / 403.
-5. **Timing-Safe Cryptographic Verification**:
-   - All payment signatures, webhook signatures, and admin master key comparisons use `crypto.timingSafeEqual` with pre-hashed equal-length buffers to eliminate timing side-channels.
-6. **Mobile Viewport Containment**:
-   - All customizer, card, and published pages must contain layout cleanly within 375px mobile viewports without horizontal scrollbars or overflow.
+1. **no video anywhere**: Lovewrit exclusively uses lightweight animated scenes, canvas effects, SVG, and high-resolution rasterized typography.
+2. **no fake reviews, counters, social proof or strike-through discounts**: All displayed numbers must reflect real database records.
+3. **devotional templates faith-neutral with no figurative depictions in finales**: Sacred devotional keepsakes use authentic scriptural verses, sacred motifs (Om, Bismillah, Ek Onkar, Cross), and respectful abstract light effects without figurative anthropomorphic depictions.
+4. **no baby-sex/gender reveal anywhere (PCPNDT Act)**: Prenatal sex determination or gender reveal mechanics are strictly prohibited in compliance with Indian law. Godh bharai keepsakes celebrate maternal health and family blessing only.
+5. **tribute/memorial pages fully unbranded with no ads, promo, referral, banners or countdowns and a pre-moderated wall**: Sacred memorial and tribute keepsakes (`isMemorial = true`) maintain solemn dignity with zero platform branding, zero upselling, zero banners, and mandatory host approval before guestbook entries appear publicly.
+6. **RSVP only on event/invite occasions**: RSVP forms and guest headcount tracking are strictly scoped to invitation occasions (`isEventInviteOccasion`).
+7. **IP-based region detection with no blocking geolocation prompt**: Currency and regional localization are determined silently via server-side edge headers (`x-vercel-ip-country`, `cf-ipcountry`) without interrupting the user with browser location permission popups.
+8. **Lovewrit never processes tips**: Tip UPI IDs or PayPal usernames are rendered as direct buyer-to-recipient peer links; platform takes 0% cut and does not process tip transactions.
+9. **no friends-list/encrypted-chat feature**: Keepsakes are focused private artifacts shared via direct link, not a social network or instant messaging client.
+10. **invite "pressure to attend" is warm emotional pull, not guilt**: Invitation copy and event reminders focus on celebration and togetherness rather than guilt-inducing countdowns.
+11. **real reviews only**: Testimonials and reviews must come from real verified purchasers.
 
 ---
 
-## 5. Payments Architecture & Razorpay Integration (Updated)
+## 4. Multi-Currency Pricing Architecture
 
-### Route Handlers
-- **`POST /api/checkout`**: Resolves geo/currency, calculates price server-side, creates database `Order`, and calls `razorpay.orders.create`. If Razorpay rejects a non-INR currency, error details are logged server-side and returned cleanly to the buyer without silently falling back to INR.
-- **`POST /api/checkout/verify`**: Verifies HMAC-SHA256 signature (`orderId|paymentId`), checks for `razorpayOrderId`, `amount`, and `currency` mismatches against the database order, updates status to `PAID`, and triggers referral crediting idempotently.
-- **`GET /api/checkout/verify`**: Status check endpoint supporting order lookup by slug or session ID, blocked for `sim_` sessions in production.
-- **`POST /api/webhooks/razorpay`**: Validates webhook HMAC signature against raw request body (`req.text()`). Handles `payment.captured` and `order.paid` dual events idempotently, crediting referrers exactly once. Unhandled events return HTTP 200 `{ received: true }` with no state modification.
+| Occasion / Product Tier | INR (Asia & Africa) | USD (Americas) | EUR (Europe) | GBP (United Kingdom) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Digital Card (Self-Service)** | ₹49 | $2 | €2 | £2 |
+| **Published Page (Self-Service)** | ₹99 | $5 | €5 | £5 |
+| **Custom Handcrafted Card** | ₹149 | $8 | €8 | £8 |
+| **Custom Handcrafted Page** | ₹499 | $25 | €25 | £25 |
+| **Emergency Rush Card (12h)** | ₹449 | $22 | €22 | £22 |
+| **Emergency Rush Page (12h)** | ₹1,459 | $75 | €75 | £75 |
+| **Card + Page Bundle Add-on** | +₹49 | +$3 | +€3 | +£3 |
+| **Referral Credit (Fixed)** | ₹49 | $2 | €2 | £2 |
+| **Regift Reply Discount** | 50% Off | 50% Off | 50% Off | 50% Off |
 
-### Multi-Currency Pricing Engine
-- Supported regions: `asia_africa` (INR / ₹), `americas` (USD / $), `europe` (EUR / €), `uk` (GBP / £).
-- Tiers: Self-Service (₹49 Card, ₹99 Page), Custom Handcrafted (₹149 Card, ₹499 Page), Emergency Rush (₹449 Card, ₹1,459 Page), Bundle Add-on (+₹49 / +$3).
-- Referral discounts apply fixed credit matching the Digital Card price (₹49 / $2 / €2 / £2).
-- Verified 50% Regift reply perk applies half-price discounts to recipients replying to a paid keepsake.
-
----
-
-## 6. Admin Authentication & Keys (Updated)
-
-- **Owner-Chosen Master Key**: Set via interactive CLI script `npm run admin:set-key` (`scripts/set-admin-secrets.mjs`) with masked input, double confirmation, and minimum 20-character enforcement.
-- **Blacklist Enforcement**: Keys matching blacklisted legacy default hashes are refused.
-- **Session Security**: Generates random 256-bit `ADMIN_SESSION_SECRET`. Session tokens use HMAC-SHA256 timestamps stored in strict `httpOnly`, `sameSite=strict`, `secure` cookies (`lovewrit_admin_session`).
-- **Brute-Force Rate Limiting**: Max 5 failed attempts per 15 minutes per IP/device identity (HTTP 429).
-- **Fail-Closed**: Unconfigured or invalid keys return HTTP 503 / 401 with zero leak of server secrets.
+### Pricing & Refund Policies:
+- **Server Authority**: Order total is computed strictly server-side by `calculateOrderTotal` (`src/lib/currency.ts`). Client-sent `amount` or `currency` parameters in checkout payloads are ignored.
+- **No-Refund Policy**: Digital keepsakes and custom handcrafted services operate under a strict no-refund policy once rendered, personalized, or delivered.
+- **Domain Launch Date**: Custom production domain deployment is planned on/after 21 Oct 2026.
 
 ---
 
-## 7. Keepsake Engine & Interactive Features
+## 5. Mandatory Environment Variables
 
-- **20 Real Templates**: Spanning wedding, anniversary, proposal, birthday, godh bharai, memorial, kitty party, Jagrata, Sikh Ardas, Muslim Dua, and Christian blessings.
-- **Scene Engine**: Modular multi-scene player (`src/components/scene-engine/`) rendering interactive openers, blessing steps, milestone photo galleries, and personalized finales.
-- **Memory Candle**: Atomic interactive candle lighting with concurrent abuse protection and live counts.
+In production (`NODE_ENV === "production"`), the server startup hook in [`src/instrumentation.ts`](file:///d:/projects/lovewrit/src/instrumentation.ts) strictly validates that the following 7 environment variable NAMES are defined (failing closed on boot with zero secret leakage if missing):
 
----
-
-## 8. Database & Migrations (Updated)
-
-- **Prisma Schema**: 8 models (`Order`, `CardData`, `PageData`, `RecipientReaction`, `ReferralRecord`, `GuestbookEntry`, `RateLimitEvent`, `PlatformSetting`) defined in [`prisma/schema.prisma`](file:///d:/projects/lovewrit/prisma/schema.prisma).
-- **Prisma Migrations**: Managed via `prisma/migrations/20261007000000_init_schema/migration.sql`.
-- **Automated Vercel Pipeline**: `npm run build` runs `prisma generate && prisma migrate deploy && next build`.
-- **PostgreSQL / Supabase Ready**: Documented in [`docs/DATABASE.md`](file:///d:/projects/lovewrit/docs/DATABASE.md) with connection pooler and direct URL configurations.
+1. `DATABASE_URL`: Connection string for PostgreSQL database (Supabase pooler).
+2. `RAZORPAY_KEY_ID`: Server-side Razorpay Key ID for API requests.
+3. `RAZORPAY_KEY_SECRET`: Server-side Razorpay Key Secret for orders and HMAC signatures.
+4. `RAZORPAY_WEBHOOK_SECRET`: Secret configured in Razorpay Dashboard for webhook payload signatures.
+5. `NEXT_PUBLIC_RAZORPAY_KEY_ID`: Client-safe Razorpay Key ID for initializing the checkout modal.
+6. `ADMIN_MASTER_KEY`: Owner-chosen master admin passphrase (minimum 20 characters).
+7. `ADMIN_SESSION_SECRET`: Cryptographically random 256-bit hex secret for signing admin session cookies.
 
 ---
 
-## 9. Startup Environment Verification (Updated)
+## 6. Admin Authentication & Key Security
 
-- **Startup Hook**: [`src/instrumentation.ts`](file:///d:/projects/lovewrit/src/instrumentation.ts) calls `validateEnv()` on process boot.
-- **Production Validation**: In `NODE_ENV === "production"`, validates all 7 mandatory variables: `DATABASE_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `ADMIN_MASTER_KEY`, `ADMIN_SESSION_SECRET`.
-- **Error Safety**: Fails closed listing variable NAMES ONLY.
-- **Template**: Documented in [`.env.example`](file:///d:/projects/lovewrit/.env.example) with empty values and single comment lines.
-
----
-
-## 10. Guestbook & Moderation
-
-- **Public Posting**: `POST /api/guestbook` open to all guests with name, RSVP status, headcount, and blessings.
-- **Public Viewing**: `GET /api/guestbook` displays approved entries and aggregates RSVP headcount statistics.
-- **Host Moderation**: Hosts approve or delete entries using `order.adminToken` via `PATCH /api/guestbook` without requiring platform admin privileges.
-- **Community Moderation**: Any visitor can flag offensive notes (`action: "FLAG"`).
-- **Master Admin Session**: Master admins can moderate entries platform-wide.
+- **Owner-Configured Secret**: Configured locally via `npm run admin:set-key` (`scripts/set-admin-secrets.mjs`) with masked input, double confirmation, minimum 20-character length, and automatic generation of `ADMIN_SESSION_SECRET`.
+- **Git History Notice**: The old default master key was present in historical Git commits prior to `2fc055e`. The project owner MUST choose a fresh, unique passphrase and rotate any historical credentials. The old key hash is permanently blacklisted in `src/lib/admin-auth.ts`.
+- **Timing-Safe Verification**: All key comparisons utilize `crypto.timingSafeEqual` with pre-hashed SHA-256 buffers.
+- **Session Tokens**: Authenticated sessions set `lovewrit_admin_session` cookies with `HttpOnly`, `SameSite=Strict`, and `Secure` attributes.
+- **Rate Limiting**: Failed admin login attempts are rate-limited to 5 attempts per 15 minutes per IP (HTTP 429).
+- **Fail-Closed**: Unconfigured or invalid keys fail closed with HTTP 503 / 401 without leaking server secret strings.
 
 ---
 
-## 11. Production Operations & Runbook (Updated)
+## 7. Two-Tier Moderation Architecture
 
-Detailed step-by-step operational instructions for deploying to Vercel and configuring Supabase and Razorpay are documented in [`docs/DEPLOY_CHECKLIST.md`](file:///d:/projects/lovewrit/docs/DEPLOY_CHECKLIST.md).
+1. **Host Moderation (`order.adminToken`)**:
+   - Buyers receive an unguessable 16-character `adminToken` in their order creation payload.
+   - Hosts use this token via `PATCH /api/guestbook` to approve (`APPROVE`) or delete (`DELETE`) entries on their own published page without needing access to the master platform admin dashboard.
+2. **Master Platform Admin (`lovewrit_admin_session`)**:
+   - Platform owners authenticate via `/api/admin/login` to access the master admin queue (`/admin`), view all orders (`/api/admin/orders`), toggle rush delivery status, and moderate any content platform-wide.
+3. **Public Pre-Moderation**:
+   - Guestbook submissions on memorial/tribute pages are held in `PENDING` status until approved by the host. Any public visitor can flag inappropriate entries (`action: "FLAG"`).
 
-### Key Commands:
-```bash
-# Configure owner secrets locally
-npm run admin:set-key
+---
 
-# Run comprehensive QA test suite
-npm run qa
+## 8. Verification Status: Logs vs. Real Deployments
 
-# Run Prisma migrations locally
-npm run db:migrate
+### Verified by Automated Logs:
+The following suites are verified with clean exits (code 0) in automated QA logs (`qa-logs/`):
+- **Static Typing**: `npx tsc --noEmit` - 0 errors (`qa-logs/step9-tsc.log`).
+- **Code Linting**: `npx eslint . --max-warnings 0` - 0 warnings, 0 errors (`qa-logs/step9-eslint.log`).
+- **Build**: `npm run build` - Prisma client generated, migrations deployed, 26/26 pages statically/dynamically generated (`qa-logs/step9-build.log`).
+- **Dependency Audit**: `npm audit --omit=dev` - 0 vulnerabilities in production dependencies (`qa-logs/step8-audit-prod-clean.log`).
+- **Pre-Merge QA Suites**: `npm run qa` - All 21 test suites passed dynamically:
+  1. TypeScript Typecheck (0 errors)
+  2. Currency Matrix Audit (86 / 86 assertions across 4 regions)
+  3. Guest Security & Sanitization (10 / 10 assertions)
+  4. Client IP Trust Model (13 / 13 assertions)
+  5. Simulated Session Production Guard (3 / 3 assertions)
+  6. Client Secret Leak Audit (5 / 5 assertions)
+  7. Startup Environment Verification (17 / 17 assertions)
+  8. Razorpay Flow & Security Suite (71 / 71 assertions)
+  9. Admin Master Key Security (28 / 28 assertions)
+  10. Guestbook Auth & Admin Security (18 / 18 assertions)
+  11. Referral & Candle Anti-Abuse (24 / 24 assertions)
+  12. Browser Exports (PDF/PNG/JPG) (4 / 4 exports)
+  13. PDF Rasterization & Sharpness (2 / 2 pages non-blank, DPI >= 150)
+  14. Layout & Accessibility Audit (252 / 252 checks across 21 templates x 3 page types x 4 viewports)
+  15. Studio Customizer 375px & Order Flow (21 / 21 templates verified)
+  16. B1 Birthday Pack (18 / 18 assertions)
+  17. B2 Godhbharai Pack (16 / 16 assertions)
+  18. B3 Sacred Tribute Pack (23 / 23 assertions)
+  19. B4 Kitty Celebration Pack (16 / 16 assertions)
+  20. B5 Religious Devotional Pack (20 / 20 assertions)
+  21. Phase C1 Growth Suite (15 / 15 assertions)
 
-# Apply migrations to production database
-npm run db:deploy
-
-# Full production build
-npm run build
-```
-
+### Unverified / Production Limitations:
+- **Real Razorpay Payments**: Gateway orders, signatures, and webhooks have been verified against simulated client HTTP boundaries. No live financial credit card or UPI transaction has been charged against a live merchant account.
+- **Real Vercel Deployment**: Builds have been verified locally with Turbopack and staging flags; no live deployment to a production Vercel project or Supabase PostgreSQL instance has been executed.
+- **Domain Setup**: Custom domain registration and DNS propagation are planned on/after 21 Oct 2026.
