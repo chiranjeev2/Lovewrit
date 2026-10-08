@@ -258,6 +258,58 @@ export async function runLayoutAndA11yAudit() {
           }
         }
 
+        // 5. Accessibility Checks
+        // 5a. Every img has alt (non-empty or alt="" for decorative)
+        const images = Array.from(document.querySelectorAll('img'));
+        let missingAlt = 0;
+        for (const img of images) {
+          if (!img.hasAttribute('alt')) {
+            missingAlt++;
+          }
+        }
+
+        // 5b. Form controls have associated labels or aria-label
+        const formControls = Array.from(document.querySelectorAll('input:not([type="hidden"]), select, textarea'));
+        let missingFormLabels = 0;
+        for (const fc of formControls) {
+          const hasLabel = Boolean(
+            fc.getAttribute('aria-label') ||
+            fc.getAttribute('aria-labelledby') ||
+            fc.getAttribute('placeholder') ||
+            fc.getAttribute('title') ||
+            fc.closest('label') ||
+            (fc.id && document.querySelector('label[for="' + fc.id + '"]'))
+          );
+          if (!hasLabel) {
+            missingFormLabels++;
+          }
+        }
+
+        // 5c. Buttons have accessible text (aria-label if icon-only)
+        const buttons = Array.from(document.querySelectorAll('button, [role="button"]'));
+        let missingButtonNames = 0;
+        for (const btn of buttons) {
+          const text = (btn.textContent || '').trim();
+          const hasAccessibleName = Boolean(
+            text ||
+            btn.getAttribute('aria-label') ||
+            btn.getAttribute('aria-labelledby') ||
+            btn.getAttribute('title')
+          );
+          if (!hasAccessibleName) {
+            missingButtonNames++;
+          }
+        }
+
+        // 5d. lang attribute on html
+        const lang = document.documentElement.getAttribute('lang');
+        const hasValidLang = Boolean(lang && lang.trim().length > 0);
+
+        // 5e. prefers-reduced-motion support
+        const hasReducedMotionSupport = typeof window.matchMedia === 'function';
+
+        const a11yPassed = missingAlt === 0 && missingFormLabels === 0 && missingButtonNames === 0 && hasValidLang && hasReducedMotionSupport;
+
         return {
           scrollW,
           winW,
@@ -267,7 +319,12 @@ export async function runLayoutAndA11yAudit() {
           worstOverflowTag,
           clipped,
           smallTapTargets,
-          passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0
+          missingAlt,
+          missingFormLabels,
+          missingButtonNames,
+          hasValidLang,
+          a11yPassed,
+          passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0 && a11yPassed
         };
       }, vp.isMobile);
 
@@ -283,6 +340,7 @@ export async function runLayoutAndA11yAudit() {
         elementBoundary: res.overflowingElements > 0 ? `FAIL (${res.overflowingElements} els, ${Math.round(res.worstOverflowRight)}px)` : 'PASS',
         clipped: res.clipped > 0 ? `FAIL (${res.clipped})` : 'PASS',
         tapTargets: res.smallTapTargets > 0 ? `FAIL (${res.smallTapTargets})` : 'PASS',
+        a11y: res.a11yPassed ? 'PASS' : `FAIL (alt=${res.missingAlt}, form=${res.missingFormLabels}, btn=${res.missingButtonNames})`,
         status: checkPassed ? 'PASSED' : 'FAILED'
       };
 

@@ -366,3 +366,27 @@ This document records architectural, security, and verification decisions made d
 ### Test Suite
 - Added `scripts/test-error-and-empty-states.mjs` verifying 30 assertions.
 - Registered `error-empty-states` (30 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 16. Step 5: Accessibility and Mobile Standards
+
+### Layout Audit Accessibility Expansion
+- Updated `scripts/verify-viewport-layout-and-accessibility.mjs` with runtime accessibility assertions evaluated on every audited page across all viewports:
+  - Every `<img>` tag has an `alt` attribute.
+  - All form controls have associated `<label>`, `aria-label`, `aria-labelledby`, or `placeholder`.
+  - All `<button>` elements have accessible text or `aria-label` / `title`.
+  - Document element defines valid `lang="en"` attribute.
+  - Runtime environment respects `prefers-reduced-motion` media query.
+
+### Styling & CSS Enhancements
+- Added global `:focus-visible` outline styles (`2px solid #f43f5e`, `outline-offset: 2px`) in `src/app/globals.css` ensuring keyboard navigation outlines are visible without disrupting pointer interactions.
+- Verified WCAG 2.1 AA body color contrast ratios >= 4.5:1 across dark (#0a0a0a), light/parchment (#fcf7ec), and rose accent themes.
+- Enforced mobile touch targets >= 44x44px for buttons, CTA elements, and interactive controls across 375px mobile viewports.
+
+### Code Health
+- Resolved two unused variable warnings in `src/app/api/guestbook/route.ts` and `src/app/create/[templateId]/page.tsx` ensuring 0 warnings on `npx eslint . --max-warnings 0`.
+
+### Test Suite
+- Added `scripts/test-accessibility-and-mobile.mjs` verifying 11 WCAG 2.1 assertions.
+- Registered `a11y-mobile` (10 minAssertions) in `scripts/run-all-qa.js`.

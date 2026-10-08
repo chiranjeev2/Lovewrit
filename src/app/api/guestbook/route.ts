@@ -43,7 +43,6 @@ export async function GET(req: NextRequest) {
       orderBy: { createdAt: "desc" },
     });
 
-    const approvedEntries = entries.filter((e) => e.status === "APPROVED");
     const validEntries = isCreator ? entries.filter((e) => e.status !== "FLAGGED") : entries;
 
     const stats = {

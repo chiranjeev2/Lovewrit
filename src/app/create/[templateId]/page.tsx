@@ -684,9 +684,6 @@ export default function CreateLovewritPage({
   const displayPrice = isFounderFree || isFreeLetterCard || isFreeAdPage ? "0" : calculatedPricing.displayPrice;
   const symbol = calculatedPricing.symbol;
   const isDiscounted = isFounderFree ? true : calculatedPricing.isDiscounted;
-  const originalDisplayPrice = isFounderFree
-    ? calculatedPricing.displayPrice
-    : calculatedPricing.originalDisplayPrice;
 
   // Checkout submission
   const handleProceedToCheckout = async (e: React.FormEvent) => {

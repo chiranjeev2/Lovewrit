@@ -65,3 +65,9 @@ body {
     -webkit-overflow-scrolling: touch;
   }
 }
+
+/* Accessible visible focus styles for keyboard navigation (WCAG 2.1) */
+:focus-visible {
+  outline: 2px solid #f43f5e;
+  outline-offset: 2px;
+}
