@@ -1,7 +1,16 @@
 # Lovewrit System Handover & Technical Architecture State
 
-**Last Updated:** October 8, 2026 (QA Integrity & Payments Hardening)  
-**Target Branch:** `main` (Production Canonical)
+**Last Updated:** October 8, 2026 (Production-Readiness Hardening Pass)  
+**Active Branch:** `fix/prod-ready` (Target: merge to `main` with `--no-ff`)  
+**Latest Production-Readiness Commits:**
+- `c3564ab` feat(compliance): step 1 - scan and enforce 11 non-negotiables policy compliance
+- `204a709` feat(api): step 2 - schema validation, rate limits, and hostile input test suite
+- `7bb6bed` feat(security): step 3 - security headers, CSP, cookie security, and privacy suite
+- `9916795` feat(error-handling): step 4 - custom error boundaries, not-found, loading, and PIN lockout
+- `7fffc8f` feat(a11y): step 5 - accessibility, focus styles, WCAG contrast, and mobile tap targets
+- `ea6af47` feat(perf): step 6 - performance audit, bundle sizes, and static asset verification
+- `02b050d` feat(db): step 7 - prisma indexes, postgres readiness, and data inventory
+- `0c0f788` feat(tooling): step 8 - code health, configurable browser path, and documentation update
 
 ---
 
@@ -64,7 +73,26 @@ The following core rules are enforced across all components, APIs, and tests, an
 
 ---
 
-## 5. Mandatory Environment Variables
+## 5. PARKED Components (Strict Freeze Enforced)
+
+The following components were placed under strict freeze during the production-readiness pass and were NOT modified:
+- **Payment Processing Core**:
+  - `src/app/api/checkout/**` (Order creation, verification, Razorpay integration).
+  - `src/app/api/webhooks/**` (Razorpay webhook verification, signature checks, event handling).
+  - `src/lib/razorpay.ts` (Razorpay client singleton and HMAC calculation).
+  - `src/lib/referral-reward.ts` (Referral ledger allocations and credits).
+  - `scripts/test-razorpay-flow.mjs` (Payment test suite).
+- **Admin Authentication Core**:
+  - `src/lib/admin-auth.ts` (Timing-safe authentication, blacklists, session cookies).
+  - `src/app/api/admin/login/**` (Admin login endpoint).
+- **Pricing Tables**:
+  - `src/lib/currency.ts` (All pricing tier constants and currency conversion matrix).
+- **Deployment Scripts**:
+  - No new external paid services, deployment wrappers, or automated env-push scripts.
+
+---
+
+## 6. Mandatory Environment Variables
 
 In production (`NODE_ENV === "production"`), the server startup hook in [`src/instrumentation.ts`](file:///d:/projects/lovewrit/src/instrumentation.ts) strictly validates that the following 7 environment variable NAMES are defined (failing closed on boot with zero secret leakage if missing):
 
@@ -78,7 +106,7 @@ In production (`NODE_ENV === "production"`), the server startup hook in [`src/in
 
 ---
 
-## 6. Admin Authentication & Key Security
+## 7. Admin Authentication & Key Security
 
 - **Owner-Configured Secret**: Configured locally via `npm run admin:set-key` (`scripts/set-admin-secrets.mjs`) with masked input, double confirmation, minimum 20-character length, and automatic generation of `ADMIN_SESSION_SECRET`.
 - **Git History Notice**: The old default master key was present in historical Git commits prior to `2fc055e`. The project owner MUST choose a fresh, unique passphrase and rotate any historical credentials. The old key hash is permanently blacklisted in `src/lib/admin-auth.ts`.
@@ -89,7 +117,7 @@ In production (`NODE_ENV === "production"`), the server startup hook in [`src/in
 
 ---
 
-## 7. Two-Tier Moderation Architecture
+## 8. Two-Tier Moderation Architecture
 
 1. **Host Moderation (`order.adminToken`)**:
    - Buyers receive an unguessable 16-character `adminToken` in their order creation payload.
@@ -101,36 +129,42 @@ In production (`NODE_ENV === "production"`), the server startup hook in [`src/in
 
 ---
 
-## 8. Verification Status: Logs vs. Real Deployments
+## 9. Verification Status: Logs vs. Real Deployments
 
 ### Verified by Automated Logs:
-The following suites are verified with clean exits (code 0) in automated QA logs (`qa-logs/`):
-- **Static Typing**: `npx tsc --noEmit` - 0 errors (`qa-logs/step5-tsc.log`).
-- **Code Linting**: `npx eslint . --max-warnings 0` - 0 warnings, 0 errors (`qa-logs/step5-eslint.log`).
-- **Build**: `npm run build` - Prisma client generated, migrations deployed, 26/26 pages statically/dynamically generated (`qa-logs/step5-build.log` and `qa-logs/step6-build-main.log`).
-- **Dependency Audit**: `npm audit --omit=dev` - 0 vulnerabilities in production dependencies (`qa-logs/step5-audit.log`).
-- **Pre-Merge QA Suites**: `npm run qa` - All 21 test suites passed dynamically (`qa-logs/step5-qa.log`):
-  1. TypeScript Typecheck (0 errors)
-  2. Currency Matrix Audit (86 / 86 assertions across 4 regions)
-  3. Guest Security & Sanitization (10 / 10 assertions)
-  4. Client IP Trust Model (13 / 13 assertions)
-  5. Simulated Session Production Guard (3 / 3 assertions)
-  6. Client Secret Leak Audit (5 / 5 assertions)
-  7. Startup Environment Verification (17 / 17 assertions)
-  8. Razorpay Flow & Security Suite (71 / 71 assertions)
-  9. Admin Master Key Security (28 / 28 assertions)
-  10. Guestbook Auth & Admin Security (18 / 18 assertions)
-  11. Referral & Candle Anti-Abuse (24 / 24 assertions)
-  12. Browser Exports (PDF/PNG/JPG) (4 / 4 exports)
-  13. PDF Rasterization & Sharpness (2 / 2 pages non-blank, DPI >= 150)
-  14. Layout & Accessibility Audit (252 / 252 checks across 21 templates x 3 page types x 4 viewports)
-  15. Studio Customizer 375px & Order Flow (21 / 21 templates verified)
-  16. B1 Birthday Pack (18 / 18 assertions)
-  17. B2 Godhbharai Pack (16 / 16 assertions)
-  18. B3 Sacred Tribute Pack (23 / 23 assertions)
-  19. B4 Kitty Celebration Pack (16 / 16 assertions)
-  20. B5 Religious Devotional Pack (20 / 20 assertions)
-  21. Phase C1 Growth Suite (15 / 15 assertions)
+The entire platform is backed by a centralized 28-suite QA runner (`scripts/run-all-qa.js`). Every suite is verified with clean exits (code 0) in automated QA logs (`qa-logs/`):
+
+#### Baseline Platform Suites (21 Suites):
+1. **TypeScript Typecheck**: `npx tsc --noEmit` - 0 errors across all ts/tsx files.
+2. **Currency Matrix Audit**: `test-currency-matrix.mjs` - 86 / 86 assertions across 4 regions.
+3. **Guest Security & Sanitization**: `scripts/test-guest-sanitization.mjs` - 10 / 10 assertions (XSS tags stripped, emojis/RTL preserved, 60 char cap).
+4. **Client IP Trust Model**: `scripts/test-client-ip-trust.mjs` - 13 / 13 assertions (Vercel edge headers, non-shared fallback).
+5. **Simulated Session Production Guard**: `scripts/test-sim-session-security.mjs` - 3 / 3 assertions (unreachable when NODE_ENV=production).
+6. **Client Secret Leak Audit**: `scripts/test-client-secret-leak.mjs` - 5 / 5 assertions (zero secret leaks).
+7. **Startup Environment Verification**: `scripts/test-env-check.mjs` - 17 / 17 assertions (fail-closed, zero leaks).
+8. **Razorpay Flow & Security Suite**: `scripts/test-razorpay-flow.mjs` - 71 / 71 assertions (HMAC-SHA256 signatures, webhooks, server pricing).
+9. **Admin Master Key Security**: `scripts/test-admin-key-security.mjs` - 28 / 28 assertions (timing-safe, zero leaks, fail-closed).
+10. **Guestbook Auth & Admin Security**: `scripts/test-guestbook-auth.mjs` - 18 / 18 assertions (host token moderation, admin session, pre-moderation).
+11. **Referral & Candle Anti-Abuse**: `scripts/test-referral-and-candle.mjs` - 24 / 24 assertions (concurrency atomic rate limits).
+12. **Browser Exports (PDF/PNG/JPG)**: `scripts/verify-real-browser-exports.js` - 4 / 4 exports valid; Foldable PDF < 10 MB.
+13. **PDF Rasterization & Sharpness**: `scripts/verify-pdf-rasterization.mjs` - 2 / 2 pages non-blank, DPI >= 150.
+14. **Layout & Accessibility Audit**: `scripts/verify-viewport-layout-and-accessibility.mjs` - 252 / 252 checks across 21 templates x 3 page types x 4 viewports (0 overflow, 0 clipped, 0 tap target failures).
+15. **Studio Customizer 375px & Order Flow**: `scripts/test-all-8-customizers.mjs` - 21 / 21 templates verified on mobile.
+16. **B1 Birthday Pack**: `scripts/verify-birthday-scene-engine.js` - 18 / 18 assertions.
+17. **B2 Godhbharai Pack**: `scripts/verify-godhbharai-scene-engine.js` - 16 / 16 assertions.
+18. **B3 Sacred Tribute Pack**: `scripts/verify-sacred-tribute-scene-engine.js` - 23 / 23 assertions.
+19. **B4 Kitty Celebration Pack**: `scripts/verify-kitty-celebration-scene-engine.js` - 16 / 16 assertions.
+20. **B5 Religious Devotional Pack**: `scripts/verify-devotional-scene-engine.js` - 20 / 20 assertions.
+21. **Phase C1 Growth Suite**: `scripts/verify-phase-c1-growth.js` - 15 / 15 assertions.
+
+#### Production-Readiness Suites Added in Final Pass (7 Suites):
+22. **11 Non-Negotiables Policy Compliance**: `scripts/test-policy-compliance.mjs` - 18 / 18 assertions (zero video, zero fake counters/reviews, zero gender reveal, memorial unbranding, RSVP invite scoping).
+23. **Public API Safety & Hostile Input Guard**: `scripts/test-public-api-safety.mjs` - 31 / 31 assertions (hostile payloads, type validation, magic bytes, SQL/NoSQL injection guards).
+24. **Security Headers, CSP & Privacy Audit**: `scripts/test-security-headers-and-privacy.mjs` - 29 / 29 assertions (strict CSP, HSTS, frame-ancestors, cookie flags, PII logger masking).
+25. **Error Boundaries, Not-Found & Empty States**: `scripts/test-error-and-empty-states.mjs` - 30 / 30 assertions (calm 404/500 screens, zero stack traces, 5-attempt PIN lockout, empty state recovery).
+26. **Accessibility & Mobile Standards**: `scripts/test-accessibility-and-mobile.mjs` - 11 / 11 assertions (WCAG 2.1 AA body contrast, 44x44px mobile tap targets, focus-visible outlines, img alt, form labels).
+27. **Performance, Bundles & Static Assets**: `scripts/test-performance-and-bundles.mjs` - 5 / 5 assertions (zero static files > 300 KB, clean Turbopack build manifest).
+28. **Database Schema & PostgreSQL Readiness**: `scripts/test-schema-postgres-readiness.mjs` - 16 / 16 assertions (B-tree indexing across all foreign keys, CUID string portability, full data inventory).
 
 ### Unverified / Production Limitations:
 - **Real Razorpay Payments**: Gateway orders, signatures, and webhooks have been verified against simulated client HTTP boundaries. No live financial credit card or UPI transaction has been charged against a live merchant account.
@@ -139,7 +173,7 @@ The following suites are verified with clean exits (code 0) in automated QA logs
 
 ---
 
-## 9. Owner Actions Checklist Before Production Go-Live
+## 10. Owner Actions Checklist Before Production Go-Live
 
 The project owner must execute the following operations prior to accepting live customer payments and traffic:
 
