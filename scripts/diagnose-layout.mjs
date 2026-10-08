@@ -1,6 +1,9 @@
 import puppeteer from 'puppeteer-core';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const { getBrowserExecutablePath } = require('./browser-config.cjs');
 
-const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const EDGE_PATH = getBrowserExecutablePath();
 
 async function diagnose(url) {
   const browser = await puppeteer.launch({

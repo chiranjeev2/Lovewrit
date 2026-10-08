@@ -1,8 +1,9 @@
 const puppeteer = require('puppeteer-core');
 const fs = require('fs');
 const path = require('path');
+const { getBrowserExecutablePath } = require('./browser-config.cjs');
 
-const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const EDGE_PATH = getBrowserExecutablePath();
 const DOWNLOAD_DIR = path.resolve(__dirname, 'verified_downloads');
 
 if (!fs.existsSync(DOWNLOAD_DIR)) {

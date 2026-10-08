@@ -2,8 +2,9 @@ import puppeteer from 'puppeteer-core';
 import path from 'path';
 import fs from 'fs';
 import { TEMPLATES } from '../src/lib/templates-data.ts';
+import { getBrowserExecutablePath } from './browser-config.cjs';
 
-const EDGE_PATH = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const EDGE_PATH = getBrowserExecutablePath();
 const BASE_URL = 'http://localhost:3000';
 const QA_SCREENSHOTS_DIR = path.resolve('qa-screenshots');
 

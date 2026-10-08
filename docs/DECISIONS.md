@@ -438,3 +438,40 @@ This document records architectural, security, and verification decisions made d
 ### Test Suite
 - Added `scripts/test-schema-postgres-readiness.mjs` verifying schema portability, index coverage, and data inventory completeness.
 - Registered `db-readiness` (15 minAssertions) in `scripts/run-all-qa.js`.
+
+---
+
+## 19. Step 8: Code Health, Tooling Abstractions & Root Cleanup
+
+### Root Directory Cleanup & Legacy Organization
+- Relocated legacy `memoir.md` into `docs/legacy/memoir.md` to keep documentation well-structured.
+- Audited all root test files against `scripts/run-all-qa.js`. Preserved `test-currency-matrix.mjs` (actively referenced by the QA runner suite `currency-matrix`).
+- Deleted 9 unreferenced, leftover test scripts from the root directory: `test-batch-features.mjs`, `test-e2e.mjs`, `test-legal-pages.mjs`, `test-new-enhancements.mjs`, `test-phase2.mjs`, `test-prompt1-catalog.mjs`, `test-prompt1-pricing.mjs`, `test-prompt1-ratelimit.mjs`, and `test-rsvp-and-features.mjs`.
+
+### Cross-Platform Configurable Browser Executable Abstraction
+- Created `scripts/browser-config.cjs` providing `getBrowserExecutablePath()`:
+  - First honors `process.env.CHROME_PATH` if specified and present on disk.
+  - Automatically probes common system installation paths for Edge, Chrome, and Chromium across Windows, macOS, and Linux.
+  - Fallbacks safely if no custom path is configured.
+- Refactored all browser automation and verification scripts across `scripts/` to use `getBrowserExecutablePath()` rather than hardcoding local Edge binary paths.
+
+### Architectural Rationale for Top 5 Largest Source Files in `src/`
+1. **`src/app/create/[templateId]/page.tsx` (2,921 lines)**:
+   - **Role**: Master Customizer Studio state machine orchestrating multi-photo arrangement, audio recording, interactive previews, font selectors, and checkout flows across all 21 occasion templates.
+   - **Rationale for Retaining Intact**: The customizer combines complex state synchronization across photo trays, audio blobs, dynamic fields, and step wizards. Refactoring this central file during the final production-readiness pass carries extreme regression risk against end-to-end user workflows and verified browser test suites. The component is well-typed, thoroughly covered by automated customizer test suites, and stable.
+2. **`src/components/scene-engine/customizer/SceneFlowEditor.tsx` (1,709 lines)**:
+   - **Role**: Scene flow visual editor and property inspector managing 29 distinct scene types, transition curves, and timing controls.
+   - **Rationale for Retaining Intact**: Highly cohesive editor component managing granular per-scene properties. Splitting into dozens of micro-components would introduce unnecessary indirection without improving runtime performance.
+3. **`src/components/editor/PagePreview.tsx` (1,266 lines)**:
+   - **Role**: Live client-side simulation engine rendering responsive page previews in real-time as users modify templates in the studio.
+   - **Rationale for Retaining Intact**: Serves as the single source of truth for preview rendering fidelity across mobile, tablet, and desktop viewports.
+4. **`src/components/editor/CardPreview.tsx` (1,133 lines)**:
+   - **Role**: Live greeting card preview renderer managing SVG frames, polaroid badge overlays, custom typography, and high-DPI export canvases.
+   - **Rationale for Retaining Intact**: Tightly couples SVG geometry calculations with CSS styling to ensure pixel-perfect export parity with on-screen previews.
+5. **`src/lib/scene-defaults.ts` (936 lines)**:
+   - **Role**: Pure data dictionary defining default scene flow configurations, sample text, and animation parameters for 21 templates.
+   - **Rationale for Retaining Intact**: Pure declarative configuration file containing zero side effects or runtime logic. Keeping defaults in a consolidated dictionary guarantees immediate consistency across templates.
+
+### Platform Documentation Update
+- Updated `README.md` to comprehensively describe the entire built product (21 occasion templates, cards & keepsake pages, Scene Engine, Razorpay payment flows, 50% regifts, guestbook & candle tributes, and multi-currency pricing).
+
