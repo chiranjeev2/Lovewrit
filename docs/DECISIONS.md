@@ -581,8 +581,37 @@ This document records architectural, security, and verification decisions made d
   - `src/components/interactive/QRCodeModal.tsx`: Converted static `qrcode` import to dynamic import inside `useEffect` triggered only when `isOpen === true`.
 - **Bundle Measurement Impact**:
   - Heavy 418 KB jsPDF / canvas bundle (`static/chunks/0r6vw-qkuvez2.js`) and 42 KB qrcode chunk are completely eliminated from the initial client route bootstrap payloads.
-  - All page initial route bundles stay within core Next.js / React framework chunks (~422 KB uncompressed shared framework code), with zero heavy export libraries executing or downloading on initial page load.
+---
 
+## 24. Closing Pass Step 5: Inventory of Deleted Files, Source Weights, and Handover Audit
 
+### 1. Deleted Files Inventory (vs 4a644b0)
+- The 9 legacy test scripts originally located in the repository root were deleted in previous refactoring passes to avoid root clutter and unify testing into `scripts/`:
+  1. `test-batch-features.mjs`: Features (voice notes, stickers, countdown, PIN) are covered in `scripts/test-card-interaction-flow.mjs`, `scripts/verify-audio-voice-notes.js`, and `scripts/test-public-api-safety.mjs`.
+  2. `test-e2e.mjs`: Full user journey and checkout flows are verified in `scripts/test-full-user-journey.mjs` and `scripts/run-all-qa.js`.
+  3. `test-legal-pages.mjs`: Legal pages, terms, privacy, and footer links are tested in `scripts/test-legal-and-content.mjs`.
+  4. `test-new-enhancements.mjs`: Referral perks, reaction emojis, and candles are tested in `scripts/test-referral-and-candle.mjs` and `scripts/test-public-api-safety.mjs`.
+  5. `test-phase2.mjs`: Scene engine templates and audio presets are tested in `scripts/verify-scene-engine-packs.mjs` and `scripts/test-music-and-audio.mjs`.
+  6. `test-prompt1-catalog.mjs`: Template metadata, categories, and tags are tested in `scripts/test-template-catalog.mjs`.
+  7. `test-prompt1-pricing.mjs`: Currency conversions, region tiers, bundles, and Founder Pass pricing are covered in `scripts/test-currency-matrix.mjs` and `scripts/test-razorpay-flow.mjs`.
+  8. `test-prompt1-ratelimit.mjs`: API rate limiting, schema validation, and payload caps are tested in `scripts/test-public-api-safety.mjs`.
+  9. `test-rsvp-and-features.mjs`: RSVP gating, guest sanitization, and occasion restrictions are tested in `scripts/test-guestbook-and-rsvp.mjs` and `scripts/test-policy-compliance.mjs`.
 
+### 2. Top 5 Largest Source Files in `src/` (Lines of Code)
+1. `src/app/create/[templateId]/page.tsx` (3,114 lines) - Studio Customizer page handling all templates, form steps, live previews, options, media uploads, and Razorpay modal triggers.
+2. `src/components/scene-engine/customizer/SceneFlowEditor.tsx` (1,778 lines) - Scene Flow visual editor and scene re-ordering interface.
+3. `src/components/editor/PagePreview.tsx` (1,351 lines) - Interactive web experience rendering view.
+4. `src/components/editor/CardPreview.tsx` (1,170 lines) - Greeting card rendering view with themes, borders, stickers, and typography.
+5. `src/lib/scene-defaults.ts` (965 lines) - Scene default configurations, prompts, and preset sequences.
 
+### 3. Tracked Files Over 1 MB in Git
+- Verified via `git ls-files`: Exactly **0 files** over 1 MB are tracked in git.
+
+### 4. `HANDOVER.md` Audit
+- **11 Non-Negotiables**: Present verbatim in Section 3 of `HANDOVER.md`.
+- **Multi-Currency Pricing Table**: Fully accurate across INR (₹49, ₹99, ₹149, ₹499, ₹449, ₹1,459, +₹49), USD ($2, $5, $8, $25, $22, $75, +$3), EUR (€2, €5, €8, €25, €22, €75, +€3), and GBP (£2, £5, £8, £25, £22, £75, +£3).
+- **Plain-Language Limitations Confirmed**: Explicitly states in Section 9:
+  1. **NO real payment has been processed (test mode only)**
+  2. **NO deployment has been performed**
+  3. **NO physical phone was tested**
+- Mirrored to `docs/HANDOVER.md` for consistent path resolution.
