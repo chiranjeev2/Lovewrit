@@ -17,7 +17,7 @@ const cspHeader = `
   font-src 'self' data: https://fonts.gstatic.com;
   connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com;
   frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com;
-  media-src 'self' blob: data:;
+  media-src 'self' blob: data: https://cdn.pixabay.com;
   object-src 'none';
   base-uri 'self';
   form-action 'self';

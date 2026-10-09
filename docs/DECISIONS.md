@@ -485,6 +485,42 @@ This document records architectural, security, and verification decisions made d
 - Applied migration on a clean scratch database file (`scratch_test.db`) via `npx prisma migrate deploy` (`qa-logs/step1-migrate-deploy-scratch.log`).
 - Executed `npx prisma migrate status` against scratch database (`qa-logs/step1-migrate-status-scratch.log`), confirming 2 migrations applied and zero schema drift (`Database schema is up to date!`).
 - Synchronized active development database `dev.db` via `npx prisma migrate resolve --applied "20261009000000_add_performance_indexes"` (`qa-logs/step1-migrate-status-dev.log`), verifying identical clean status.
-- Documented full migration catalog and scratch replay runbook in `docs/DATABASE.md`.
 - Provider preserved strictly as SQLite in local development and schema kept 100% portable for PostgreSQL in production.
+
+---
+
+## 21. Closing Pass Step 2: CSP, Headers & Browser Execution Under Production Build
+
+### Dual-Mode Runner Support (`next dev` and `next start`)
+- Updated `ensureServerRunning()` in `scripts/run-all-qa.js` to support dual-mode server startup:
+  - If `process.env.QA_PROD_SERVER === '1'` or `process.argv.includes('--prod')`, spawns `next start -p 3000` with production environment flags (`NODE_ENV=production`).
+  - Otherwise, preserves isolated development server `next dev -p 3000`.
+  - Added startup configuration ensuring all 7 mission-critical variable names required by `src/lib/env-check.ts` are provided during automated runs.
+
+### Production CSP Violation & Console Error Interception
+- Authored `scripts/verify-prod-browser-and-csp.mjs`:
+  - Listens for browser `securitypolicyviolation` events via `window.addEventListener('securitypolicyviolation', ...)` injected across new documents.
+  - Traps `console.error` messages to catch any runtime script execution failures.
+  - Asserts live HTTP response headers directly from the production server instance.
+  - Successfully verified 21 / 21 assertions green (`qa-logs/step2-prod-csp-verify.log`), with 0 CSP violations and 0 fatal console errors.
+
+### Discovered CSP Hardening: `media-src` Pixabay Host Allowance
+- During real browser execution against the production server, browser CSP violation listener caught that background audio presets defined in `src/lib/audio-tracks.ts` stream from `https://cdn.pixabay.com`.
+- Updated `next.config.ts` to allow `https://cdn.pixabay.com` within the `media-src` directive:
+  `media-src 'self' blob: data: https://cdn.pixabay.com;`
+- Recompiled production build (`npm run build`) and verified audio loading occurs with zero CSP violations.
+
+### Razorpay Hosts & Inline Script Rationale
+- Confirmed Razorpay script host (`https://checkout.razorpay.com`), API host (`https://api.razorpay.com`), and logging endpoint (`https://lumberjack.razorpay.com`) are explicitly permitted across `script-src`, `frame-src`, `connect-src`, and `img-src`.
+- Confirmed `unsafe-eval` is completely eliminated in production builds.
+- Rationale for `'unsafe-inline'`: Next.js App Router relies on inline scripts for streaming hydration chunks (`<script>self.__next_f.push(...)</script>`) and inline style injection across statically generated routes (`/`, `/faq`, `/privacy`). Without per-request dynamic nonce generation middleware (which disables Next.js full static page optimization), `'unsafe-inline'` remains an architectural requirement for App Router hydration.
+
+### Production Server Browser Runs Executed
+- Audited against live production server (`next start` on port 3000):
+  - Security headers suite: `qa-logs/step2-prod-security-headers.log` (ExitCode 0).
+  - Error and empty states: `qa-logs/step2-prod-error-states.log` (ExitCode 0).
+  - 375px Studio customizer flow: `qa-logs/step2-prod-customizers.log` (21 / 21 templates pass, ExitCode 0).
+  - Layout & accessibility audit: `qa-logs/step2-prod-layout-audit.log` (252 / 252 checks pass, ExitCode 0).
+  - Prod browser & CSP verification: `qa-logs/step2-prod-csp-verify.log` (21 / 21 assertions pass, ExitCode 0).
+
 
