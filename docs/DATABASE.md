@@ -1,6 +1,6 @@
 # Lovewrit Database Architecture & PostgreSQL Migration Guide
 
-This document details the database schema, Prisma migration workflows, PostgreSQL/Supabase readiness, and the production deployment runbook.
+This document details the database schema, Prisma migration workflows, PostgreSQL/Supabase readiness, index catalog, and the production deployment runbook.
 
 ---
 
@@ -19,18 +19,44 @@ The database schema is defined in [`prisma/schema.prisma`](file:///d:/projects/l
 
 ---
 
-## 2. PostgreSQL & Supabase Compatibility Audit
+## 2. Migration History & Performance Indexes
+
+The repository maintains an immutable Prisma migrations directory under [`prisma/migrations/`](file:///d:/projects/lovewrit/prisma/migrations):
+
+### Migration Catalog:
+1. **`20261007000000_init_schema`**:
+   - Initial relational schema establishing all 8 tables, column types, default values, primary keys (`cuid()`), and unique constraints (`Order.slug`, `Order.razorpayOrderId`, `CardData.orderId`, `PageData.orderId`, `ReferralRecord.code`).
+2. **`20261009000000_add_performance_indexes`**:
+   - Adds 10 B-tree performance and search indexes to eliminate table scans on frequently filtered columns:
+     - `GuestbookEntry_pageDataId_idx` on `GuestbookEntry(pageDataId)`
+     - `GuestbookEntry_createdAt_idx` on `GuestbookEntry(createdAt)`
+     - `Order_customerEmail_idx` on `Order(customerEmail)`
+     - `Order_createdAt_idx` on `Order(createdAt)`
+     - `Order_myReferralCode_idx` on `Order(myReferralCode)`
+     - `RateLimitEvent_action_ipAddress_createdAt_idx` on `RateLimitEvent(action, ipAddress, createdAt)`
+     - `RateLimitEvent_createdAt_idx` on `RateLimitEvent(createdAt)`
+     - `RecipientReaction_pageDataId_idx` on `RecipientReaction(pageDataId)`
+     - `RecipientReaction_createdAt_idx` on `RecipientReaction(createdAt)`
+     - `ReferralRecord_ownerEmail_idx` on `ReferralRecord(ownerEmail)`
+
+### Verification of Migration Integrity:
+- **Zero Schema Drift**: Executing `npx prisma migrate status` confirms 2 migrations found, 0 pending, and schema up to date.
+- **Clean Scratch Replay**: Verified by executing `prisma migrate deploy` on a fresh scratch database (`scratch_test.db`), confirming deterministic ordered replay from base schema to final indexed state without errors.
+
+---
+
+## 3. PostgreSQL & Supabase Compatibility Audit
 
 The Prisma schema is 100% PostgreSQL-compatible:
 - **Primary Keys**: All tables use CUID strings (`@id @default(cuid())`), which are supported uniformly across SQLite, PostgreSQL, and MySQL.
 - **Data Types**: All attributes use standard Prisma primitive types (`String`, `Int`, `Boolean`, `DateTime`) that translate directly to native PostgreSQL column types (`TEXT`, `INTEGER`, `BOOLEAN`, `TIMESTAMP WITH TIME ZONE`).
 - **No Engine-Specific Types**: There are zero SQLite-only pragmas, SQLite-specific types, or unsupported database extensions.
 - **Foreign Key Cascades**: All relations use standard `onDelete: Cascade`, translating cleanly to PostgreSQL `ON DELETE CASCADE` foreign keys.
-- **Indexes**: Unique constraints (`slug`, `razorpayOrderId`, `orderId`, `code`) generate standard B-tree unique indexes in PostgreSQL.
+- **Indexes**: All composite and single-column indexes are pure standard B-tree indexes natively supported by PostgreSQL.
 
 ---
 
-## 3. Step-by-Step Migration from SQLite to Supabase / PostgreSQL
+## 4. Step-by-Step Migration from SQLite to Supabase / PostgreSQL
 
 ### Step 1: Provision Managed PostgreSQL Database
 1. Create a project in [Supabase](https://supabase.com) (or AWS RDS / Neon / Railway).
@@ -56,26 +82,14 @@ datasource db {
 Execute the migration against the new database:
 
 ```bash
-npx prisma migrate dev --name init_postgres
+npx prisma migrate deploy
 ```
 
-This creates the complete relational table structure, foreign key constraints, and unique indexes in PostgreSQL.
-
-### Step 4: Data Export & Transfer (Optional for Existing Dev Data)
-If existing development rows in `dev.db` need to be migrated to production:
-1. Export existing SQLite records using Prisma client:
-   ```bash
-   npx tsx scripts/export-sqlite-data.mjs > data-backup.json
-   ```
-2. Switch `.env` to point `DATABASE_URL` to PostgreSQL.
-3. Import records into PostgreSQL preserving IDs and foreign keys:
-   ```bash
-   npx tsx scripts/import-postgres-data.mjs < data-backup.json
-   ```
+This applies both migrations in sequence, creating the complete relational table structure, foreign key constraints, unique indexes, and performance indexes in PostgreSQL.
 
 ---
 
-## 4. Vercel Production Build & Migration Pipeline
+## 5. Vercel Production Build & Migration Pipeline
 
 The Vercel deployment pipeline is configured in [`package.json`](file:///d:/projects/lovewrit/package.json):
 
@@ -96,18 +110,21 @@ The Vercel deployment pipeline is configured in [`package.json`](file:///d:/proj
 
 ---
 
-## 5. Development Workflow Commands
+## 6. Development Workflow Commands
 
 - **Create new migration locally**:
   ```bash
-  npm run db:migrate
+  npx prisma migrate dev
   ```
 - **Apply pending migrations to active database**:
   ```bash
-  npm run db:deploy
+  npx prisma migrate deploy
+  ```
+- **Check migration drift and status**:
+  ```bash
+  npx prisma migrate status
   ```
 - **Inspect database tables via Prisma Studio**:
   ```bash
   npx prisma studio
   ```
-

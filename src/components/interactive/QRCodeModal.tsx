@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import QRCode from "qrcode";
 import { QrCode, Download, X, Copy, Check } from "lucide-react";
 
 interface QRCodeModalProps {
@@ -24,16 +23,27 @@ export default function QRCodeModal({
   useEffect(() => {
     if (!url || !isOpen) return;
 
-    QRCode.toDataURL(url, {
-      width: 512,
-      margin: 2,
-      color: {
-        dark: "#171717",
-        light: "#ffffff",
-      },
-    })
-      .then((res) => setDataUrl(res))
+    let active = true;
+    import("qrcode")
+      .then((mod) => {
+        const qrcodeLib = mod.default || mod;
+        return qrcodeLib.toDataURL(url, {
+          width: 512,
+          margin: 2,
+          color: {
+            dark: "#171717",
+            light: "#ffffff",
+          },
+        });
+      })
+      .then((res) => {
+        if (active) setDataUrl(res);
+      })
       .catch((err) => console.error("QR Code generation error:", err));
+
+    return () => {
+      active = false;
+    };
   }, [url, isOpen]);
 
   if (!isOpen) return null;

@@ -58,23 +58,41 @@ async function ensureServerRunning() {
     console.error('         Please stop any running server before running QA so QA can manage its own isolated server instance.');
     process.exit(1);
   }
-  console.log('  Launching Next.js dev server for browser QA checks (isolated QA server)...');
-  const serverProcess = spawn('npx.cmd', ['next', 'dev', '-p', '3000'], {
+  const useProd = process.env.QA_PROD_SERVER === '1' || process.argv.includes('--prod');
+  const serverCmd = useProd ? 'start' : 'dev';
+  console.log(`  Launching Next.js ${useProd ? 'production (next start)' : 'dev (next dev)'} server for browser QA checks (isolated QA server)...`);
+
+  const serverEnv = {
+    ...process.env,
+    VERCEL: '1',
+    ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY,
+    ...(useProd ? {
+      NODE_ENV: 'production',
+      DATABASE_URL: process.env.DATABASE_URL || 'file:./dev.db',
+      RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || 'dummy_test_key_id',
+      RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || 'dummy_test_key_secret',
+      RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET || 'dummy_test_webhook_secret',
+      NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'dummy_test_public_key',
+      ADMIN_SESSION_SECRET: process.env.ADMIN_SESSION_SECRET || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+    } : {}),
+  };
+
+  const serverProcess = spawn('npx.cmd', ['next', serverCmd, '-p', '3000'], {
     detached: false,
     stdio: 'ignore',
     shell: true,
-    env: { ...process.env, VERCEL: '1', ADMIN_MASTER_KEY: QA_TEST_ADMIN_KEY },
+    env: serverEnv,
   });
 
   for (let i = 0; i < 30; i++) {
     await new Promise((r) => setTimeout(r, 1000));
     const ready = await checkServerListening();
     if (ready) {
-      console.log('  Server is active and healthy on http://localhost:3000\n');
+      console.log(`  Server is active and healthy on http://localhost:3000 (${useProd ? 'production' : 'dev'} mode)\n`);
       return serverProcess;
     }
   }
-  throw new Error('Server failed to start within 30 seconds');
+  throw new Error(`Server (${serverCmd}) failed to start within 30 seconds`);
 }
 
 const EXPECTED_SUITE_IDS = [
@@ -530,7 +548,7 @@ const SUITE_REGISTRY = [
       const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
       const total = tMatch ? parseInt(tMatch[1], 10) : 0;
       if (exitCode === 0 && passed >= 10) {
-        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (WCAG 2.1 contrast, reduced motion, focus-visible, 44px tap targets)` };
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (contrast >=4.5:1, reduced motion, focus-visible, 44px tap targets, alt, form labels)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Accessibility & mobile standards audit failed or assertions below minimum' };
     },

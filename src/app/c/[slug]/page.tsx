@@ -23,9 +23,7 @@ import {
   FileText,
   AlertCircle,
 } from "lucide-react";
-import { toPng, toJpeg } from "html-to-image";
 import { FontFamilyKey, CardBorderStyleKey } from "@/lib/templates-data";
-import { generateFoldableCardPdf } from "@/lib/pdf-export";
 
 export interface CardCustomData {
   senderName: string;
@@ -250,6 +248,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
       const primaryRatio = isPrint ? 3.5 : 2;
 
       const attemptCapture = async (ratio: number) => {
+        const { toJpeg, toPng } = await import("html-to-image");
         const opts = {
           ...baseOptions,
           pixelRatio: ratio,
@@ -376,6 +375,7 @@ export default function CardSharePage({ params }: CardSharePageProps) {
   const handleDownloadPdf = async () => {
     setIsExportingPdf(true);
     try {
+      const { generateFoldableCardPdf } = await import("@/lib/pdf-export");
       await generateFoldableCardPdf({
         senderName: cardData.senderName,
         recipientName: cardData.recipientName,
