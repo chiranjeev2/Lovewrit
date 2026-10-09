@@ -475,3 +475,16 @@ This document records architectural, security, and verification decisions made d
 ### Platform Documentation Update
 - Updated `README.md` to comprehensively describe the entire built product (21 occasion templates, cards & keepsake pages, Scene Engine, Razorpay payment flows, 50% regifts, guestbook & candle tributes, and multi-currency pricing).
 
+---
+
+## 20. Closing Pass Step 1: Database Migration for Performance Indexes
+
+### Migration Generation and Drift Elimination
+- Used `npx prisma migrate diff --from-migrations ./prisma/migrations --to-schema-datamodel ./prisma/schema.prisma --script` to generate exact SQL for the 10 B-tree indexes introduced in `prisma/schema.prisma`.
+- Created official migration directory `prisma/migrations/20261009000000_add_performance_indexes/migration.sql`.
+- Applied migration on a clean scratch database file (`scratch_test.db`) via `npx prisma migrate deploy` (`qa-logs/step1-migrate-deploy-scratch.log`).
+- Executed `npx prisma migrate status` against scratch database (`qa-logs/step1-migrate-status-scratch.log`), confirming 2 migrations applied and zero schema drift (`Database schema is up to date!`).
+- Synchronized active development database `dev.db` via `npx prisma migrate resolve --applied "20261009000000_add_performance_indexes"` (`qa-logs/step1-migrate-status-dev.log`), verifying identical clean status.
+- Documented full migration catalog and scratch replay runbook in `docs/DATABASE.md`.
+- Provider preserved strictly as SQLite in local development and schema kept 100% portable for PostgreSQL in production.
+
