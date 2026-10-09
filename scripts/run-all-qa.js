@@ -548,7 +548,7 @@ const SUITE_REGISTRY = [
       const passed = pMatch ? parseInt(pMatch[1], 10) : 0;
       const total = tMatch ? parseInt(tMatch[1], 10) : 0;
       if (exitCode === 0 && passed >= 10) {
-        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (WCAG 2.1 contrast, reduced motion, focus-visible, 44px tap targets)` };
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (contrast >=4.5:1, reduced motion, focus-visible, 44px tap targets, alt, form labels)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Accessibility & mobile standards audit failed or assertions below minimum' };
     },

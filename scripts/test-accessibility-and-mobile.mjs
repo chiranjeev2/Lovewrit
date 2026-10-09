@@ -75,7 +75,7 @@ function hexToRgb(hex) {
 
 async function runAccessibilityAndMobileAudit() {
   console.log("================================================================");
-  console.log("   WCAG 2.1 ACCESSIBILITY & MOBILE STANDARDS AUDIT              ");
+  console.log("   ACCESSIBILITY & MOBILE AUDIT (CONTRAST, MOTION, FOCUS, TAP)  ");
   console.log("================================================================\n");
 
   // --------------------------------------------------------------------------
@@ -89,7 +89,7 @@ async function runAccessibilityAndMobileAudit() {
   // --------------------------------------------------------------------------
   // 2. Body Text Color Contrast >= 4.5:1 Across Themes
   // --------------------------------------------------------------------------
-  console.log("\n[2] Verifying WCAG AA Color Contrast (>= 4.5:1) Across Themes...");
+  console.log("\n[2] Verifying Color Contrast (>= 4.5:1) Across Themes...");
   // Standard text on dark themes (neutral-100 / white on neutral-950 / black)
   const whiteRgb = [255, 255, 255];
   const darkBgRgb = hexToRgb("#0a0a0a"); // neutral-950
@@ -106,7 +106,7 @@ async function runAccessibilityAndMobileAudit() {
   const roseTextRgb = hexToRgb("#f43f5e"); // rose-500
   const blackBgRgb = [0, 0, 0];
   const roseContrast = getContrastRatio(roseTextRgb, blackBgRgb);
-  assert(roseContrast >= 4.5, `Accent rose contrast (${roseContrast.toFixed(1)}:1) meets WCAG minimum 4.5:1`);
+  assert(roseContrast >= 4.5, `Accent rose contrast (${roseContrast.toFixed(1)}:1) meets minimum 4.5:1`);
 
   // --------------------------------------------------------------------------
   // 3. prefers-reduced-motion Honored Across Scene Engine

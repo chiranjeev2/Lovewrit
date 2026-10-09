@@ -561,5 +561,28 @@ This document records architectural, security, and verification decisions made d
   - Every file exhibits exactly `3 ++-` (2 lines added, 1 line removed).
   - Changes are strictly isolated to importing `getBrowserExecutablePath` from `./browser-config.cjs` and setting `const EDGE_PATH = getBrowserExecutablePath()`, completely replacing the hardcoded `C:\Program Files (x86)\...` binary path without altering any test assertions or execution logic.
 
+---
+
+## 23. Closing Pass Step 4: Honest Accessibility Labels and Dynamic Imports for Performance
+
+### 1. Honest Accessibility Labeling
+- Replaced unqualified "WCAG 2.1 AA" labels in `scripts/run-all-qa.js` and `scripts/test-accessibility-and-mobile.mjs` with precise descriptions of the automated checks performed:
+  - Relative luminance color contrast >= 4.5:1 across dark and parchment themes.
+  - `prefers-reduced-motion` responsive fallback to static scroll layouts in SceneContainer.
+  - `:focus-visible` interactive keyboard focus styles in global stylesheet.
+  - Mobile touch targets >= 44x44px verified programmatically across viewports.
+  - Required `alt` attributes on all rendered `<img>` elements.
+  - Accessible names, labels, and placeholders on interactive form controls and buttons.
+
+### 2. Route Bundle Optimization via Dynamic Imports
+- **Heavy Client Libraries Isolated**:
+  - `src/lib/pdf-export.ts`: Removed static imports for `jsPDF`, `html-to-image`, and `qrcode`. Replaced with lazy `await import()` inside `generateFoldableCardPdf` and `renderIndicMessagePanel`. `jsPDF` is imported as a type-only interface (`import type { jsPDF } from "jspdf"`).
+  - `src/app/c/[slug]/page.tsx`: Removed static imports for `html-to-image` and `@/lib/pdf-export`. Export functions `handleDownloadImage` (via `attemptCapture`) and `handleDownloadPdf` now dynamically load their rendering dependencies only upon user click.
+  - `src/components/interactive/QRCodeModal.tsx`: Converted static `qrcode` import to dynamic import inside `useEffect` triggered only when `isOpen === true`.
+- **Bundle Measurement Impact**:
+  - Heavy 418 KB jsPDF / canvas bundle (`static/chunks/0r6vw-qkuvez2.js`) and 42 KB qrcode chunk are completely eliminated from the initial client route bootstrap payloads.
+  - All page initial route bundles stay within core Next.js / React framework chunks (~422 KB uncompressed shared framework code), with zero heavy export libraries executing or downloading on initial page load.
+
+
 
 

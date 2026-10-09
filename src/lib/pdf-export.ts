@@ -1,6 +1,4 @@
-import { jsPDF } from "jspdf";
-import QRCode from "qrcode";
-import { toJpeg } from "html-to-image";
+import type { jsPDF } from "jspdf";
 import { getBaseUrl } from "@/lib/base-url";
 
 export interface FoldablePdfOptions {
@@ -61,6 +59,7 @@ async function renderIndicMessagePanel(
     }
     const rect = el.getBoundingClientRect();
     const pixelRatio = 3;
+    const { toJpeg } = await import("html-to-image");
     const imgData = await toJpeg(el, {
       pixelRatio,
       quality: 0.95,
@@ -136,6 +135,11 @@ export async function generateFoldableCardPdf(options: FoldablePdfOptions): Prom
     cardRef,
     download = true,
   } = options;
+
+  const { jsPDF } = await import("jspdf");
+  const { toJpeg } = await import("html-to-image");
+  const QRCodeModule = await import("qrcode");
+  const QRCode = QRCodeModule.default || QRCodeModule;
 
   // 10 x 7 inches in landscape (254 x 177.8 mm)
   const doc = new jsPDF({
