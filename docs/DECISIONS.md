@@ -523,4 +523,43 @@ This document records architectural, security, and verification decisions made d
   - Layout & accessibility audit: `qa-logs/step2-prod-layout-audit.log` (252 / 252 checks pass, ExitCode 0).
   - Prod browser & CSP verification: `qa-logs/step2-prod-csp-verify.log` (21 / 21 assertions pass, ExitCode 0).
 
+---
+
+## 22. Closing Pass Step 3: Explanation and Verification of Late Changes
+
+### 1. `scripts/verify-viewport-layout-and-accessibility.mjs` Pass Criteria Invariance
+- **Proof of Criteria Equivalence**:
+  - Pre-change baseline (`4a644b0`): `passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0`.
+  - Current state (`HEAD`): `passed: !hasOverflow && overflowingElements === 0 && clipped === 0 && smallTapTargets === 0`.
+  - Pass condition checks:
+    1. `hasOverflow === false`: `document.documentElement.scrollWidth <= window.innerWidth + 2` (0 horizontal overflow).
+    2. `overflowingElements === 0`: right boundary of all rendered DOM elements <= `window.innerWidth + 2`.
+    3. `clipped === 0`: zero clipped content or interactive buttons (`rect.left >= -4 && rect.right <= winW + 4`).
+    4. `smallTapTargets === 0`: all mobile interactive touch targets >= 44x44 CSS px (`rect.width >= 44 && rect.height >= 44`).
+  - Total checks executed: exactly 252 (21 templates x 3 page types x 4 viewports: 375px, 768px, 1024px, 1440px).
+  - Zero weakening: Pass thresholds, check count, and assertions are identical. In addition, runtime accessibility diagnostics (`missingAlt`, `missingFormLabels`, `missingButtonNames`, `hasValidLang`, `hasReducedMotionSupport`) are captured and displayed per row.
+
+### 2. `src/app/api/referral/route.ts` Security Hardening and Backward Compatibility
+- **Changes**:
+  - Added request payload boundary protection: `checkPayloadSize(req, 50 * 1024)`.
+  - Added rate limiting: `enforceRateLimit(req, "REFERRAL_CREATE", 10, 60)` limiting creation to 10 requests/min per IP.
+  - Added input validation: `validateReferralCreateInput(rawBody)` preventing prototype pollution, script injection, and malformed strings.
+  - Replaced raw error responses with `safeErrorResponse` and `safeServerErrorResponse` to prevent runtime stack trace leaks.
+  - Stored creator audit metadata in `PlatformSetting` preserving both camelCase (`creatorIp`, `creatorFingerprint`, `ownerEmail`) and short key formats (`ip`, `fingerprint`, `email`).
+- **Response Shape Backward Compatibility**:
+  - Returns `{ success: true, code: newRecord.code, ownerName: newRecord.ownerName, record: newRecord, message: ... }`.
+  - Clients consuming `record` directly (such as `test-referral-and-candle.mjs`) and clients consuming top-level `code` / `ownerName` (such as Customizer UI and Creator Dashboard) receive their expected fields without disruption.
+
+### 3. `src/app/not-found.tsx` Respectful Aesthetics and Memorial Route Dignity
+- **Changes**:
+  - Created dedicated App Router 404 handler with a solemn neutral dark palette (`bg-neutral-950`).
+  - Added technical status indicators (`404 — Not Found` mono badge and `"could not be found"` description) to guarantee compatibility with test assertions and search engine crawlers.
+  - Retains zero platform branding, zero upselling banners, zero celebratory emojis, and zero promotional countdowns, ensuring respectful dignity when rendered on memorial or tribute routes (`/p/[slug]` or `/c/[slug]` with `isMemorial = true`).
+
+### 4. Pack Script Browser Config Migration Verification
+- Confirmed via `git diff --stat 4a644b0 HEAD` across all 13 pack and verification scripts (`scripts/verify-*.js`, `scripts/test-all-formats.js`):
+  - Every file exhibits exactly `3 ++-` (2 lines added, 1 line removed).
+  - Changes are strictly isolated to importing `getBrowserExecutablePath` from `./browser-config.cjs` and setting `const EDGE_PATH = getBrowserExecutablePath()`, completely replacing the hardcoded `C:\Program Files (x86)\...` binary path without altering any test assertions or execution logic.
+
+
 
