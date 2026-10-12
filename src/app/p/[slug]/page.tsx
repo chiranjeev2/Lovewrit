@@ -30,7 +30,7 @@ import {
 import { FontFamilyKey, AmbientEffectKey } from "@/lib/templates-data";
 import { SceneContainer } from "@/components/scene-engine/SceneContainer";
 import { parseAndValidateScenesJson } from "@/types/scenes";
-import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
+import { getDefaultScenesForOccasion, syncPhotosToScenes } from "@/lib/scene-defaults";
 import { sanitizeGuestName } from "@/lib/guest-personalization";
 import DownloadPageModal from "@/components/interactive/DownloadPageModal";
 import { InteractivePageExportOptions } from "@/lib/interactive-page-export";
@@ -386,7 +386,7 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   // Interactive Scene Engine: Full-screen sequential story view
   if (pageData.sceneEngineEnabled && !isLockedCountdown) {
     const guestParam = sanitizeGuestName(searchParams.get("guest"), 60);
-    const scenes =
+    const rawScenes =
       parseAndValidateScenesJson(pageData.scenesJson) ||
       getDefaultScenesForOccasion(pageData.occasion, {
         senderName: pageData.senderName,
@@ -396,6 +396,8 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         templateId: template.id,
         location: pageData.milestoneVenue || template.sampleLocation,
       });
+
+    const scenes = parsedPhotos.length > 0 ? syncPhotosToScenes(rawScenes, parsedPhotos) : rawScenes;
 
     return (
       <div

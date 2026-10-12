@@ -13,7 +13,7 @@ import HindiPunjabiKeyboard from "@/components/editor/HindiPunjabiKeyboard";
 import DesktopEmojiPicker from "@/components/editor/DesktopEmojiPicker";
 import { SceneFlowEditor } from "@/components/scene-engine/customizer/SceneFlowEditor";
 import { SceneContainer } from "@/components/scene-engine/SceneContainer";
-import { getDefaultScenesForOccasion } from "@/lib/scene-defaults";
+import { getDefaultScenesForOccasion, syncPhotosToScenes } from "@/lib/scene-defaults";
 import { SceneConfig } from "@/types/scenes";
 import { useApp } from "@/context/AppContext";
 import {
@@ -512,6 +512,7 @@ export default function CreateLovewritPage({
     updated[index] = updated[targetIndex];
     updated[targetIndex] = temp;
     setPagePhotos(updated);
+    setScenes((prev) => syncPhotosToScenes(prev, updated));
     if (updated.length > 0) {
       setCardPhoto(updated[0]);
     }
@@ -520,6 +521,7 @@ export default function CreateLovewritPage({
   const removePhoto = (index: number) => {
     const updated = pagePhotos.filter((_, i) => i !== index);
     setPagePhotos(updated);
+    setScenes((prev) => syncPhotosToScenes(prev, updated));
     setCardPhoto(updated[0] || "");
     setHasUserPhotos(true);
   };
@@ -561,6 +563,7 @@ export default function CreateLovewritPage({
 
     setPagePhotos(optimisticPhotos);
     setCardPhoto(optimisticPhotos[0]);
+    setScenes((prev) => syncPhotosToScenes(prev, optimisticPhotos));
     setHasUserPhotos(true);
 
     try {
@@ -581,6 +584,7 @@ export default function CreateLovewritPage({
 
       if (uploadedUrls.length > 0) {
         // Swap local blob preview URLs with permanent server URLs
+        let finalUpdatedPhotos: string[] = [];
         setPagePhotos((prevPhotos) => {
           const updated = [...prevPhotos];
           localBlobUrls.forEach((blobUrl, i) => {
@@ -592,8 +596,13 @@ export default function CreateLovewritPage({
               }
             }
           });
-          return updated.slice(0, maxCount);
+          finalUpdatedPhotos = updated.slice(0, maxCount);
+          return finalUpdatedPhotos;
         });
+
+        if (finalUpdatedPhotos.length > 0) {
+          setScenes((prev) => syncPhotosToScenes(prev, finalUpdatedPhotos));
+        }
 
         setCardPhoto((prevCardPhoto) => {
           const matchIdx = localBlobUrls.indexOf(prevCardPhoto);
@@ -798,8 +807,8 @@ export default function CreateLovewritPage({
           showBismillah,
           isAdSupported: isFreeAdPage,
           language: selectedLanguage,
-          scenesJson: JSON.stringify(scenes),
-          scenes,
+          scenesJson: JSON.stringify(syncPhotosToScenes(scenes, cleanPagePhotos)),
+          scenes: syncPhotosToScenes(scenes, cleanPagePhotos),
         },
       };
 

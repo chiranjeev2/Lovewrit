@@ -962,3 +962,47 @@ export function getDefaultScenesForOccasion(
     },
   ];
 }
+
+/**
+ * Synchronizes user photo URLs into Scene Engine scenes configuration.
+ * Maps uploaded photos to scenes containing image slots (How We Met, Timeline, Memories, etc.).
+ */
+export function syncPhotosToScenes(currentScenes: SceneConfig[], photos: string[]): SceneConfig[] {
+  if (!photos || photos.length === 0) return currentScenes;
+  const validPhotos = photos.filter((p) => Boolean(p && typeof p === "string" && p.trim().length > 0));
+  if (validPhotos.length === 0) return currentScenes;
+
+  return currentScenes.map((sc) => {
+    switch (sc.type) {
+      case "how_we_met":
+        return { ...sc, photoUrl: validPhotos[0] || sc.photoUrl };
+      case "wedding_story":
+        return { ...sc, photoUrl: validPhotos[0] || sc.photoUrl };
+      case "party_theme":
+        return { ...sc, photoUrl: validPhotos[0] || sc.photoUrl };
+      case "day_arrived":
+        return { ...sc, photoUrl: validPhotos[0] || sc.photoUrl };
+      case "tribute_candle":
+        return { ...sc, photoUrl: validPhotos[0] || sc.photoUrl };
+      case "timeline":
+        return {
+          ...sc,
+          events: sc.events.map((evt, idx) => ({
+            ...evt,
+            photoUrl: validPhotos[idx % validPhotos.length] || evt.photoUrl,
+          })),
+        };
+      case "memories":
+        return {
+          ...sc,
+          memories: sc.memories.map((mem, idx) => ({
+            ...mem,
+            photoUrl: validPhotos[idx % validPhotos.length] || mem.photoUrl,
+          })),
+        };
+      default:
+        return sc;
+    }
+  });
+}
+

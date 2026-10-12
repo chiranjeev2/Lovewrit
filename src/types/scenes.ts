@@ -74,6 +74,20 @@ export const BaseSceneSchema = z.object({
   required: z.boolean().optional(),
 });
 
+// Validates full URLs (http/https/blob/data) or relative upload paths (/uploads/...)
+export const SafeMediaUrlSchema = z
+  .string()
+  .max(1000)
+  .refine(
+    (v) =>
+      v.startsWith("/") ||
+      v.startsWith("http://") ||
+      v.startsWith("https://") ||
+      v.startsWith("blob:") ||
+      v.startsWith("data:"),
+    { message: "Must be a valid URL or relative path" }
+  );
+
 // 1. Balloon Pop Scene (Apology Pack)
 export const BalloonPopSceneSchema = BaseSceneSchema.extend({
   type: z.literal("balloon_pop"),
@@ -89,7 +103,7 @@ export const BalloonPopSceneSchema = BaseSceneSchema.extend({
 export const HowWeMetSceneSchema = BaseSceneSchema.extend({
   type: z.literal("how_we_met"),
   storyText: z.string().max(1000).transform((v) => sanitizeText(v, 1000)),
-  photoUrl: z.string().url().max(1000).optional(),
+  photoUrl: SafeMediaUrlSchema.optional(),
   location: z.string().max(120).optional().transform((v) => v ? sanitizeText(v, 120) : undefined),
   dateLabel: z.string().max(80).optional().transform((v) => v ? sanitizeText(v, 80) : undefined),
 });
@@ -100,7 +114,7 @@ export const TimelineEventSchema = z.object({
   yearOrDate: z.string().max(50).transform((v) => sanitizeText(v, 50)),
   title: z.string().max(100).transform((v) => sanitizeText(v, 100)),
   description: z.string().max(350).transform((v) => sanitizeText(v, 350)),
-  photoUrl: z.string().url().max(1000).optional(),
+  photoUrl: SafeMediaUrlSchema.optional(),
 });
 
 export const TimelineSceneSchema = BaseSceneSchema.extend({
@@ -114,7 +128,7 @@ export const ChatMessageSchema = z.object({
   sender: z.enum(["buyer", "recipient"]),
   text: z.string().max(500).transform((v) => sanitizeText(v, 500)),
   timestamp: z.string().max(30).optional(),
-  imageUrl: z.string().url().max(1000).optional(), // Strictly image screenshot, no video
+  imageUrl: SafeMediaUrlSchema.optional(), // Strictly image screenshot, no video
 });
 
 export const ChatStorySceneSchema = BaseSceneSchema.extend({
@@ -128,7 +142,7 @@ export const MemoryItemSchema = z.object({
   id: z.string().max(50),
   title: z.string().max(100).transform((v) => sanitizeText(v, 100)),
   caption: z.string().max(300).optional().transform((v) => v ? sanitizeText(v, 300) : undefined),
-  photoUrl: z.string().url().max(1000),
+  photoUrl: SafeMediaUrlSchema,
 });
 
 export const MemoriesSceneSchema = BaseSceneSchema.extend({
@@ -171,7 +185,7 @@ export const ForgiveReplySceneSchema = BaseSceneSchema.extend({
 export const WeddingStorySceneSchema = BaseSceneSchema.extend({
   type: z.literal("wedding_story"),
   coupleStory: z.string().max(1000).transform((v) => sanitizeText(v, 1000)),
-  photoUrl: z.string().url().max(1000).optional(),
+  photoUrl: SafeMediaUrlSchema.optional(),
   faithTag: z.string().max(100).optional().transform((v) => v ? sanitizeText(v, 100) : undefined),
   verseText: z.string().max(400).optional().transform((v) => v ? sanitizeText(v, 400) : undefined),
 });
@@ -188,7 +202,7 @@ export const PartyThemeSceneSchema = BaseSceneSchema.extend({
     "Polaroid photo station with fun accessories",
     "Unfiltered chit-chat, music & gossip session",
   ]),
-  photoUrl: z.string().url().max(1000).optional(),
+  photoUrl: SafeMediaUrlSchema.optional(),
 });
 
 // 12. Event Details Scene (Wedding & Celebration Packs)
@@ -235,7 +249,7 @@ export const DayArrivedSceneSchema = BaseSceneSchema.extend({
   birthDate: z.string().max(30).optional().transform((v) => v ? sanitizeText(v, 30) : undefined),
   birthWeekday: z.string().max(40).optional().transform((v) => v ? sanitizeText(v, 40) : undefined),
   birthCity: z.string().max(100).optional().transform((v) => v ? sanitizeText(v, 100) : undefined),
-  photoUrl: z.string().url().max(1000).optional(),
+  photoUrl: SafeMediaUrlSchema.optional(),
 });
 
 // 16. Wishes from Loved Ones Scene (Birthday & Celebration)
@@ -283,7 +297,7 @@ export const TributeCandleSceneSchema = BaseSceneSchema.extend({
   yearsSpan: z.string().max(60).optional().transform((v) => v ? sanitizeText(v, 60) : undefined),
   candleLitCount: z.number().int().nonnegative().default(1),
   candleMessage: z.string().max(300).default("In loving memory, an eternal flame burns warmly in our hearts.").transform((v) => sanitizeText(v, 300)),
-  photoUrl: z.string().url().max(1000).optional(),
+  photoUrl: SafeMediaUrlSchema.optional(),
 });
 
 // 21. What They Taught Us Scene

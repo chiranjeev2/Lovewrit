@@ -654,3 +654,38 @@ This document records architectural, security, and verification decisions made d
    - Zero video formats or fake counters.
    - For memorial pages (`isMemorial = true`), all download titles, modals, and exported HTML/PDF files maintain respectful dignity with zero platform branding, upselling, or promotional badges.
 
+---
+
+## 26. Uploaded Image Display & Runtime Static Serving Fix
+
+### Problem Statement
+- User reported: "the images i upload dont show"
+
+### Root Cause Analysis
+1. **Next.js Production Dynamic Static Serving Gap**:
+   - Next.js production builds (`next start`) build an internal index of the `public/` directory at startup.
+   - Any file uploaded at runtime by users via `POST /api/upload` into `public/uploads/` returned **HTTP 404 Not Found** because it was not indexed in Next.js's in-memory startup manifest.
+   - When components like `CardPreview` or `PagePreview` attempted to render `<Image src="/uploads/..." />` or `<img src="/uploads/..." />`, the browser received 404, triggered `onError`, and marked the image as broken or filtered it out into the empty placeholder state.
+2. **Zod `.url()` Rejection of Relative Paths**:
+   - In `src/types/scenes.ts`, scene schemas (`HowWeMetSceneSchema`, `TimelineEventSchema`, `ChatMessageSchema`, `MemoryItemSchema`, `WeddingStorySceneSchema`, `PartyThemeSceneSchema`, `DayArrivedSceneSchema`, `TributeCandleSceneSchema`) used `photoUrl: z.string().url()`.
+   - Zod's `.url()` requires an absolute protocol (`http://` or `https://`) and rejects relative paths (`/uploads/...`).
+   - Consequently, `parseAndValidateScenesJson` failed validation and returned `null`, discarding the user's custom scene configuration and falling back to default template sample photos.
+3. **Scene Engine Customizer State Desynchronization**:
+   - When users uploaded photos in `src/app/create/[templateId]/page.tsx`, `pagePhotos` state was updated, but `scenes` state was not synchronized.
+   - Because Interactive Page preview defaults to `previewMode === "scene"`, the live Scene Flow continued rendering sample template photos rather than user uploads.
+   - Similarly, checkout payloads sent the un-updated `scenes` array.
+
+### Remediation Implemented
+1. **Dynamic File Server Route (`src/app/uploads/[filename]/route.ts`)**:
+   - Created dedicated App Router route handler to dynamically stream uploaded assets from `public/uploads/` with HTTP 200.
+   - Includes directory traversal guards (`path.basename` check, path resolution bounds), safe MIME mapping, immutable cache headers, and `nosniff` security flags.
+2. **`SafeMediaUrlSchema` in `src/types/scenes.ts`**:
+   - Replaced rigid `.url()` with `SafeMediaUrlSchema` permitting both absolute URLs (`https://`, `blob:`, `data:`) and relative upload paths (`/uploads/...`).
+3. **`syncPhotosToScenes` Utility (`src/lib/scene-defaults.ts`)**:
+   - Synchronizes uploaded photos across all scene types (`how_we_met`, `timeline`, `memories`, `wedding_story`, `party_theme`, `day_arrived`, `tribute_candle`).
+   - Wired into photo upload, move, and remove handlers in `src/app/create/[templateId]/page.tsx`.
+   - Wired into `/p/[slug]` to ensure existing and new keepsake pages display the buyer's real photos.
+4. **Verification**:
+   - Added comprehensive automated test suite `scripts/test-upload-and-image-display.mjs` verifying all 12 assertions across upload writing, dynamic route streaming (200 OK), traversal blocking (403), Zod validation, and scene photo propagation.
+
+
