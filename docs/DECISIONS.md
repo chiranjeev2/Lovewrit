@@ -615,3 +615,42 @@ This document records architectural, security, and verification decisions made d
   2. **NO deployment has been performed**
   3. **NO physical phone was tested**
 - Mirrored to `docs/HANDOVER.md` for consistent path resolution.
+
+---
+
+## 25. Interactive Page Download and Responsive Export Architecture
+
+### User Request
+- "add option of downloading ineractive page and it should be responsive"
+
+### Architecture & Format Decisions
+1. **Offline Interactive Webpage (`.html`)**:
+   - Generates a standalone, self-contained single-file HTML keepsake (`downloadInteractiveHtmlKeepsake` in `src/lib/interactive-page-export.ts`).
+   - Embeds responsive styling, fluid typography, mobile-first layouts, and custom theme CSS variables.
+   - Includes embedded base64 QR code linking to the live online keepsake story.
+   - Includes full offline interactivity: secret notes revelation triggers, audio player controls (with data URL audio if provided or safe fallbacks), celebration canvas particle animations, and memorial tribute candle lighting.
+   - Requires zero external dependencies or internet connection to view or interact once downloaded.
+2. **Commemorative Keepsake Document (`.pdf`)**:
+   - Implemented via `downloadInteractivePagePdf` with dynamic client-side import of `jspdf` and `qrcode`.
+   - Multi-page printable layout featuring letter, photo highlights, milestone timeline, secret note entries, and QR code to the live story.
+   - Respects solemn dignity for memorial / tribute pages (no celebratory badges, no promo branding).
+3. **High-Resolution Poster Image (`.png`)**:
+   - Implemented via `downloadInteractivePageImage` using dynamic import of `html-to-image`.
+   - Captures `#lovewrit-page-node` container at 2x pixel ratio for crisp offline saving and printing.
+
+### Responsive UI Integration
+1. **`DownloadPageModal` Component (`src/components/interactive/DownloadPageModal.tsx`)**:
+   - Mobile-first responsive modal dialog.
+   - All interactive touch targets (buttons, options) are >= 44x44px.
+   - Zero horizontal overflow across 375px mobile viewports up to desktop.
+   - Visual feedback with loading spinners, format badges, and descriptive helper text.
+2. **Scene Engine & Classic Mode Integration**:
+   - **Scene Engine Navigation (`src/components/scene-engine/SceneNavigation.tsx`)**: Added responsive Download button in top control bar.
+   - **Scene Engine Finale (`src/components/scene-engine/scenes/FinaleScene.tsx`)**: Added "Download Keepsake" action button alongside "Replay Story".
+   - **Fallback Static Scroll (`src/components/scene-engine/FallbackStaticScroll.tsx`)**: Added header download action button for users on reduced-motion or low-spec fallback mode.
+   - **Classic Mode (`src/app/p/[slug]/page.tsx`)**: Added Download action buttons in top navigation bar and bottom action bar beneath `PagePreview`.
+3. **Preservation of Non-Negotiables and Policy Rules**:
+   - Strictly preserved frozen payment, admin auth, pricing, and 11 non-negotiables.
+   - Zero video formats or fake counters.
+   - For memorial pages (`isMemorial = true`), all download titles, modals, and exported HTML/PDF files maintain respectful dignity with zero platform branding, upselling, or promotional badges.
+
