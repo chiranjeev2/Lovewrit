@@ -688,4 +688,28 @@ This document records architectural, security, and verification decisions made d
 4. **Verification**:
    - Added comprehensive automated test suite `scripts/test-upload-and-image-display.mjs` verifying all 12 assertions across upload writing, dynamic route streaming (200 OK), traversal blocking (403), Zod validation, and scene photo propagation.
 
+---
+
+## 27. Reversion of Interactive Page Download Feature
+
+### User Request
+- "undo the download interactive page functions and the things"
+
+### Changes Made
+1. **Removed Export Files & Components**:
+   - Deleted `src/lib/interactive-page-export.ts` (HTML/PDF/PNG generation utilities).
+   - Deleted `src/components/interactive/DownloadPageModal.tsx` (download modal dialog).
+2. **Reverted UI & Navigation Buttons**:
+   - `src/components/scene-engine/SceneNavigation.tsx`: Removed Download icon and `onOpenDownload` prop.
+   - `src/components/scene-engine/scenes/FinaleScene.tsx`: Restored original single Replay button; removed Download CTA and `onOpenDownload` prop.
+   - `src/components/scene-engine/FallbackStaticScroll.tsx`: Removed header download action button and `onOpenDownload` prop.
+   - `src/components/scene-engine/SceneContainer.tsx`: Removed `onOpenDownload` prop forwarding and handlers.
+   - `src/components/editor/PagePreview.tsx`: Removed `id="lovewrit-page-node"`.
+   - `src/app/p/[slug]/page.tsx`: Removed `Download` icons, `DownloadPageModal` mount points, `exportOptions`, and `showDownloadModal` state.
+3. **Preserved Fixes & Non-Negotiables**:
+   - Preserved dynamic runtime upload serving (`src/app/uploads/[filename]/route.ts`).
+   - Preserved `SafeMediaUrlSchema` and `syncPhotosToScenes` image display fixes.
+   - Preserved all frozen payment, admin auth, pricing, and 11 non-negotiables.
+
+
 

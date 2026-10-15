@@ -25,15 +25,12 @@ import {
   Lock,
   Gift,
   Copy,
-  Download,
 } from "lucide-react";
 import { FontFamilyKey, AmbientEffectKey } from "@/lib/templates-data";
 import { SceneContainer } from "@/components/scene-engine/SceneContainer";
 import { parseAndValidateScenesJson } from "@/types/scenes";
 import { getDefaultScenesForOccasion, syncPhotosToScenes } from "@/lib/scene-defaults";
 import { sanitizeGuestName } from "@/lib/guest-personalization";
-import DownloadPageModal from "@/components/interactive/DownloadPageModal";
-import { InteractivePageExportOptions } from "@/lib/interactive-page-export";
 
 export interface PageCustomData {
   senderName: string;
@@ -106,7 +103,6 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
   const [canPlayAudio, setCanPlayAudio] = useState(false);
   const [isLockedCountdown, setIsLockedCountdown] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
 
   // PIN Protection state
   const [enteredPin, setEnteredPin] = useState("");
@@ -358,31 +354,6 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
     template.occasion === "memorial" ||
     template.id === "in-loving-memory";
 
-  const exportOptions: InteractivePageExportOptions = {
-    senderName: pageData.senderName,
-    recipientName: pageData.recipientName,
-    nickname: order?.nickname,
-    occasion: pageData.occasion,
-    letter: pageData.letter,
-    photoUrls: parsedPhotos,
-    colorTheme: pageData.colorTheme as ColorThemeKey,
-    fontFamily: pageData.fontFamily as FontFamilyKey,
-    eventDate: pageData.eventDate,
-    eventTime: pageData.eventTime,
-    venueName: pageData.venueName,
-    venueAddress: pageData.venueAddress,
-    venueMapUrl: pageData.venueMapUrl,
-    milestoneVenue: pageData.milestoneVenue,
-    musicTrackUrl: musicUrl,
-    voiceMessageUrl: pageData.voiceMessageUrl,
-    timeline: parsedTimeline,
-    secretNotes: parsedSecretNotes,
-    shareUrl: currentUrl,
-    isMemorial,
-    showOmMotif: Boolean(pageData.showOmMotif),
-    showBismillah: Boolean(pageData.showBismillah),
-  };
-
   // Interactive Scene Engine: Full-screen sequential story view
   if (pageData.sceneEngineEnabled && !isLockedCountdown) {
     const guestParam = sanitizeGuestName(searchParams.get("guest"), 60);
@@ -418,18 +389,6 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           token={token || order?.adminToken}
           isTribute={isMemorial}
           onSendReply={handleSendReaction}
-          onOpenDownload={() => setShowDownloadModal(true)}
-        />
-
-        {/* Download Modal for Scene Engine Mode */}
-        <DownloadPageModal
-          isOpen={showDownloadModal}
-          onClose={() => setShowDownloadModal(false)}
-          options={{
-            ...exportOptions,
-            scenes,
-          }}
-          pageNodeId="lovewrit-scene-engine-container"
         />
       </div>
     );
@@ -449,13 +408,6 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         onClose={() => setShowQRModal(false)}
       />
 
-      {/* Download Interactive Keepsake Modal */}
-      <DownloadPageModal
-        isOpen={showDownloadModal}
-        onClose={() => setShowDownloadModal(false)}
-        options={exportOptions}
-        pageNodeId="lovewrit-page-node"
-      />
 
       {/* Countdown Reveal Lock (if scheduled for the future) */}
       {isLockedCountdown && pageData.revealAt && (
@@ -514,16 +466,6 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
         )}
 
         <div className="flex items-center space-x-2">
-          <button
-            onClick={() => setShowDownloadModal(true)}
-            className="flex items-center space-x-1.5 rounded-full border border-rose-500/40 bg-rose-950/40 px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:text-white hover:bg-rose-900/50 transition min-h-[44px]"
-            title="Download Interactive Keepsake"
-            aria-label="Download Interactive Keepsake"
-          >
-            <Download className="h-3.5 w-3.5 text-rose-400" />
-            <span className="hidden sm:inline">Download</span>
-          </button>
-
           <button
             onClick={() => setShowQRModal(true)}
             className="flex items-center space-x-1.5 rounded-full border border-neutral-800 bg-neutral-900 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:text-white transition min-h-[44px]"
@@ -587,18 +529,6 @@ export default function TemplatePageView({ params }: TemplatePageProps) {
           showBismillah={Boolean(pageData.showBismillah)}
           isAdSupported={Boolean(pageData.isAdSupported || order?.isAdSupported)}
         />
-
-        {/* Action Controls: Download Interactive Keepsake */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <button
-            onClick={() => setShowDownloadModal(true)}
-            className="inline-flex items-center justify-center space-x-2 rounded-2xl bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-rose-500/25 hover:scale-105 active:scale-95 transition min-h-[44px]"
-            title="Download this interactive page as an offline webpage, printable PDF, or high-res image"
-          >
-            <Download className="h-4 w-4" />
-            <span>Download Interactive Keepsake</span>
-          </button>
-        </div>
 
         {/* Phase 2: Recipient / Guest Wishes Wall */}
         <GuestbookWall

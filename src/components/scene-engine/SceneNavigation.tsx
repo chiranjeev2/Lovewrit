@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronLeft, ChevronRight, Volume2, VolumeX, FastForward, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Volume2, VolumeX, FastForward } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
 
 function getNavigationThemeStyles(theme?: ColorThemeKey) {
@@ -81,7 +81,6 @@ interface SceneNavigationProps {
   nextButtonLabel?: string;
   isOpener?: boolean;
   colorTheme?: ColorThemeKey;
-  onOpenDownload?: () => void;
 }
 
 export function SceneNavigation({
@@ -99,7 +98,6 @@ export function SceneNavigation({
   nextButtonLabel,
   isOpener = false,
   colorTheme = "rose",
-  onOpenDownload,
 }: SceneNavigationProps) {
   const navStyles = getNavigationThemeStyles(colorTheme);
   // If opener scene, top navigation is hidden or minimal until opened to prevent distraction
@@ -170,18 +168,6 @@ export function SceneNavigation({
               <Volume2 className="h-4 w-4 text-rose-300 animate-pulse" />
             )}
           </button>
-
-          {onOpenDownload && !isOpener && (
-            <button
-              type="button"
-              onClick={onOpenDownload}
-              className="flex h-11 w-11 sm:h-9 sm:w-9 items-center justify-center rounded-full bg-black/40 hover:bg-black/70 backdrop-blur-md text-white/90 border border-white/10 transition shadow-lg active:scale-95"
-              title="Download Interactive Keepsake"
-              aria-label="Download Interactive Keepsake"
-            >
-              <Download className="h-4 w-4 text-rose-300" />
-            </button>
-          )}
         </div>
       </header>
 

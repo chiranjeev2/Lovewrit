@@ -139,7 +139,6 @@ interface SceneContainerProps {
   isTribute?: boolean;
   onSendReply?: (text: string) => Promise<void>;
   previewActiveIndex?: number; // Studio preview control
-  onOpenDownload?: () => void;
 }
 
 export function SceneContainer({
@@ -156,7 +155,6 @@ export function SceneContainer({
   isTribute: isTributeProp,
   onSendReply,
   previewActiveIndex,
-  onOpenDownload,
 }: SceneContainerProps) {
   // Check if this experience is a Sacred Tribute
   const isTribute = Boolean(
@@ -349,7 +347,6 @@ export function SceneContainer({
       colorTheme={colorTheme}
       fontFamily={fontFamily}
       guestName={guestName}
-      onOpenDownload={onOpenDownload}
     />
   );
 
@@ -389,7 +386,6 @@ export function SceneContainer({
           isOpener={isOpener}
           nextButtonLabel={isLetterScene ? "Continue to Response" : "Continue"}
           colorTheme={colorTheme}
-          onOpenDownload={onOpenDownload}
         />
 
         {/* Scene Viewport with Animated Transitions */}
@@ -687,7 +683,6 @@ export function SceneContainer({
                     setDirection(-1);
                     setCurrentIndex(0);
                   }}
-                  onOpenDownload={onOpenDownload}
                 />
               )}
             </Suspense>

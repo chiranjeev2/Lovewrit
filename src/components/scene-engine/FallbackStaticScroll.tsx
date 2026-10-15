@@ -29,7 +29,7 @@ import {
   DevotionalSignificanceSceneConfig,
   DevotionalFinaleSceneConfig,
 } from "@/types/scenes";
-import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun, Download } from "lucide-react";
+import { Heart, Sparkles, MapPin, Camera, MessageCircle, HeartHandshake, Sun } from "lucide-react";
 import { ColorThemeKey } from "@/lib/templates-data";
 
 interface FallbackStaticScrollProps {
@@ -40,7 +40,6 @@ interface FallbackStaticScrollProps {
   colorTheme?: ColorThemeKey;
   fontFamily?: string;
   guestName?: string | null;
-  onOpenDownload?: () => void;
 }
 
 export function FallbackStaticScroll({
@@ -49,7 +48,6 @@ export function FallbackStaticScroll({
   recipientName,
   letter,
   guestName,
-  onOpenDownload,
 }: FallbackStaticScrollProps) {
   const displayRecipient = guestName || recipientName;
 
@@ -68,18 +66,6 @@ export function FallbackStaticScroll({
           <p className="text-sm text-neutral-400">
             Written with heartfelt care from {senderName}
           </p>
-          {onOpenDownload && (
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={onOpenDownload}
-                className="inline-flex items-center space-x-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 px-4 py-2 text-xs font-semibold text-white transition active:scale-95 shadow-md min-h-[44px]"
-              >
-                <Download className="h-3.5 w-3.5 text-rose-300" />
-                <span>Download Interactive Keepsake</span>
-              </button>
-            </div>
-          )}
         </div>
 
         {/* Dynamic Scenes Stack */}

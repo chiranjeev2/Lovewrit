@@ -393,7 +393,6 @@ const PagePreview = React.memo(function PagePreview({
 
   return (
     <div
-      id="lovewrit-page-node"
       ref={containerRef}
       className={`relative w-full overflow-hidden rounded-[32px] border ${theme.borderStyle} bg-gradient-to-b ${theme.bgGradient} p-4 sm:p-10 text-white shadow-2xl transition-all duration-300`}
     >
