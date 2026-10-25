@@ -1,12 +1,12 @@
 # Lovewrit Database Architecture & PostgreSQL Migration Guide
 
-This document details the database schema, Prisma migration workflows, PostgreSQL/Supabase readiness, index catalog, and the production deployment runbook.
+This document details the database schema, dual-provider architecture (SQLite for local dev/QA, PostgreSQL for production Supabase), Prisma migration workflows, index catalog, and the production deployment runbook.
 
 ---
 
 ## 1. Schema Overview & Models
 
-The database schema is defined in [`prisma/schema.prisma`](file:///d:/projects/lovewrit/prisma/schema.prisma) and consists of 8 core models:
+The database schema defines 8 core models:
 
 1. **`Order`**: Root transaction entity tracking keepsake type (`CARD` or `PAGE`), pricing tier (`SELF_SERVICE`, `CUSTOM`, `RUSH`), payment status (`PENDING`, `PAID`, `FAILED`), Razorpay order identifiers, currency, amount in smallest units, referral codes, and security tokens (`adminToken`, `pinCode`).
 2. **`CardData`**: 1-to-1 relation with `Order` for Digital Greeting Cards (bilingual text, photos, color themes, stickers JSON, Om/Bismillah sacred motifs, reveal timestamps).
@@ -19,110 +19,82 @@ The database schema is defined in [`prisma/schema.prisma`](file:///d:/projects/l
 
 ---
 
-## 2. Migration History & Performance Indexes
+## 2. Dual-Provider Architecture (Zero Schema Drift)
 
-The repository maintains an immutable Prisma migrations directory under [`prisma/migrations/`](file:///d:/projects/lovewrit/prisma/migrations):
+To ensure zero drift between local SQLite development and PostgreSQL production environments, Lovewrit maintains two synchronised schemas:
+- [`prisma/schema.sqlite.prisma`](file:///d:/projects/lovewrit/prisma/schema.sqlite.prisma): Configured with `provider = "sqlite"` and `url = env("DATABASE_URL")`. Default in dev and automated QA test runs.
+- [`prisma/schema.postgresql.prisma`](file:///d:/projects/lovewrit/prisma/schema.postgresql.prisma): Configured with `provider = "postgresql"`, `url = env("DATABASE_URL")`, and `directUrl = env("DIRECT_URL")`.
+- [`prisma/schema.prisma`](file:///d:/projects/lovewrit/prisma/schema.prisma): The active schema file read by Prisma CLI.
 
-### Migration Catalog:
-1. **`20261007000000_init_schema`**:
-   - Initial relational schema establishing all 8 tables, column types, default values, primary keys (`cuid()`), and unique constraints (`Order.slug`, `Order.razorpayOrderId`, `CardData.orderId`, `PageData.orderId`, `ReferralRecord.code`).
-2. **`20261009000000_add_performance_indexes`**:
-   - Adds 10 B-tree performance and search indexes to eliminate table scans on frequently filtered columns:
-     - `GuestbookEntry_pageDataId_idx` on `GuestbookEntry(pageDataId)`
-     - `GuestbookEntry_createdAt_idx` on `GuestbookEntry(createdAt)`
-     - `Order_customerEmail_idx` on `Order(customerEmail)`
-     - `Order_createdAt_idx` on `Order(createdAt)`
-     - `Order_myReferralCode_idx` on `Order(myReferralCode)`
-     - `RateLimitEvent_action_ipAddress_createdAt_idx` on `RateLimitEvent(action, ipAddress, createdAt)`
-     - `RateLimitEvent_createdAt_idx` on `RateLimitEvent(createdAt)`
-     - `RecipientReaction_pageDataId_idx` on `RecipientReaction(pageDataId)`
-     - `RecipientReaction_createdAt_idx` on `RecipientReaction(createdAt)`
-     - `ReferralRecord_ownerEmail_idx` on `ReferralRecord(ownerEmail)`
-
-### Verification of Migration Integrity:
-- **Zero Schema Drift**: Executing `npx prisma migrate status` confirms 2 migrations found, 0 pending, and schema up to date.
-- **Clean Scratch Replay**: Verified by executing `prisma migrate deploy` on a fresh scratch database (`scratch_test.db`), confirming deterministic ordered replay from base schema to final indexed state without errors.
-
----
-
-## 3. PostgreSQL & Supabase Compatibility Audit
-
-The Prisma schema is 100% PostgreSQL-compatible:
-- **Primary Keys**: All tables use CUID strings (`@id @default(cuid())`), which are supported uniformly across SQLite, PostgreSQL, and MySQL.
-- **Data Types**: All attributes use standard Prisma primitive types (`String`, `Int`, `Boolean`, `DateTime`) that translate directly to native PostgreSQL column types (`TEXT`, `INTEGER`, `BOOLEAN`, `TIMESTAMP WITH TIME ZONE`).
-- **No Engine-Specific Types**: There are zero SQLite-only pragmas, SQLite-specific types, or unsupported database extensions.
-- **Foreign Key Cascades**: All relations use standard `onDelete: Cascade`, translating cleanly to PostgreSQL `ON DELETE CASCADE` foreign keys.
-- **Indexes**: All composite and single-column indexes are pure standard B-tree indexes natively supported by PostgreSQL.
-
----
-
-## 4. Step-by-Step Migration from SQLite to Supabase / PostgreSQL
-
-### Step 1: Provision Managed PostgreSQL Database
-1. Create a project in [Supabase](https://supabase.com) (or AWS RDS / Neon / Railway).
-2. Navigate to **Project Settings** -> **Database**.
-3. Copy the Connection Strings:
-   - **Transaction Connection Pooler** (Port 6543, for serverless Next.js runtime):
-     `DATABASE_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"`
-   - **Direct Session Connection** (Port 5432, for Prisma migrations):
-     `DIRECT_URL="postgresql://postgres.[PROJECT_REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"`
-
-### Step 2: Configure Prisma for PostgreSQL
-In `prisma/schema.prisma`, update the `datasource` block:
-
-```prisma
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
-}
-```
-
-### Step 3: Run Initial PostgreSQL Migrations
-Execute the migration against the new database:
-
+### Provider Switching Commands:
 ```bash
-npx prisma migrate deploy
+# Switch active schema to PostgreSQL and regenerate client
+npm run db:use-postgres
+
+# Switch active schema to SQLite and regenerate client
+npm run db:use-sqlite
 ```
 
-This applies both migrations in sequence, creating the complete relational table structure, foreign key constraints, unique indexes, and performance indexes in PostgreSQL.
+The synchronization script ([`scripts/sync-prisma-schemas.js`](file:///d:/projects/lovewrit/scripts/sync-prisma-schemas.js)) programmatically parses all models, attributes, fields, types, indexes, and relations across both files. Automated tests assert that both schemas remain 100% identical in model structure.
 
 ---
 
-## 5. Vercel Production Build & Migration Pipeline
+## 3. Migration Sets
 
-The Vercel deployment pipeline is configured in [`package.json`](file:///d:/projects/lovewrit/package.json):
+### SQLite Migrations (`prisma/migrations/`):
+1. `20261007000000_init_schema`: Base relational tables and unique constraints.
+2. `20261009000000_add_performance_indexes`: 10 B-tree performance and search indexes.
 
-```json
-{
-  "scripts": {
-    "build": "prisma generate && prisma migrate deploy && next build",
-    "db:migrate": "prisma migrate dev",
-    "db:deploy": "prisma migrate deploy"
-  }
-}
-```
-
-### Build Execution Flow on Vercel:
-1. `prisma generate`: Compiles the type-safe `@prisma/client` artifacts into `node_modules`.
-2. `prisma migrate deploy`: Connects to `DATABASE_URL` (or `DIRECT_URL`) and applies any pending migrations idempotently. If the database is already up-to-date, it exits cleanly with code 0.
-3. `next build`: Builds the production Next.js application bundle.
+### PostgreSQL Migrations (`prisma/migrations-postgres/`):
+Dedicated PostgreSQL DDL migration set generated via `prisma migrate diff`:
+1. `20261007000000_init_schema`: Creates tables, primary keys (`CONSTRAINT ... PRIMARY KEY ("id")`), foreign keys with cascade deletes, and unique indexes on PostgreSQL.
+2. `20261009000000_add_performance_indexes`: Creates all 10 B-tree performance indexes in PostgreSQL syntax.
 
 ---
 
-## 6. Development Workflow Commands
+## 4. Production Supabase / PostgreSQL Deployment Runbook
 
-- **Create new migration locally**:
+Follow these exact steps when deploying Lovewrit to production on Supabase:
+
+### Step 1: Provision Managed Database in Supabase
+1. Create a new project in the [Supabase Dashboard](https://supabase.com).
+2. Navigate to **Project Settings** -> **Database**.
+3. Under **Connection string**, obtain both URIs:
+   - **Transaction Pooler (Port 6543)** — Required for `DATABASE_URL` in serverless Next.js runtimes:
+     ```env
+     DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
+     ```
+   - **Direct Session (Port 5432)** — Required for `DIRECT_URL` to run Prisma migrations:
+     ```env
+     DIRECT_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+     ```
+
+### Step 2: Set Environment Variables in Hosting Dashboard
+Add both variables to the hosting provider (e.g. Vercel dashboard):
+- `DATABASE_URL`: Transaction pooler URI on port 6543 with `pgbouncer=true`.
+- `DIRECT_URL`: Direct connection URI on port 5432.
+
+### Step 3: Switch Schema and Apply Migrations
+Before deploying or building the production bundle:
+```bash
+# 1. Switch active schema to PostgreSQL
+npm run db:use-postgres
+
+# 2. Deploy migrations to the Supabase instance
+npx prisma migrate deploy --schema prisma/schema.postgresql.prisma
+```
+
+---
+
+## 5. Development Workflow Commands
+
+- **Check Schema Drift**:
   ```bash
-  npx prisma migrate dev
+  node scripts/sync-prisma-schemas.js
   ```
 - **Apply pending migrations to active database**:
   ```bash
-  npx prisma migrate deploy
-  ```
-- **Check migration drift and status**:
-  ```bash
-  npx prisma migrate status
+  npm run db:deploy
   ```
 - **Inspect database tables via Prisma Studio**:
   ```bash

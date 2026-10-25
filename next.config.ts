@@ -9,15 +9,29 @@ const scriptSrc = isDev
   ? "'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com"
   : "'self' 'unsafe-inline' https://checkout.razorpay.com";
 
+const storagePublicBaseUrl = process.env.STORAGE_PUBLIC_BASE_URL || "";
+let storageOrigin = "";
+let storagePattern: { protocol: "https" | "http"; hostname: string } | null = null;
+if (storagePublicBaseUrl.trim().length > 0) {
+  try {
+    const parsed = new URL(storagePublicBaseUrl);
+    storageOrigin = parsed.origin;
+    storagePattern = {
+      protocol: (parsed.protocol.replace(":", "") as "https" | "http") || "https",
+      hostname: parsed.hostname,
+    };
+  } catch {}
+}
+
 const cspHeader = `
   default-src 'self';
   script-src ${scriptSrc};
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' blob: data: https://images.unsplash.com https://*.unsplash.com https://checkout.razorpay.com;
+  img-src 'self' blob: data: https://images.unsplash.com https://*.unsplash.com https://checkout.razorpay.com ${storageOrigin};
   font-src 'self' data: https://fonts.gstatic.com;
   connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com;
   frame-src 'self' https://api.razorpay.com https://checkout.razorpay.com;
-  media-src 'self' blob: data: https://cdn.pixabay.com;
+  media-src 'self' blob: data: https://cdn.pixabay.com ${storageOrigin};
   object-src 'none';
   base-uri 'self';
   form-action 'self';
@@ -25,18 +39,24 @@ const cspHeader = `
   .replace(/\s{2,}/g, " ")
   .trim();
 
+const remotePatterns: Array<{ protocol: "https" | "http"; hostname: string }> = [
+  {
+    protocol: "https",
+    hostname: "images.unsplash.com",
+  },
+  {
+    protocol: "https",
+    hostname: "**.unsplash.com",
+  },
+];
+
+if (storagePattern) {
+  remotePatterns.push(storagePattern);
+}
+
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "images.unsplash.com",
-      },
-      {
-        protocol: "https",
-        hostname: "**.unsplash.com",
-      },
-    ],
+    remotePatterns,
   },
   async headers() {
     return [

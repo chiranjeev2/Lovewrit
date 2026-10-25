@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Order {
+  id                  String    @id @default(cuid())
+  slug                String    @unique
+  customerEmail       String
+  customerName        String
+  productType         String    // "CARD" | "PAGE"
+  templateId          String
+  tier                String    @default("SELF_SERVICE") // "SELF_SERVICE" | "CUSTOM" | "RUSH"
+  isBundle            Boolean   @default(false)
+  customNotes         String?   // Buyer instructions for Custom / Rush tiers
+  status              String    @default("PENDING") // "PENDING" | "PAID" | "FAILED"
+  founderStatus       String    @default("NOT_APPLICABLE") // "NOT_APPLICABLE" | "QUEUED" | "IN_PROGRESS" | "COMPLETED"
+  founderAssignedLink String?
+  adminToken          String?   // Secret token for buyer/family moderation
+  currency            String    // "INR" | "USD" | "EUR" | "GBP"
+  amountTotal         Int       // in cents / paise / pence
+  region              String    // "asia_africa" | "americas" | "europe" | "uk"
+  razorpayOrderId     String?   @unique
+  razorpayPaymentId   String?
+  paymentProvider     String    @default("razorpay") // "razorpay" | "founder_pass" | "free"
+  ipAddress           String?
+  isAdSupported       Boolean   @default(false)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  pinCode             String?   // Optional numeric PIN protection
+  nickname            String?   // Optional pet name / nickname
+  tipUpiId            String?   // Optional sender UPI ID for direct tips
+  tipPaypalUsername   String?   // Optional sender PayPal username for direct tips
+  referralCodeUsed    String?   // Referral code applied at checkout
+  myReferralCode      String?   // Unique referral code for this buyer
+
+  cardData            CardData?
+  pageData            PageData?
+
+  @@index([customerEmail])
+  @@index([createdAt])
+  @@index([myReferralCode])
+}
+
+model CardData {
+  id                String    @id @default(cuid())
+  orderId           String    @unique
+  order             Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName        String
+  recipientName     String
+  occasion          String
+  message           String
+  secondaryMessage  String?   // Bilingual secondary message
+  photoUrl          String
+  photoShape        String    @default("oval")
+  colorTheme        String    @default("rose")
+  fontFamily        String    @default("serif") // "serif" | "handwriting" | "sans"
+  borderStyle       String    @default("classic") // "classic" | "floral" | "minimal_line" | "festive_gold"
+  stickersJson      String?   // JSON array of placed stickers
+  isFlipReveal      Boolean   @default(false)
+  location          String?
+  venueName         String?
+  venueAddress      String?
+  venueMapUrl       String?
+  voiceMessageUrl   String?
+  revealAt          DateTime?
+  showOmMotif       Boolean   @default(false)
+  showBismillah     Boolean   @default(false)
+  language          String    @default("en")
+  secondaryLanguage String?
+  createdAt         DateTime  @default(now())
+}
+
+model PageData {
+  id                       String           @id @default(cuid())
+  orderId                  String           @unique
+  order                    Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  senderName               String
+  recipientName            String
+  occasion                 String
+  letter                   String
+  photoUrls                String           // JSON stringified array of URLs
+  collageLayout            String?          @default("masonry")
+  musicTrack               String?
+  musicType                String?          @default("builtin")
+  isProposal               Boolean          @default(false)
+  proposalQuestion         String?          @default("marry_me")
+  colorTheme               String           @default("rose")
+  fontFamily               String           @default("serif")
+  ambientEffect            String?          @default("none") // "none" | "petals" | "stars" | "rain"
+  timelineJson             String?          // JSON array of milestone dates/photos
+  secretNotesJson          String?          // JSON array of tap-to-reveal secret messages
+  milestoneVenue           String?          // "Where we first met" / landmark
+  venueName                String?
+  venueAddress             String?
+  venueMapUrl              String?
+  voiceMessageUrl          String?
+  revealAt                 DateTime?
+  showOmMotif              Boolean          @default(false)
+  showBismillah            Boolean          @default(false)
+  isAdSupported            Boolean          @default(false)
+  requireGuestbookApproval Boolean          @default(false)
+  language                 String           @default("en")
+  scenesJson               String?          // Serialized SceneConfig[] array
+  sceneEngineEnabled       Boolean          @default(false) // Default false for existing rows, true for new orders
+  createdAt                DateTime         @default(now())
+
+  guestbookEntries         GuestbookEntry[]
+  reactions                RecipientReaction[]
+}
+
+model RecipientReaction {
+  id           String   @id @default(cuid())
+  pageDataId   String
+  pageData     PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
+  senderName   String
+  reactionType String   @default("text") // "text" | "voice" | "emoji"
+  message      String?
+  voiceUrl     String?
+  createdAt    DateTime @default(now())
+
+  @@index([pageDataId])
+  @@index([createdAt])
+}
+
+model ReferralRecord {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  ownerEmail    String
+  ownerName     String
+  creditBalance Int      @default(0) // in cents / paise
+  timesUsed     Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  @@index([ownerEmail])
+}
+
+model GuestbookEntry {
+  id         String   @id @default(cuid())
+  pageDataId String
+  pageData   PageData @relation(fields: [pageDataId], references: [id], onDelete: Cascade)
+  authorName String
+  message    String
+  attendance String?  @default("ATTENDING") // "ATTENDING" | "REGRETS" | "MESSAGE_ONLY"
+  headcount  Int      @default(1)
+  status     String   @default("APPROVED") // "PENDING" | "APPROVED" | "FLAGGED"
+  createdAt  DateTime @default(now())
+
+  @@index([pageDataId])
+  @@index([createdAt])
+}
+
+model RateLimitEvent {
+  id        String   @id @default(cuid())
+  ipAddress String
+  email     String?
+  action    String   // "FREE_ORDER_CREATION"
+  allowed   Boolean
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([action, ipAddress, createdAt])
+  @@index([createdAt])
+}
+
+model PlatformSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+

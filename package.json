@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && prisma migrate deploy && next build --webpack",
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "qa": "node scripts/run-all-qa.js",
     "admin:set-key": "node scripts/set-admin-secrets.mjs",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:use-postgres": "node scripts/sync-prisma-schemas.js --use=postgres",
+    "db:use-sqlite": "node scripts/sync-prisma-schemas.js --use=sqlite"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",

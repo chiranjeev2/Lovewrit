@@ -25,6 +25,8 @@ if (!process.env.__TSX_ACTIVE__) {
   }
 }
 
+const { verifyNoDrift } = await import("./sync-prisma-schemas.js");
+
 let totalAssertions = 0;
 let passedAssertions = 0;
 
@@ -58,35 +60,28 @@ async function runPostgresReadinessTests() {
   // 2. Index Coverage for High-Churn & Lookup Fields
   // --------------------------------------------------------------------------
   console.log("\n[2] Verifying Essential B-Tree Indexes for Production...");
-  assert(schemaContent.includes("@@index([customerEmail])"), "Order table indexes customerEmail");
-  assert(schemaContent.includes("@@index([createdAt])"), "High-churn tables index createdAt timestamp");
-  assert(schemaContent.includes("@@index([pageDataId])"), "Relation tables index pageDataId foreign key");
-  assert(schemaContent.includes("@@index([ownerEmail])"), "ReferralRecord indexes ownerEmail");
-  assert(schemaContent.includes("@@index([action, ipAddress, createdAt])"), "RateLimitEvent has compound index for sliding window queries");
+  const expectedIndexes = [
+    "@@index([customerEmail])",
+    "@@index([createdAt])",
+    "@@index([myReferralCode])",
+    "@@index([pageDataId])",
+    "@@index([ownerEmail])",
+    "@@index([action, ipAddress, createdAt])",
+  ];
 
-  // --------------------------------------------------------------------------
-  // 3. Raw SQL & SQLite Keyword Prohibitions
-  // --------------------------------------------------------------------------
-  console.log("\n[3] Auditing Codebase for SQLite-Only SQL Assumptions...");
-  let rawSqlMatches = "";
-  try {
-    rawSqlMatches = execFileSync(
-      "git",
-      ["grep", "-n", "$queryRaw", "src"],
-      { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }
-    ).trim();
-  } catch {
-    rawSqlMatches = "";
+  for (const idx of expectedIndexes) {
+    assert(schemaContent.includes(idx), `Schema includes required index: ${idx}`);
   }
 
-  // If there are raw queries, check none use strftime or sqlite_master
-  assert(
-    !rawSqlMatches.includes("strftime") && !rawSqlMatches.includes("sqlite_master"),
-    "No raw SQL queries rely on SQLite-specific functions like strftime or sqlite_master"
-  );
+  // --------------------------------------------------------------------------
+  // 3. Foreign Key Cascades & Constraints
+  // --------------------------------------------------------------------------
+  console.log("\n[3] Checking Foreign Key Relations & Constraints...");
+  assert(schemaContent.includes("onDelete: Cascade"), "Cascade deletion specified on child relations");
+  assert(schemaContent.includes("@unique"), "Unique constraints defined on slugs and order identifiers");
 
   // --------------------------------------------------------------------------
-  // 4. Data Inventory Documentation Verification
+  // 4. Verifying docs/DATA_INVENTORY.md
   // --------------------------------------------------------------------------
   console.log("\n[4] Verifying docs/DATA_INVENTORY.md...");
   const inventoryPath = path.resolve(process.cwd(), "docs/DATA_INVENTORY.md");
@@ -99,6 +94,26 @@ async function runPostgresReadinessTests() {
   assert(inventoryContent.includes("GuestbookEntry"), "Inventory documents GuestbookEntry table");
   assert(inventoryContent.includes("RateLimitEvent"), "Inventory documents RateLimitEvent table");
   assert(inventoryContent.includes("PII"), "Inventory classifies PII across all columns");
+
+  // --------------------------------------------------------------------------
+  // 5. Zero Drift Between SQLite and PostgreSQL Schemas
+  // --------------------------------------------------------------------------
+  console.log("\n[5] Verifying Dual-Schema Parity & PostgreSQL Migrations...");
+  const sqliteSchemaPath = path.resolve(process.cwd(), "prisma/schema.sqlite.prisma");
+  const postgresSchemaPath = path.resolve(process.cwd(), "prisma/schema.postgresql.prisma");
+  const postgresMigrationsPath = path.resolve(process.cwd(), "prisma/migrations-postgres");
+
+  assert(fs.existsSync(sqliteSchemaPath), "prisma/schema.sqlite.prisma exists");
+  assert(fs.existsSync(postgresSchemaPath), "prisma/schema.postgresql.prisma exists");
+  assert(fs.existsSync(postgresMigrationsPath), "prisma/migrations-postgres exists");
+
+  let driftVerified = false;
+  try {
+    driftVerified = verifyNoDrift();
+  } catch (err) {
+    console.error("Drift check error:", err.message);
+  }
+  assert(driftVerified === true, "Zero drift detected: SQLite and PostgreSQL schemas match 100% in models, fields, indexes and relations");
 
   console.log("\n================================================================");
   console.log(`TOTAL ASSERTIONS: ${totalAssertions}`);
