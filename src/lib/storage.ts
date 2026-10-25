@@ -1,4 +1,3 @@
-import fs from "fs";
 import { writeFile, mkdir, unlink, stat } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
