@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { nanoid } from "nanoid";
 import {
   checkPayloadSize,
@@ -14,6 +12,7 @@ import {
   validateAudioFile,
   validateVoiceMemoFile,
 } from "@/lib/validation";
+import { getStorageAdapter } from "@/lib/storage";
 
 export async function POST(req: NextRequest) {
   try {
@@ -111,19 +110,13 @@ export async function POST(req: NextRequest) {
     const safeIdentifier = nanoid(16);
     const filename = `${Date.now()}-${kind}-${safeIdentifier}${extension}`;
 
-    const uploadDir = path.resolve(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
-    const filePath = path.resolve(uploadDir, filename);
-
-    // Path traversal assertion: target must strictly be inside uploadDir
-    if (!filePath.startsWith(uploadDir)) {
-      return safeErrorResponse("Illegal file path traversal attempt", 400);
-    }
-
-    await writeFile(filePath, buffer);
-
-    const publicUrl = `/uploads/${filename}`;
+    // 7. Store file via configured storage adapter (local disk or S3)
+    const storage = getStorageAdapter();
+    const { url: publicUrl } = await storage.put({
+      filename,
+      buffer,
+      mimeType: file.type || (kind === "image" ? `image/${detected.format}` : `audio/${detected.format}`),
+    });
 
     return NextResponse.json({
       success: true,

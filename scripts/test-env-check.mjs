@@ -24,7 +24,7 @@ if (!process.env.__TSX_ACTIVE__) {
   }
 }
 
-const { validateEnv, REQUIRED_PRODUCTION_VARS } = await import("../src/lib/env-check");
+const { validateEnv, REQUIRED_PRODUCTION_VARS, REQUIRED_S3_STORAGE_VARS } = await import("../src/lib/env-check");
 
 let totalAssertions = 0;
 let passedAssertions = 0;
@@ -116,6 +116,40 @@ async function runEnvCheckTests() {
   assert(devResult && devResult.valid === false, "Returns valid=false indicating incomplete config");
   assert(devResult && devResult.missing.length === REQUIRED_PRODUCTION_VARS.length, "All missing variables identified");
 
+  // 5. Production S3 Storage Driver Conditional Check
+  console.log("\n[5] Testing S3 Storage Driver Requirements in Production...");
+  const prodS3IncompleteEnv = {
+    ...fullMockProdEnv,
+    STORAGE_DRIVER: "s3",
+    // Missing STORAGE_ENDPOINT, STORAGE_BUCKET, etc.
+  };
+
+  let s3Threw = false;
+  let s3ThrownMessage = "";
+  try {
+    validateEnv(prodS3IncompleteEnv);
+  } catch (err) {
+    s3Threw = true;
+    s3ThrownMessage = err.message;
+  }
+
+  assert(s3Threw, "validateEnv throws in production when STORAGE_DRIVER=s3 and S3 credentials missing");
+  assert(s3ThrownMessage.includes("STORAGE_ENDPOINT"), "Error message lists missing variable NAME STORAGE_ENDPOINT");
+  assert(s3ThrownMessage.includes("STORAGE_BUCKET"), "Error message lists missing variable NAME STORAGE_BUCKET");
+  assert(s3ThrownMessage.includes("STORAGE_ACCESS_KEY_ID"), "Error message lists missing variable NAME STORAGE_ACCESS_KEY_ID");
+  assert(s3ThrownMessage.includes("STORAGE_SECRET_ACCESS_KEY"), "Error message lists missing variable NAME STORAGE_SECRET_ACCESS_KEY");
+
+  const prodS3CompleteEnv = {
+    ...fullMockProdEnv,
+    STORAGE_DRIVER: "s3",
+    STORAGE_ENDPOINT: "https://r2.example.com",
+    STORAGE_BUCKET: "my-bucket",
+    STORAGE_ACCESS_KEY_ID: "my_key_id",
+    STORAGE_SECRET_ACCESS_KEY: "my_secret_key",
+  };
+  const s3CompleteResult = validateEnv(prodS3CompleteEnv);
+  assert(s3CompleteResult.valid === true, "validateEnv passes in production when STORAGE_DRIVER=s3 and all S3 variables present");
+
   console.log(`\n=== ENV CHECK TEST SUITE COMPLETE: ${passedAssertions} / ${totalAssertions} assertions green ===\n`);
 }
 
@@ -123,4 +157,3 @@ runEnvCheckTests().catch((err) => {
   console.error("Env check test suite failed:", err);
   process.exit(1);
 });
-

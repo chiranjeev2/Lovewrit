@@ -150,6 +150,7 @@ const EXPECTED_SUITE_IDS = [
   'a11y-mobile',
   'performance-bundles',
   'db-readiness',
+  'storage-adapter',
 ];
 
 const SUITE_REGISTRY = [
@@ -611,6 +612,22 @@ const SUITE_REGISTRY = [
         return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (Prisma schema, indexes, CUID portability, data inventory)` };
       }
       return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Database readiness audit failed or assertions below minimum' };
+    },
+  },
+  {
+    id: 'storage-adapter',
+    name: 'Upload Storage Adapter Suite',
+    command: 'node scripts/test-storage-adapter.mjs',
+    requiresServer: false,
+    minAssertions: 35,
+    parse: (output, exitCode) => {
+      const match = output.match(/(\\d+)\\s*\\/\\s*(\\d+)\\s*assertions/i);
+      const passed = match ? parseInt(match[1], 10) : 0;
+      const total = match ? parseInt(match[2], 10) : 0;
+      if (exitCode === 0 && match && passed >= 35) {
+        return { passed: true, assertionsPassed: passed, totalAssertions: total, details: `${passed} / ${total} assertions green (local/S3 drivers, SigV4 mocked boundary, hostile rejection, legacy /uploads/)` };
+      }
+      return { passed: false, assertionsPassed: passed, totalAssertions: total, details: 'Storage adapter assertions below minimum' };
     },
   },
 ];

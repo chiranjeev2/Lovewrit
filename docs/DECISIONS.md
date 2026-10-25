@@ -713,3 +713,42 @@ This document records architectural, security, and verification decisions made d
 
 
 
+
+---
+
+## 28. Deploy-Prep Pass: Upload Storage Adapter & PostgreSQL Readiness (`fix/deploy-prep`)
+
+### 1. Upload Storage Adapter Architecture
+- **Unified Interface (`src/lib/storage.ts`)**:
+  - Defined `StorageAdapter` interface exposing `put(key, buffer, contentType)`, `getUrl(key)`, and `delete(key)`.
+  - Implemented `LocalStorageDriver` as default for local development and QA suites, preserving file writes to `public/uploads/` and returning `/uploads/[filename]`.
+  - Implemented `S3StorageDriver` using AWS Signature Version 4 over standard fetch and Node.js native `crypto`, avoiding heavy external SDK dependencies and compatible with Cloudflare R2, AWS S3, and Supabase Storage.
+  - Implemented factory `getStorageAdapter()` driven by `STORAGE_DRIVER` (`"s3"` vs `"local"`).
+- **Environment Configuration**:
+  - Configured 7 environment variable names: `STORAGE_DRIVER`, `STORAGE_ENDPOINT`, `STORAGE_REGION`, `STORAGE_BUCKET`, `STORAGE_ACCESS_KEY_ID`, `STORAGE_SECRET_ACCESS_KEY`, and `STORAGE_PUBLIC_BASE_URL`.
+  - Listed as empty in `.env.example`.
+  - Updated `src/lib/env-check.ts` to strictly require S3 variables in production only when `STORAGE_DRIVER === 's3'`.
+- **Security & Schema Compatibility**:
+  - Preserved all strict upload validations in `src/app/api/upload/route.ts` (magic byte verification, file size limits, safe filename generation, no SVG).
+  - Preserved legacy `/uploads/...` URL rendering via `src/app/uploads/[filename]/route.ts`.
+  - Updated `SafeMediaUrlSchema` in `src/types/scenes.ts` to permit both local paths and URLs matching the configured `STORAGE_PUBLIC_BASE_URL`.
+  - Updated `next.config.ts` to permit the configured storage public host in Content Security Policy (`img-src` and `media-src`) and `images.remotePatterns`.
+- **Testing & Verification**:
+  - Built `scripts/test-storage-adapter.mjs` verifying 37 assertions across local driver contract, mocked S3 HTTP boundary (SigV4 signing headers, endpoint resolution, zero real bucket calls), upload hostile file rejection, and legacy `/uploads/` rendering.
+
+### 2. Dual-Provider PostgreSQL Readiness
+- **Dual Schema Configuration**:
+  - `prisma/schema.sqlite.prisma`: Preserved SQLite provider for dev and QA.
+  - `prisma/schema.postgresql.prisma`: PostgreSQL provider targeting Supabase / Postgres with `directUrl = env("DIRECT_URL")`.
+- **Synchronization & Zero-Drift Tooling**:
+  - Created `scripts/sync-prisma-schemas.js` and npm scripts `db:use-postgres` and `db:use-sqlite`.
+  - AST-based validation verifies identical models, fields, types, attributes, relations, and indexes between SQLite and Postgres schemas.
+  - Generated PostgreSQL migration set in `prisma/migrations-postgres/` (`20261007000000_init_schema` and `20261009000000_add_performance_indexes`).
+  - Verified schema with `npx prisma validate --schema prisma/schema.postgresql.prisma`.
+  - Documented Supabase deployment steps (connection pooling on port 6543, direct URL on port 5432, migration deployment) in `docs/DATABASE.md`.
+- **Database Code Audit & PARKED Items**:
+  - Codebase audit confirmed zero raw SQL (`$queryRaw` or `$executeRaw`) in application code.
+  - Parked items inside frozen payment code:
+    1. `src/lib/referral-reward.ts`: Prisma atomic `increment` on `creditBalance`.
+    2. `src/app/api/checkout/verify/route.ts`: Payment verification logic comparing razorpayOrderId and order record.
+    3. `src/app/api/checkout/**` & `src/app/api/webhooks/**`: Payment creation and webhook handling.
