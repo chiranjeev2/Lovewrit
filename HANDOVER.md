@@ -1,7 +1,7 @@
 # Lovewrit System Handover & Technical Architecture State
 
-**Last Updated:** October 8, 2026 (Production-Readiness Hardening Pass)  
-**Active Branch:** `fix/prod-ready` (Target: merge to `main` with `--no-ff`)  
+**Last Updated:** October 25, 2026  
+**Active Branch:** `main`  
 **Latest Production-Readiness Commits:**
 - `c3564ab` feat(compliance): step 1 - scan and enforce 11 non-negotiables policy compliance
 - `204a709` feat(api): step 2 - schema validation, rate limits, and hostile input test suite
@@ -64,11 +64,11 @@ The following core rules are enforced across all components, APIs, and tests, an
 | **Emergency Rush Page (12h)** | ₹1,459 | $75 | €75 | £75 |
 | **Card + Page Bundle Add-on** | +₹49 | +$3 | +€3 | +£3 |
 | **Referral Credit (Fixed)** | ₹49 | $2 | €2 | £2 |
-| **Regift Reply Discount** | 50% Off | 50% Off | 50% Off | 50% Off |
 
 ### Pricing & Refund Policies:
 - **Server Authority**: Order total is computed strictly server-side by `calculateOrderTotal` (`src/lib/currency.ts`). Client-sent `amount` or `currency` parameters in checkout payloads are ignored.
 - **No-Refund Policy**: Digital keepsakes and custom handcrafted services operate under a strict no-refund policy once rendered, personalized, or delivered.
+- **Open Owner Decision (Regift Reply Discount)**: The regift reply discount (previously drafted at 50% off) has been removed from the active pricing table and is parked as an open owner business decision prior to launch.
 - **Domain Launch Date**: Custom production domain deployment is planned on/after 21 Oct 2026.
 
 ---
@@ -174,27 +174,27 @@ The entire platform is backed by a centralized 28-suite QA runner (`scripts/run-
 
 ---
 
-## 10. Owner Actions Checklist Before Production Go-Live
+## 10. Next Code Tasks
 
-The project owner must execute the following operations prior to accepting live customer payments and traffic:
+The following engineering tasks are queued for implementation following the pre-merge verification:
 
-1. **Rotate Master Admin Key**: Run `npm run admin:set-key` locally to set a fresh, secret `ADMIN_MASTER_KEY` (minimum 20 characters). This automatically generates a matching cryptographically random `ADMIN_SESSION_SECRET`.
-2. **Configure Vercel Environment Variables**: Populate the 7 required production variables in the Vercel dashboard:
-   - `DATABASE_URL`
-   - `RAZORPAY_KEY_ID`
-   - `RAZORPAY_KEY_SECRET`
-   - `RAZORPAY_WEBHOOK_SECRET`
-   - `NEXT_PUBLIC_RAZORPAY_KEY_ID`
-   - `ADMIN_MASTER_KEY`
-   - `ADMIN_SESSION_SECRET`
-3. **Configure Razorpay Test & Live Keys**: Create Razorpay API keys in the Razorpay Dashboard. Configure the webhook endpoint `/api/webhooks/razorpay` subscribing to the three critical events:
-   - `payment.captured`
-   - `order.paid`
-   - `payment.failed`
-4. **Enable International Currencies in Razorpay**: Check and enable multi-currency support (USD, EUR, GBP) in the Razorpay Dashboard to accept international card payments.
-5. **Perform Real Test-Mode Payment on Mobile**: Execute at least one real test-mode payment on an actual physical Android phone at 375px viewport to verify modal responsiveness, native UPI intent handling, and keyboard behavior.
-6. **Migrate to PostgreSQL / Supabase**: Provision a managed production PostgreSQL database (e.g. Supabase), run `prisma migrate deploy`, and verify connection pooling (`pgbouncer`) on port 6543 / direct URL on port 5432.
-7. **Conduct Cultural & Faith Reviews**: Have devotional templates reviewed by appropriate faith practitioners (Hindu, Muslim, Sikh, Christian) to ensure ongoing reverence and scriptural accuracy.
-8. **Native Indic Typography Review**: Have a native Hindi and Punjabi reader review exported PDF sample prints to ensure accurate conjunct ligatures and aesthetic standards.
-9. **Legal Review**: Complete lawyer review of Terms of Service, Privacy Policy, PCPNDT Act compliance, and the digital goods no-refund policy.
-10. **Enable Live Mode**: Switch Razorpay keys from test mode to live mode only after the production domain is live on/after 21 Oct 2026.
+1. **Upload Storage Migration**:
+   - Currently, user photos and uploaded audio assets are persisted to the local filesystem (`public/uploads` / `src/app/uploads/[filename]/route.ts`).
+   - Migrate file storage to an S3-compatible cloud object storage provider (e.g., Cloudflare R2, AWS S3, or Supabase Storage) with presigned direct upload URLs and Content-Disposition headers.
+2. **SQLite-to-PostgreSQL Migration**:
+   - Switch Prisma datasource provider from `sqlite` to `postgresql`.
+   - Regenerate Prisma migrations for the PostgreSQL target schema.
+   - Deploy schema to hosted PostgreSQL instance (e.g., Supabase) and verify connection pooling (`pgbouncer` on port 6543, direct migrations on port 5432).
+
+---
+
+## 11. Owner Actions Checklist Before Production Go-Live
+
+The project owner must execute the following operations in exact sequential order prior to accepting live customer traffic:
+
+1. **Domain Setup**: Configure custom production domain and DNS records in DNS host and deployment dashboard.
+2. **Postgres Migration Regeneration plus Upload Storage**: Switch datasource to PostgreSQL, regenerate migrations, deploy to managed database, and connect Cloudflare R2 / S3 object storage for user uploads.
+3. **Host Environment Variables**: Populate the 7 required production variables in hosting provider dashboard (`DATABASE_URL`, `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID`, `ADMIN_MASTER_KEY`, `ADMIN_SESSION_SECRET`).
+4. **Razorpay Test Keys and Webhook**: Configure Razorpay test API keys and set webhook endpoint to `/api/webhooks/razorpay` subscribing to `payment.captured`, `order.paid`, and `payment.failed`.
+5. **Real Test Payment from a Phone**: Execute a real end-to-end checkout on an actual physical handset to verify mobile viewport, native UPI intent handling, and webhook fulfillment.
+6. **Live Mode after KYC**: Once Razorpay merchant KYC verification is approved and live keys are issued, switch credentials to live mode.
