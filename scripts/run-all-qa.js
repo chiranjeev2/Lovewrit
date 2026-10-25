@@ -77,22 +77,44 @@ async function ensureServerRunning() {
     } : {}),
   };
 
-  const serverProcess = spawn('npx.cmd', ['next', serverCmd, '-p', '3000'], {
-    detached: false,
-    stdio: 'ignore',
-    shell: true,
-    env: serverEnv,
-  });
+  const sLogPath = path.resolve(__dirname, '..', 'qa-logs', 'qa-server.log');
+  const sLogFd = fs.openSync(sLogPath, 'a');
 
-  for (let i = 0; i < 30; i++) {
+  function spawnServer() {
+    return spawn('npx.cmd', ['next', serverCmd, '-p', '3000'], {
+      detached: false,
+      stdio: ['ignore', sLogFd, sLogFd],
+      shell: true,
+      env: serverEnv,
+    });
+  }
+
+  let serverProcess = spawnServer();
+
+  for (let i = 0; i < 40; i++) {
     await new Promise((r) => setTimeout(r, 1000));
     const ready = await checkServerListening();
     if (ready) {
+      // Warm up an API route to catch any initial compilation or security advisory nudge
+      try {
+        await new Promise((resolve) => {
+          const req = http.get('http://localhost:3000/api/referral?code=WARMUP', () => resolve(true));
+          req.on('error', () => resolve(false));
+          req.setTimeout(2500, () => { req.destroy(); resolve(false); });
+        });
+      } catch {}
+      await new Promise((r) => setTimeout(r, 1000));
+      // If server halted for security advisory recommendation, retry once per Next.js instructions
+      const stillReady = await checkServerListening();
+      if (!stillReady) {
+        serverProcess = spawnServer();
+        continue;
+      }
       console.log(`  Server is active and healthy on http://localhost:3000 (${useProd ? 'production' : 'dev'} mode)\n`);
       return serverProcess;
     }
   }
-  throw new Error(`Server (${serverCmd}) failed to start within 30 seconds`);
+  throw new Error(`Server (${serverCmd}) failed to start within 40 seconds`);
 }
 
 const EXPECTED_SUITE_IDS = [
