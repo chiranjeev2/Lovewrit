@@ -8,6 +8,10 @@ const QA_SCREENSHOTS_DIR = path.resolve(__dirname, '..', 'qa-screenshots');
 if (!fs.existsSync(QA_SCREENSHOTS_DIR)) {
   fs.mkdirSync(QA_SCREENSHOTS_DIR, { recursive: true });
 }
+const QA_LOGS_DIR = path.resolve(__dirname, '..', 'qa-logs');
+if (!fs.existsSync(QA_LOGS_DIR)) {
+  fs.mkdirSync(QA_LOGS_DIR, { recursive: true });
+}
 
 const QA_TEST_ADMIN_KEY = process.env.ADMIN_MASTER_KEY || crypto.randomBytes(24).toString('hex');
 process.env.ADMIN_MASTER_KEY = QA_TEST_ADMIN_KEY;
