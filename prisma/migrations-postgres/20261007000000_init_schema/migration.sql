@@ -189,3 +189,4 @@ ALTER TABLE "RecipientReaction" ADD CONSTRAINT "RecipientReaction_pageDataId_fke
 
 -- AddForeignKey
 ALTER TABLE "GuestbookEntry" ADD CONSTRAINT "GuestbookEntry_pageDataId_fkey" FOREIGN KEY ("pageDataId") REFERENCES "PageData"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+

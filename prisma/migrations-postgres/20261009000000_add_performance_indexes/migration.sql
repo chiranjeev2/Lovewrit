@@ -27,3 +27,4 @@ CREATE INDEX "RecipientReaction_createdAt_idx" ON "RecipientReaction"("createdAt
 
 -- CreateIndex
 CREATE INDEX "ReferralRecord_ownerEmail_idx" ON "ReferralRecord"("ownerEmail");
+

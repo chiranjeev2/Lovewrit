@@ -174,3 +174,4 @@ model PlatformSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+

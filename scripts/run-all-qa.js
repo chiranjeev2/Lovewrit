@@ -621,7 +621,7 @@ const SUITE_REGISTRY = [
     requiresServer: false,
     minAssertions: 35,
     parse: (output, exitCode) => {
-      const match = output.match(/(\\d+)\\s*\\/\\s*(\\d+)\\s*assertions/i);
+      const match = output.match(/(\d+)\s*\/\s*(\d+)\s*assertions/i);
       const passed = match ? parseInt(match[1], 10) : 0;
       const total = match ? parseInt(match[2], 10) : 0;
       if (exitCode === 0 && match && passed >= 35) {
